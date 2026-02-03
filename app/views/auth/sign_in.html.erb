@@ -1,0 +1,40 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h2>Singing Cadets Login</h2>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-4">
+          Welcome! Please sign in with your Google account to access the Singing Cadets platform.
+        </p>
+        
+        <div class="d-grid gap-3">
+          <%= link_to "/auth/google_oauth2", 
+              class: "btn btn-danger btn-lg" do %>
+            <i class="fab fa-google me-2"></i>
+            Sign in with Google
+          <% end %>
+
+          <%# Developer Bypass Button %>
+          <% if Rails.env.development? %>
+            <%= link_to "/auth/developer_bypass", 
+                class: "btn btn-warning btn-lg" do %>
+              <i class="bi bi-person-badge me-2"></i>
+              Developer Bypass (Admin)
+            <% end %>
+          <% end %>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="text-center">
+          <small class="text-muted">
+            Only authorized users can access this platform.<br>
+            Contact your administrator if you need access.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

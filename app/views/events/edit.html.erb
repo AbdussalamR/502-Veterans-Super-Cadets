@@ -1,0 +1,13 @@
+<% content_for :page_title do %>
+  Edit Event | Singing Cadets
+<% end %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Edit Event</h1>
+  </div>
+  
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <%= render "form", event: @event %>
+  </div>
+</div>

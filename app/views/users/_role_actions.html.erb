@@ -1,0 +1,65 @@
+<% if current_user.super_admin? && user != current_user %>
+  <div class="btn-group dropup" role="group">
+    <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="true">
+      Role Actions
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <% case user.role %>
+      <% when 'user' %>
+        <li>
+          <%= form_with url: promote_to_officer_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Promote to Officer", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to promote #{user.full_name} to officer?" } %>
+          <% end %>
+        </li>
+        <li>
+          <%= form_with url: promote_to_super_admin_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Promote to Director", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100 text-danger", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to promote #{user.full_name} to director?" } %>
+          <% end %>
+        </li>
+      <% when 'officer' %>
+        <li>
+          <%= form_with url: promote_to_super_admin_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Promote to Director", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100 text-danger", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to promote #{user.full_name} to director?" } %>
+          <% end %>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <%= form_with url: demote_to_user_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Demote to Member", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100 text-warning", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to demote #{user.full_name} to member?" } %>
+          <% end %>
+        </li>
+      <% when 'super_admin' %>
+        <li>
+          <%= form_with url: demote_to_officer_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Demote to Officer", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100 text-warning", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to demote #{user.full_name} to officer?" } %>
+          <% end %>
+        </li>
+        <li>
+          <%= form_with url: demote_to_user_user_path(user), method: :patch, local: true, class: "d-inline" do |form| %>
+            <%= form.submit "Demote to Member", 
+                class: "dropdown-item btn btn-link text-start p-2 border-0 w-100 text-warning", 
+                style: "background: none;",
+                data: { confirm: "Are you sure you want to demote #{user.full_name} to member?" } %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% elsif user == current_user %>
+  <span class="badge bg-info">You</span>
+<% end %>

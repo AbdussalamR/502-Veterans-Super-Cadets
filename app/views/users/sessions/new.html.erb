@@ -1,0 +1,31 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h2>Sign In to Singing Cadets</h2>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-4">
+          Welcome! Please sign in with your Google account to access the Singing Cadets platform.
+        </p>
+        
+        <div class="d-grid">
+          <%= link_to "/users/auth/google_oauth2", 
+              class: "btn btn-danger btn-lg" do %>
+            <i class="fab fa-google me-2"></i>
+            Sign in with Google
+          <% end %>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="text-center">
+          <small class="text-muted">
+            Only authorized users can access this platform.<br>
+            Contact your administrator if you need access.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

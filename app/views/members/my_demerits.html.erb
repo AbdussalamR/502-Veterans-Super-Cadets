@@ -1,0 +1,321 @@
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <%= link_to root_path, class: "text-decoration-none" do %>
+        <i class="bi bi-house me-1"></i>Dashboard
+      <% end %>
+    </li>
+    <li class="breadcrumb-item">
+      <%= link_to user_path(current_user), class: "text-decoration-none" do %>
+        <i class="bi bi-person me-1"></i>My Profile
+      <% end %>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">My Discipline Points</li>
+  </ol>
+</nav>
+
+<!-- Main Content -->
+<div class="row">
+  <div class="col-lg-8">
+    <!-- Page Header Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-warning text-white border-0 py-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h2 mb-2 text-white">
+              <i class="bi bi-exclamation-triangle me-2"></i>My Discipline Points
+            </h1>
+            <p class="mb-0 text-white-50">
+              <i class="bi bi-person-circle me-2"></i>
+              <%= current_user.full_name %>
+            </p>
+          </div>
+          <div class="text-end">
+            <div class="display-4 text-white">
+              <i class="bi bi-file-text"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card bg-danger bg-opacity-10 border-0 shadow-sm h-100">
+          <div class="card-body text-center p-4">
+            <div class="display-6 text-danger mb-2">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h3 class="text-danger mb-1"><%= @demerits.count %></h3>
+            <small class="text-muted">Total Discipline Records</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card bg-warning bg-opacity-10 border-0 shadow-sm h-100">
+          <div class="card-body text-center p-4">
+            <div class="display-6 text-warning mb-2">
+              <i class="bi bi-calculator-fill"></i>
+            </div>
+            <h3 class="text-warning mb-1"><%= format_absence_points(@total_absence_points) %></h3>
+            <small class="text-muted">Absence Points</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card bg-<%= @total_absence_points >= 3 ? 'danger' : (@total_absence_points >= 2 ? 'warning' : 'success') %> bg-opacity-10 border-0 shadow-sm h-100">
+          <div class="card-body text-center p-4">
+            <div class="display-6 text-<%= @total_absence_points >= 3 ? 'danger' : (@total_absence_points >= 2 ? 'warning' : 'success') %> mb-2">
+              <i class="bi bi-<%= @total_absence_points >= 3 ? 'x-circle' : (@total_absence_points >= 2 ? 'exclamation-triangle' : 'check-circle') %>-fill"></i>
+            </div>
+            <h3 class="text-<%= @total_absence_points >= 3 ? 'danger' : (@total_absence_points >= 2 ? 'warning' : 'success') %> mb-1">
+              <%= @total_absence_points >= 3 ? 'At Risk' : (@total_absence_points >= 2 ? 'Warning' : 'Good') %>
+            </h3>
+            <small class="text-muted">Current Status</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Box -->
+    <% if @total_absence_points >= 3 %>
+      <div class="alert alert-danger border-danger border-start border-4 mb-4">
+        <div class="d-flex">
+          <div class="me-3">
+            <i class="bi bi-exclamation-triangle-fill display-6"></i>
+          </div>
+          <div>
+            <h5 class="alert-heading mb-2">Warning: Grade Penalty Risk</h5>
+            <p class="mb-0">
+              You have accumulated <strong><%= format_absence_points(@total_absence_points) %></strong> absence points. 
+              Having more than 3 absence points per semester may result in grade penalties or other consequences.
+            </p>
+          </div>
+        </div>
+      </div>
+    <% elsif @total_absence_points >= 2 %>
+      <div class="alert alert-warning border-warning border-start border-4 mb-4">
+        <div class="d-flex">
+          <div class="me-3">
+            <i class="bi bi-exclamation-triangle-fill display-6"></i>
+          </div>
+          <div>
+            <h5 class="alert-heading mb-2">Caution: Approaching Threshold</h5>
+            <p class="mb-0">
+              You have <strong><%= format_absence_points(@total_absence_points) %></strong> absence points. 
+              You are approaching the 3-point threshold. Please maintain good attendance.
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Discipline Points Table -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light border-0">
+        <h5 class="mb-0">
+          <i class="bi bi-list-ul text-primary me-2"></i>Discipline Points History
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <% if @demerits.empty? %>
+          <div class="text-center py-5">
+            <div class="display-1 text-success mb-3">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <h5 class="text-muted mb-2">No Discipline Records</h5>
+            <p class="text-muted mb-0">You don't have any discipline point records. Keep up the great work!</p>
+          </div>
+        <% else %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>
+                    <i class="bi bi-calendar3 me-1"></i>Date
+                  </th>
+                  <th>
+                    <i class="bi bi-hash me-1"></i>Value
+                  </th>
+                  <th>
+                    <i class="bi bi-chat-square-text me-1"></i>Reason
+                  </th>
+                  <th>
+                    <i class="bi bi-person-badge me-1"></i>Given By
+                  </th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @demerits.each do |demerit| %>
+                  <tr>
+                    <td class="text-muted">
+                      <%= demerit.date.strftime("%b %d, %Y") %>
+                      <br>
+                      <small><%= demerit.date.strftime("%I:%M %p") %></small>
+                    </td>
+                    <td>
+                      <span class="badge bg-danger fs-6 px-3"><%= demerit.value %></span>
+                      <div class="mt-1">
+                        <small class="text-muted">(<%= format_absence_points(demerit.absence_points) %> pts)</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="text-muted"><%= truncate(demerit.reason, length: 40) %></span>
+                    </td>
+                    <td class="text-muted">
+                      <i class="bi bi-person-circle me-1"></i><%= demerit.given_by.full_name %>
+                    </td>
+                    <td class="text-center">
+                      <%= link_to demerit_path(demerit), class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="bi bi-eye me-1"></i>View Details
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <td colspan="2">
+                    <strong>
+                      <i class="bi bi-calculator me-2"></i>Total Discipline Records: <%= @demerits.count %>
+                    </strong>
+                  </td>
+                  <td colspan="3" class="text-end">
+                    <strong>Total Absence Points: <%= format_absence_points(@total_absence_points) %></strong>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-lg-4">
+    <!-- Quick Summary Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-light border-0">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-speedometer2 text-primary me-2"></i>Quick Summary
+        </h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <span>
+              <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+              <strong>Discipline Records</strong>
+            </span>
+            <span class="badge bg-danger fs-6"><%= @demerits.count %></span>
+          </li>
+          <li class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <span>
+              <i class="bi bi-calculator text-warning me-2"></i>
+              <strong>Absence Points</strong>
+            </span>
+            <span class="badge bg-warning fs-6"><%= format_absence_points(@total_absence_points) %></span>
+          </li>
+          <li class="d-flex justify-content-between align-items-center">
+            <span>
+              <i class="bi bi-shield-check text-<%= @total_absence_points >= 3 ? 'danger' : (@total_absence_points >= 2 ? 'warning' : 'success') %> me-2"></i>
+              <strong>Status</strong>
+            </span>
+            <span class="badge bg-<%= @total_absence_points >= 3 ? 'danger' : (@total_absence_points >= 2 ? 'warning' : 'success') %>">
+              <%= @total_absence_points >= 3 ? 'At Risk' : (@total_absence_points >= 2 ? 'Warning' : 'Good Standing') %>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Understanding Discipline Points Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-light border-0">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-question-circle text-primary me-2"></i>Understanding Discipline Points
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="fw-medium mb-2">
+            <i class="bi bi-info-circle text-primary me-2"></i>What are discipline points?
+          </h6>
+          <p class="text-muted small mb-0">
+            Discipline points are given for tardiness or other infractions according to Singing Cadets policy.
+          </p>
+        </div>
+        <hr>
+        <div class="mb-3">
+          <h6 class="fw-medium mb-2">
+            <i class="bi bi-calculator text-primary me-2"></i>How are they calculated?
+          </h6>
+          <p class="text-muted small mb-0">
+            Each discipline point value of 1 equals 0.33 absence points. For example, 3 discipline points equal 1 absence point.
+          </p>
+        </div>
+        <hr>
+        <div>
+          <h6 class="fw-medium mb-2">
+            <i class="bi bi-exclamation-triangle text-primary me-2"></i>Impact on Standing
+          </h6>
+          <p class="text-muted small mb-0">
+            Accumulating 3 or more absence points per semester may result in grade penalties or other consequences.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light border-0">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-list text-primary me-2"></i>Navigation
+        </h5>
+      </div>
+      <div class="card-body d-grid gap-2">
+        <%= link_to user_path(current_user), class: "btn btn-outline-primary" do %>
+          <i class="bi bi-person me-2"></i>Back to My Profile
+        <% end %>
+        
+        <%= link_to attendance_history_user_path(current_user), class: "btn btn-outline-info" do %>
+          <i class="bi bi-clock-history me-2"></i>My Attendance History
+        <% end %>
+        
+        <%= link_to excuses_path, class: "btn btn-outline-warning" do %>
+          <i class="bi bi-file-earmark-text me-2"></i>Excuses
+        <% end %>
+        
+        <%= link_to root_path, class: "btn btn-outline-secondary" do %>
+          <i class="bi bi-house me-2"></i>Dashboard
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  .card {
+    transition: transform 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .card:hover {
+    transform: translateY(-1px);
+    z-index: 10;
+  }
+  
+  .bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 1rem 0.75rem;
+  }
+</style>

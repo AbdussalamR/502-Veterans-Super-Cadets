@@ -1,0 +1,249 @@
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"></h4>
+        </div>
+        <div class="card-body">
+          <%= form_with(model: event, class: "needs-validation", data: { turbo: false }) do |form| %>
+            <% if event.errors.any? %>
+              <div class="alert alert-danger">
+                <h5><%= pluralize(event.errors.count, "error") %> prohibited this event from being saved:</h5>
+                <ul class="mb-0">
+                  <% event.errors.each do |error| %>
+                    <li><%= error.full_message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= form.label :title, class: "form-label" %>
+              <%= form.text_field :title, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :date, "Start", class: "form-label" %>
+              <%= form.datetime_local_field :date, class: "form-control", id: "start_datetime" %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :end_time, "End", class: "form-label" %>
+              <%= form.datetime_local_field :end_time, class: "form-control", id: "end_datetime" %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :location, class: "form-label" %>
+              <%= form.text_field :location, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :description, class: "form-label" %>
+              <%= form.text_area :description, rows: 4, class: "form-control" %>
+            </div>
+            
+            <div class="mb-3">
+              <div class="form-check">
+                <%= form.check_box :repeat_weekly, class: "form-check-input", id: "repeat_weekly_checkbox" %>
+                <%= form.label :repeat_weekly, "Create Recurring Event", class: "form-check-label" %>
+              </div>
+              <%= form.date_field :repeat_until, class: "form-control mt-2", id: "repeat_until_field" %>
+              <small class="form-text text-muted">
+                If selected, identical events will be created weekly on the same weekday until this date.
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <%= form.check_box :allow_self_checkin, class: "form-check-input", id: "allow_self_checkin_checkbox" %>
+                <%= form.label :allow_self_checkin, "Allow member self check-in", class: "form-check-label" %>
+              </div>
+              <small class="form-text text-muted">
+                Members can check themselves in using a 4-digit passcode from 10 minutes before to 10 minutes after the event.
+              </small>
+            </div>
+
+            <% if event.allow_self_checkin? && event.checkin_passcode.present? %>
+              <div class="mb-3 alert alert-info">
+                <strong>Check-in Passcode:</strong> 
+                <span class="badge bg-dark fs-5"><%= event.checkin_passcode %></span>
+                <br>
+                <small>Share this passcode with members at the event so they can check themselves in.</small>
+              </div>
+            <% end %>
+
+            <div class="d-flex justify-content-between">
+              <%= link_to "Cancel", events_path, class: "btn btn-secondary", id: "cancel-button" %>
+              <%= form.submit "Save Event", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Unsaved Changes Modal -->
+<div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning bg-opacity-10">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Unsaved Changes
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>You have unsaved changes for <strong><%= event.new_record? ? "this event" : event.title %></strong>.</p>
+        <p>If you leave without saving, your changes will be lost.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
+        <a href="<%= events_path %>" class="btn btn-danger" id="discard-changes-btn">Discard Changes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const startField = document.getElementById("start_datetime");
+    const endField = document.getElementById("end_datetime");
+
+    function roundToNearestFive(date) {
+      const minutes = date.getMinutes();
+      const rounded = Math.round(minutes / 5) * 5;
+      date.setMinutes(rounded);
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      return date;
+    }
+
+    function autofillEndTime() {
+      if (!startField.value) return;
+
+      const startDate = new Date(startField.value);
+      startDate.setHours(startDate.getHours() + 1); // add 1 hour
+      roundToNearestFive(startDate);
+
+      // Format to yyyy-MM-ddTHH:mm for datetime-local
+      const yyyy = startDate.getFullYear();
+      const mm = String(startDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(startDate.getDate()).padStart(2, '0');
+      const hh = String(startDate.getHours()).padStart(2, '0');
+      const min = String(startDate.getMinutes()).padStart(2, '0');
+
+      endField.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+
+    startField.addEventListener("change", autofillEndTime);
+    // initialize end time if start is already filled
+    if (startField.value && !endField.value) autofillEndTime();
+
+    // Prevent Enter from submitting form, move to next input
+    const inputs = Array.from(document.querySelectorAll(".needs-validation input, .needs-validation textarea"));
+    inputs.forEach((input, idx) => {
+      input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const next = inputs[idx + 1];
+          if (next) next.focus();
+        }
+      });
+    });
+
+    // Unsaved changes logic
+    let formChanged = false;
+    const form = document.querySelector("form.needs-validation");
+    console.log("Form element:", form);
+    const cancelButton = document.getElementById("cancel-button");
+
+    function getFormState() {
+      const state = {};
+      document.querySelectorAll("input, textarea").forEach(input => {
+        state[input.name] = input.value;
+      });
+      return state;
+    }
+
+    function beforeUnloadHandler(e) {
+      e.preventDefault();
+      e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+      return e.returnValue;
+    }
+
+    function ensureBootstrap() {
+      return typeof bootstrap !== 'undefined';
+    }
+
+    let originalFormState;
+    setTimeout(() => {
+      originalFormState = getFormState();
+    }, 100);
+
+    document.querySelectorAll("input, textarea").forEach(input => {
+      input.addEventListener("input", () => {
+        if (!originalFormState) return;
+        const changed = JSON.stringify(originalFormState) !== JSON.stringify(getFormState());
+        console.log("Input changed?", changed, "formChanged:", formChanged);
+        if (changed && !formChanged) {
+          formChanged = true;
+          window.addEventListener("beforeunload", beforeUnloadHandler);
+          console.log("Added beforeunload");
+        } else if (!changed && formChanged) {
+          formChanged = false;
+          window.removeEventListener("beforeunload", beforeUnloadHandler);
+          console.log("Removed beforeunload");
+        }
+      });
+    });
+
+    cancelButton.addEventListener("click", function(e) {
+      if (!formChanged) return;
+      e.preventDefault();
+      if (ensureBootstrap()) {
+        const modalElement = document.getElementById("cancelConfirmModal");
+        let modal = bootstrap.Modal.getInstance(modalElement);
+        if (!modal) modal = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: true });
+        modal.show();
+      } else {
+        if (confirm("You have unsaved changes. Are you sure you want to leave without saving?")) {
+          window.location.href = cancelButton.getAttribute("href");
+        }
+      }
+    });
+
+    // Discard changes from modal
+    document.getElementById("discard-changes-btn").addEventListener("click", function(e) {
+      e.preventDefault();
+      window.removeEventListener("beforeunload", beforeUnloadHandler);
+      formChanged = false;
+      if (ensureBootstrap()) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById("cancelConfirmModal"));
+        if (modal) modal.hide();
+        document.body.classList.remove("modal-open");
+        document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+      }
+      window.location.href = this.getAttribute("href");
+    });
+
+    // Clear beforeunload on submit button click (before form submits)
+    const submitButton = form.querySelector('input[type="submit"]');
+    if (submitButton) {
+      submitButton.addEventListener("click", () => {
+        console.log("Submit button clicked — removing beforeunload listener");
+        window.removeEventListener("beforeunload", beforeUnloadHandler);
+        formChanged = false;
+      });
+    }
+    
+    // Also clear on form submit as backup
+    form.addEventListener("submit", () => {
+      console.log("Form submit event triggered — removing beforeunload listener");
+      window.removeEventListener("beforeunload", beforeUnloadHandler);
+      formChanged = false;
+    });
+    
+  });
+</script>

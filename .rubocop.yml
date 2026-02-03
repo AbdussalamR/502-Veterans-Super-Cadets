@@ -1,0 +1,181 @@
+inherit_from: .rubocop_todo.yml
+
+plugins:
+  - rubocop-rails
+
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - 'vendor/**/*'
+    - 'db/schema.rb'
+    - 'bin/*'
+    - 'config/boot.rb'
+    - 'config/environment.rb'
+    - 'config/application.rb'
+    - 'node_modules/**/*'
+
+# INDENTATION: Use 2-space indentation
+Layout/IndentationWidth:
+  Width: 2
+
+Layout/IndentationConsistency:
+  EnforcedStyle: normal
+
+Layout/IndentationStyle:
+  EnforcedStyle: spaces
+
+# STYLE PREFERENCES: each instead of for, unless instead of !if, until instead of while!
+Style/For:
+  EnforcedStyle: each
+
+Style/NegatedIf:
+  EnforcedStyle: postfix
+
+Style/NegatedWhile:
+  Enabled: true
+
+Style/IfUnlessModifier:
+  Enabled: true
+
+Style/WhileUntilModifier:
+  Enabled: true
+
+# Avoid unless-else combinations
+Style/UnlessElse:
+  Enabled: true
+
+# NAMING CONVENTIONS
+# Use snake_case for methods and variables
+Naming/MethodName:
+  EnforcedStyle: snake_case
+
+# CamelCase for classes and modules is enforced by default
+# These cops don't exist but the style is enforced by Ruby conventions
+
+# Constants should be UPPER_CASE
+Naming/ConstantName:
+  Enabled: true
+
+# Predicate methods should end with ? and avoid certain prefixes
+Naming/PredicatePrefix:
+  Enabled: true
+  ForbiddenPrefixes:
+    - is_
+    - has_
+    - have_
+    - does_
+  NamePrefix:
+    - is_
+    - has_
+    - have_
+    - does_
+
+# Instance variables should use @ with lowercase
+Naming/MemoizedInstanceVariableName:
+  Enabled: true
+
+# Variable names should be snake_case (covers global variables too)
+Naming/VariableName:
+  EnforcedStyle: snake_case
+
+# METHOD DEFINITIONS: Use parentheses when there are parameters
+Style/DefWithParentheses:
+  Enabled: true
+
+Style/MethodDefParentheses:
+  EnforcedStyle: require_parentheses
+
+# Parentheses handling is managed by MethodDefParentheses above
+
+# RAILS-SPECIFIC CONVENTIONS
+# Table names: lowercase with underscores, plural
+# Model names: CamelCase, singular  
+# Controller names: CamelCase, plural with Controller suffix
+
+# Skinny Controllers, Fat Models
+Rails/ActionFilter:
+  Enabled: true
+
+Rails/ApplicationController:
+  Enabled: true
+
+Rails/ApplicationRecord:
+  Enabled: true
+
+# Enforce Rails naming conventions
+Rails/FilePath:
+  Enabled: true
+
+# Encourage proper Rails patterns
+Rails/InverseOf:
+  Enabled: true
+
+Rails/HasManyOrHasOneDependent:
+  Enabled: true
+
+# DRY Principle
+Style/Documentation:
+  Enabled: false  # Often too strict for Rails apps
+
+# Use meaningful variable names
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+
+# Additional style preferences
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+
+Style/HashSyntax:
+  EnforcedStyle: ruby19_no_mixed_keys
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+# Layout preferences
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_first_parameter
+
+# Line length - keeping reasonable for readability
+Layout/LineLength:
+  Max: 120
+  AllowHeredoc: true
+  AllowURI: true
+  URISchemes:
+    - http
+    - https
+
+# Method length - encourage smaller methods
+Metrics/MethodLength:
+  Max: 15
+  CountComments: false
+
+# Block length - more lenient for specs and config
+Metrics/BlockLength:
+  Max: 25
+  Exclude:
+    - 'spec/**/*'
+    - 'config/**/*'
+    - 'db/migrate/*'
+
+# ABC Size - measure method complexity
+Metrics/AbcSize:
+  Max: 20
+
+# Cyclomatic complexity
+Metrics/CyclomaticComplexity:
+  Max: 8
+
+# Perceived complexity
+Metrics/PerceivedComplexity:
+  Max: 8

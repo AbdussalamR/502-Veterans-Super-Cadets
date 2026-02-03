@@ -1,0 +1,91 @@
+# frozen_string_literal: true
+
+Rails.application.routes.draw do
+  get 'excuses/index'
+  get 'excuses/show'
+  get 'excuses/new'
+  get 'excuses/create'
+  root to: 'events#index'
+
+  # Manual authentication routes (using custom controller to avoid Devise mapping issues)
+  get '/users/sign_in', to: 'auth#sign_in'
+  post '/users/sign_in', to: 'auth#create'
+  delete '/users/sign_out', to: 'auth#destroy'
+
+  # Alternative paths for cleaner URLs
+  get '/auth/sign_in', to: 'auth#sign_in'
+  post '/auth/sign_in', to: 'auth#create'
+  delete '/auth/sign_out', to: 'auth#destroy'
+
+  # OAuth routes - manual handling since middleware might not be working
+  get '/auth/google_oauth2', to: 'auth#oauth_redirect'
+  get '/auth/google_oauth2/callback', to: 'users/omniauth_callbacks#google_oauth2'
+
+  # Redirect old paths to new ones
+  get '/users/auth/google_oauth2', to: redirect('/auth/google_oauth2')
+  get '/users/auth/google_oauth2/callback', to: redirect('/auth/google_oauth2/callback')
+
+  # Dev login bypass
+  if Rails.env.development?
+    get '/auth/developer_bypass', to: 'auth#developer_bypass'
+  end
+
+  # Devise routes for users (backup - may not work until DB is migrated)
+  begin
+    devise_for :users, controllers: {
+      omniauth_callbacks: 'users/omniauth_callbacks',
+      sessions: 'users/sessions',
+    }, skip: [:registrations]
+  rescue StandardError => e
+    Rails.logger.warn "Devise routes not loaded: #{e.message}"
+  end
+
+  # User management routes with different path to avoid conflict
+  resources :users, path: 'user_management' do
+    member do
+      patch :promote_to_officer
+      patch :promote_to_super_admin
+      patch :demote_to_user
+      patch :demote_to_officer
+      get :attendance_history
+    end
+    
+    collection do
+      get :absence_report
+    end
+  end
+
+  resources :events do
+    resources :attendances, only: %i[new create update]
+    member do
+      get :self_checkin, to: 'attendances#self_checkin_form'
+      post :self_checkin, to: 'attendances#self_checkin'
+    end
+  end
+
+  resources :excuses, only: [:index, :show, :new, :create, :update] do
+    member do
+      post :review
+    end
+  end
+  
+  resources :demerits
+  
+  # Special route for creating demerits for a specific member
+  get '/users/:member_id/demerits/new', to: 'demerits#new', as: 'new_member_demerit'
+  
+  # Member-specific routes
+  get '/my-demerits', to: 'members#my_demerits', as: 'my_demerits'
+  get '/help', to: 'help#show', as: 'help'
+
+  # Admin routes
+  namespace :admin do
+    resources :registrations, only: [:index] do
+      member do
+        patch :approve
+        patch :reject
+        delete :destroy_rejected
+      end
+    end
+  end
+end

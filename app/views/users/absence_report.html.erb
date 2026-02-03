@@ -1,0 +1,144 @@
+<% content_for :page_title do %>
+  Absence Report | Singing Cadets
+<% end %>
+
+<div class="container mx-auto px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="display-5 fw-bold text-dark mb-1">
+        <i class="bi bi-calendar-x me-2 text-danger"></i>Absence Report
+      </h1>
+      <p class="text-muted mb-0">Comprehensive view of all member absence points</p>
+    </div>
+    <div>
+      <%= link_to users_path, class: "btn btn-outline-secondary" do %>
+        <i class="bi bi-people me-2"></i>Back to Members
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Absence Stats Summary -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title text-primary mb-3">Total Members</h5>
+          <div class="display-4 fw-bold"><%= @users.count %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title text-success mb-3">Perfect Attendance</h5>
+          <div class="display-4 fw-bold"><%= @users.select { |u| u.total_absence_points == 0 }.count %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title text-warning mb-3">Warning Zone</h5>
+          <div class="display-4 fw-bold"><%= @users.select { |u| u.total_absence_points >= 2 && u.total_absence_points < 3 }.count %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title text-danger mb-3">Exceeding Limit</h5>
+          <div class="display-4 fw-bold"><%= @users.select { |u| u.total_absence_points >= 3 }.count %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Absence Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Member Absence Points</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Member</th>
+            <th class="text-center">Absences</th>
+            <th class="text-center">Tardies</th>
+            <th class="text-center">Discipline Points</th>
+            <th class="text-center">Total Points</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @users.each do |user| %>
+            <% 
+              absences = user.attendances.absent.count
+              tardies = user.attendances.tardy.count
+              demerits = user.received_demerits.sum { |demerit| demerit.absence_points }
+              total_points = user.total_absence_points
+              
+              row_class = if total_points >= 3
+                            'table-danger'
+                          elsif total_points >= 2
+                            'table-warning'
+                          elsif total_points > 0
+                            'table-light'
+                          else
+                            ''
+                          end
+            %>
+            <tr class="<%= row_class %>">
+              <td>
+                <%= link_to user_path(user), class: "text-decoration-none" do %>
+                  <div class="fw-bold text-dark"><%= user.full_name %></div>
+                  <small class="text-muted"><%= user.email %></small>
+                <% end %>
+              </td>
+              <td class="text-center"><%= absences %></td>
+              <td class="text-center"><%= tardies %> <small class="text-muted">(<%= format_absence_points(tardies * 0.33) %>)</small></td>
+              <td class="text-center"><%= format_absence_points(demerits) %></td>
+              <td class="text-center fw-bold">
+                <span class="<%= total_points >= 3 ? 'text-danger' : (total_points >= 2 ? 'text-warning' : '') %>">
+                  <%= format_absence_points(total_points) %>
+                </span>
+              </td>
+              <td class="text-end">
+                <%= link_to user_path(user), class: "btn btn-sm btn-outline-primary" do %>
+                  <i class="bi bi-eye me-1"></i>View
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Info Card -->
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Absence Points System</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <h6><i class="bi bi-x-circle text-danger me-2"></i>Regular Absence</h6>
+          <p class="text-muted">Each unexcused absence = 1.0 point</p>
+        </div>
+        <div class="col-md-4">
+          <h6><i class="bi bi-clock text-warning me-2"></i>Tardy</h6>
+          <p class="text-muted">Each tardy = 0.33 points (3 tardies = 1 absence)</p>
+        </div>
+        <div class="col-md-4">
+          <h6><i class="bi bi-exclamation-triangle text-danger me-2"></i>Discipline Points</h6>
+          <p class="text-muted">Disciplinary points in multiples of 0.33 (3 = 1 absence point)</p>
+        </div>
+      </div>
+      
+      <div class="alert alert-info mt-3 mb-0">
+        <strong>Grade Policy:</strong> Members with more than 3 absence points per semester may result in grade penalties.
+      </div>
+    </div>
+  </div>
+</div>

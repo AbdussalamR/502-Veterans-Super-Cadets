@@ -1,0 +1,18 @@
+<!-- filepath: app/views/shared/_flash_messages.html.erb -->
+<% if flash[:error] %>
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+    <p><%= flash[:error] %></p>
+  </div>
+<% elsif flash[:alert] %>
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+    <p><%= flash[:alert] %></p>
+  </div>
+<% elsif flash[:success] %>
+  <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+    <p><%= flash[:success] %></p>
+  </div>
+<% elsif flash[:notice] %>
+  <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+    <p><%= flash[:notice] %></p>
+  </div>
+<% end %>

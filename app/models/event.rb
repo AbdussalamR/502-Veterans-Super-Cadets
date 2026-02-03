@@ -1,0 +1,146 @@
+# frozen_string_literal: true
+
+class Event < ApplicationRecord
+  has_many :attendances, dependent: :destroy
+  has_many :attending_users, through: :attendances, source: :user
+
+  # New join associations for excuses (many-to-many)
+  has_many :events_to_excuses,
+    class_name: "EventsToExcuse",
+    foreign_key: :event_id,
+    dependent: :destroy
+  has_many :excuses, through: :events_to_excuses, dependent: :destroy
+
+  # Validations
+  validates :title, presence: true
+  validates :date, presence: true
+  validates :end_time, presence: true
+  validate :end_time_after_start_time
+  validates :checkin_passcode, format: { with: /\A\d{4}\z/, message: "must be a 4-digit number" }, if: :allow_self_checkin?
+
+  # Virtual attributes for repeating events (not saved to the database)
+  attr_accessor :repeat_weekly, :repeat_until
+  
+  # Callbacks
+  before_validation :generate_checkin_passcode, if: :should_generate_passcode?
+
+  # Scopes for filtering
+  scope :upcoming, -> { where(date: Time.zone.today..).order(:date) }
+  scope :past, -> { where(date: ...Time.zone.today).order(date: :desc) }
+  
+  # Validation to ensure end_time is after date's start time
+  def end_time_after_start_time
+    return if end_time.blank? || date.blank?
+    if end_time < date
+      errors.add(:end_time, "must be after the start time")
+    end
+  end
+
+  # Method to find overlapping events
+  def overlapping_events
+    return Event.none if date.blank? || end_time.blank?
+    Event.where.not(id: id)
+        .where("date < ? AND end_time > ?", end_time, date)
+  end
+
+  # Method to get attendance stats for this event
+  def attendance_stats
+    total = attendances.count
+    present_count = attendances.present.count
+    absent_count = attendances.absent.count
+    excused_count = attendances.excused.count
+    tardy_count = attendances.tardy.count
+
+    # For attendance percentage, tardies count as present
+    present_with_tardy_count = present_count + tardy_count
+
+    {
+      total: total,
+      present: present_count,
+      absent: absent_count,
+      excused: excused_count,
+      tardy: tardy_count,
+      present_percentage: total.positive? ? ((present_with_tardy_count.to_f / total) * 100).round(1) : 0,
+    }
+  end
+
+  # Return approved excuses for this event
+  def approved_excuses
+    excuses.approved
+  end
+
+  # Method to get count of approved excuses
+  def approved_excuses_count
+    approved_excuses.count
+  end
+
+  # Check if a given user has an approved excuse for this event
+  def approved_excuse_for_user?(user)
+    approved_excuses.exists?(member_id: user.id)
+  end
+  alias_method :user_has_approved_excuse?, :approved_excuse_for_user?
+
+  # Method to get users with approved excuses
+  def users_with_approved_excuses
+    User.joins(excuses: :events)
+        .where(events: { id: id }, excuses: { status: 'approved' })
+        .distinct
+  end
+
+  # Self-checkin methods
+  def self_checkin_available?
+    return false unless allow_self_checkin?
+    return false if date.blank? || end_time.blank?
+    
+    current_time = Time.current
+    checkin_start = date.in_time_zone - 10.minutes
+    checkin_end = end_time.in_time_zone + 10.minutes
+    
+    current_time.between?(checkin_start, checkin_end)
+  end
+
+  # Helper method to check self-checkin window status (for debugging)
+  def self_checkin_window_info
+    return { available: false, reason: 'Self check-in not enabled' } unless allow_self_checkin?
+    return { available: false, reason: 'Missing date or end_time' } if date.blank? || end_time.blank?
+    
+    current_time = Time.current
+    checkin_start = date.in_time_zone - 10.minutes
+    checkin_end = end_time.in_time_zone + 10.minutes
+    
+    {
+      available: current_time.between?(checkin_start, checkin_end),
+      current_time: current_time,
+      checkin_start: checkin_start,
+      checkin_end: checkin_end,
+      minutes_until_start: ((checkin_start - current_time) / 60).round,
+      minutes_until_end: ((checkin_end - current_time) / 60).round
+    }
+  end
+
+  def verify_passcode(input_passcode)
+    checkin_passcode.present? && checkin_passcode == input_passcode.to_s.strip
+  end
+
+  private
+
+  def should_generate_passcode?
+    allow_self_checkin? && checkin_passcode.blank?
+  end
+
+  def generate_checkin_passcode
+    self.checkin_passcode = rand(1000..9999).to_s
+  end
+
+  before_destroy :destroy_related_excuses
+
+  def destroy_related_excuses
+    # Only destroy excuses that are exclusively linked to this event
+    excuses.each do |excuse|
+      if excuse.events.count == 1  # only linked to this event
+        excuse.destroy
+      end
+    end
+  end
+
+end
