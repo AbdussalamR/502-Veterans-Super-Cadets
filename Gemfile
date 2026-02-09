@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'concurrent-ruby', '~> 1.2.0'
-gem 'nokogiri', '~> 1.16.2', platforms: [:ruby]
+gem 'nokogiri', '>= 1.16.2'
 gem 'rails', '~> 7.0.2', '>= 7.0.2.3'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem 'propshaft'
@@ -75,6 +75,8 @@ group :development, :test do
   gem 'simplecov'
   gem 'drb', require: false
 
+  # Environment variable management for local development
+  gem 'dotenv-rails'
 end
 
 group :development do

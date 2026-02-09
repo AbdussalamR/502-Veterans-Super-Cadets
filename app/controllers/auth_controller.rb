@@ -27,8 +27,11 @@ class AuthController < ApplicationController
   end
 
   def oauth_redirect
+    # Validate required OAuth credentials
+    validate_oauth_credentials!
+
     # Manual OAuth redirect since Omniauth middleware might not be working
-    client_id = ENV['GOOGLE_CLIENT_ID'] || '338487321222-k06ljc2nc6pnkjc6p4n278e18lhfifia.apps.googleusercontent.com'
+    client_id = ENV['GOOGLE_CLIENT_ID']
     # Dynamic redirect URI that works in both development and production
     redirect_uri = oauth_callback_url
 
@@ -57,6 +60,27 @@ class AuthController < ApplicationController
   end
   
   private
+
+  def validate_oauth_credentials!
+    missing_vars = []
+    missing_vars << 'GOOGLE_CLIENT_ID' if ENV['GOOGLE_CLIENT_ID'].blank?
+    missing_vars << 'GOOGLE_CLIENT_SECRET' if ENV['GOOGLE_CLIENT_SECRET'].blank?
+
+    return if missing_vars.empty?
+
+    error_message = "Missing required OAuth environment variables: #{missing_vars.join(', ')}. " \
+                    "Please set these in your .env file or environment. " \
+                    "See .env.example for a template."
+    
+    Rails.logger.error "OAuth configuration error: #{error_message}"
+    
+    if Rails.env.development?
+      flash[:alert] = error_message
+      redirect_to '/users/sign_in' and return
+    else
+      raise error_message
+    end
+  end
 
   def oauth_callback_url
     # Environment-aware callback URL
