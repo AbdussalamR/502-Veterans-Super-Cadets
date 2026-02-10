@@ -106,6 +106,9 @@ GEM
     diff-lcs (1.6.2)
     docile (1.4.0)
     dotenv (3.1.8)
+    dotenv-rails (3.1.8)
+      dotenv (= 3.1.8)
+      railties (>= 6.1)
     drb (2.2.3)
     ed25519 (1.4.0)
     erb (4.0.4)
@@ -428,6 +431,7 @@ DEPENDENCIES
   concurrent-ruby (~> 1.2.0)
   debug
   devise
+  dotenv-rails
   drb
   factory_bot_rails
   importmap-rails

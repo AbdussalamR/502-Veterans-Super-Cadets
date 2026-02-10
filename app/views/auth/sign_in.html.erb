@@ -15,15 +15,6 @@
             <i class="fab fa-google me-2"></i>
             Sign in with Google
           <% end %>
-
-          <%# Developer Bypass Button %>
-          <% if Rails.env.development? %>
-            <%= link_to "/auth/developer_bypass", 
-                class: "btn btn-warning btn-lg" do %>
-              <i class="bi bi-person-badge me-2"></i>
-              Developer Bypass (Admin)
-            <% end %>
-          <% end %>
         </div>
         
         <hr class="my-4">

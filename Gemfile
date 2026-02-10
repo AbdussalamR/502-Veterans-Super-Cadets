@@ -75,6 +75,8 @@ group :development, :test do
   gem 'simplecov'
   gem 'drb', require: false
 
+  gem 'dotenv-rails'
+
 end
 
 group :development do
