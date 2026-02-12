@@ -25,10 +25,6 @@ Rails.application.routes.draw do
   get '/users/auth/google_oauth2', to: redirect('/auth/google_oauth2')
   get '/users/auth/google_oauth2/callback', to: redirect('/auth/google_oauth2/callback')
 
-  # Dev login bypass
-  if Rails.env.development?
-    get '/auth/developer_bypass', to: 'auth#developer_bypass'
-  end
 
   # Devise routes for users (backup - may not work until DB is migrated)
   begin
