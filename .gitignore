@@ -5,3 +5,5 @@ config/master.key
 /storage/*
 /node_modules
 .DS_Store
+.yarn/
+.env

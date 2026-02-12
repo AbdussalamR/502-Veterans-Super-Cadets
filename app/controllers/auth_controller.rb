@@ -27,34 +27,27 @@ class AuthController < ApplicationController
   end
 
   def oauth_redirect
-    # Manual OAuth redirect since Omniauth middleware might not be working
-    client_id = ENV['GOOGLE_CLIENT_ID'] || '338487321222-k06ljc2nc6pnkjc6p4n278e18lhfifia.apps.googleusercontent.com'
-    # Dynamic redirect URI that works in both development and production
-    redirect_uri = oauth_callback_url
-
-    google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' \
-                      "client_id=#{client_id}&" \
-                      "redirect_uri=#{CGI.escape(redirect_uri)}&" \
-                      'response_type=code&' \
-                      'scope=email%20profile&' \
-                      'access_type=offline&' \
-                      'prompt=select_account'
-
-    redirect_to google_auth_url, allow_other_host: true
+  # Only use environment variables - do not hardcode IDs
+  client_id = ENV['GOOGLE_CLIENT_ID']
+  
+  if client_id.blank?
+    redirect_to '/users/sign_in', alert: "Google Client ID is missing in the environment variables."
+    return
   end
 
-  def developer_bypass
-    return unless Rails.env.development?
-    
-    user = User.find_by(email: "admin@test.com")
-    if user
-      session[:user_id] = user.id
-      flash[:notice] = "Logged in as Developer Admin (Bypass)"
-      redirect_to root_path
-    else
-      redirect_to '/users/sign_in', alert: "Seed user not found. Run rails db:seed"
-    end
-  end
+  redirect_uri = oauth_callback_url
+
+  google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' \
+                    "client_id=#{client_id}&" \
+                    "redirect_uri=#{CGI.escape(redirect_uri)}&" \
+                    'response_type=code&' \
+                    'scope=email%20profile&' \
+                    'access_type=offline&' \
+                    'prompt=select_account'
+
+  redirect_to google_auth_url, allow_other_host: true
+end
+
   
   private
 

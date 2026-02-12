@@ -84,6 +84,7 @@ module Users
       uri = URI(token_url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
+      http.cert_store = ssl_cert_store
 
       req = Net::HTTP::Post.new(uri)
       req.set_form_data({
@@ -100,8 +101,11 @@ module Users
       return nil unless token_data['access_token']
 
       # Get user info from Google
-      user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=#{token_data['access_token']}"
-      user_response = Net::HTTP.get_response(URI(user_info_url))
+      user_info_uri = URI("https://www.googleapis.com/oauth2/v2/userinfo?access_token=#{token_data['access_token']}")
+      user_http = Net::HTTP.new(user_info_uri.host, user_info_uri.port)
+      user_http.use_ssl = true
+      user_http.cert_store = ssl_cert_store
+      user_response = user_http.request(Net::HTTP::Get.new(user_info_uri))
       user_data = JSON.parse(user_response.body)
 
       # Create user from Google data
@@ -111,6 +115,12 @@ module Users
         uid: user_data['id'],
         avatar_url: user_data['picture']
       )
+    end
+
+    def ssl_cert_store
+      store = OpenSSL::X509::Store.new
+      store.set_default_paths
+      store
     end
 
     def oauth_callback_url
