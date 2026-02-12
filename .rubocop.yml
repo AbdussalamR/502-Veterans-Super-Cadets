@@ -179,3 +179,10 @@ Metrics/CyclomaticComplexity:
 # Perceived complexity
 Metrics/PerceivedComplexity:
   Max: 8
+
+# Skinny controllers - warn if controller classes exceed 10 lines
+Metrics/ClassLength:
+  Max: 100
+  CountComments: false
+  Include:
+    - 'app/controllers/**/*'
