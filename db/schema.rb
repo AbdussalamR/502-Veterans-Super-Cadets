@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_11_022820) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_14_210034) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -123,7 +123,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_11_022820) do
     t.datetime "updated_at", null: false
     t.string "role", default: "user", null: false
     t.string "approval_status", default: "pending"
+    t.string "calendar_token"
     t.index ["approval_status"], name: "index_users_on_approval_status"
+    t.index ["calendar_token"], name: "index_users_on_calendar_token"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["role"], name: "index_users_on_role"
   end

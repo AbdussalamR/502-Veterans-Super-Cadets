@@ -125,13 +125,14 @@ class Event < ApplicationRecord
   # convert event to iCalendar format
   def to_ical_event
     event = Icalendar::Event.new
-    event.dtstart = Icalendar::Values::DateTime.new(date)
-    event.dtend = Icalendar::Values::DateTime.new(end_time)
+    event.dtstart = Icalendar::Values::DateTime.new(date.in_time_zone("America/Chicago"))
+    event.dtend   = Icalendar::Values::DateTime.new(end_time.in_time_zone("America/Chicago"))
     event.summary = title
-    event.description = description if respond_to?(:description)
-    event.location = location if respond_to?(:location)
-    event.url = Rails.application.routes.url_helpers.event_url(self, host: 'localhost:3000')
-    event.uid = "event-#{id}@yourapp.com"
+    event.description = description
+    event.location = location
+    event.url = Rails.application.routes.url_helpers.event_url(self, host: Rails.application.config.action_controller.default_url_options[:host])
+    event.uid = "event-#{id}@singing-cadets-tamu"
+    event.dtstamp = Time.current
     event.created = created_at
     event.last_modified = updated_at
     event
