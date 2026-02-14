@@ -13,15 +13,48 @@
   <% end %>
 </div>
 
-<!-- Add this near the top of app/views/events/index.html.erb -->
 <div class="feed-subscriptions" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
   <h4>Subscribe to Events</h4>
-  <%= link_to "Calendar Feed (.ics)", events_path(format: :ics), class: "btn btn-primary", style: "margin-right: 10px;" %>
-  <%= link_to "RSS Feed", events_path(format: :rss), class: "btn btn-secondary" %>
+  
+  <div style="margin-bottom: 10px;">
+    <strong>Calendar Feed:</strong>
+    <input 
+      type="text" 
+      value="<%= events_url(format: :ics) %>" 
+      readonly 
+      id="calendar-url"
+      style="width: 60%; padding: 5px; margin: 0 10px;"
+      onclick="this.select()"
+    >
+    <button onclick="copyUrl('calendar-url')" class="btn btn-sm btn-primary">Copy</button>
+  </div>
+  
+  <div>
+    <strong>RSS Feed:</strong>
+    <input 
+      type="text" 
+      value="<%= events_url(format: :rss) %>" 
+      readonly 
+      id="rss-url"
+      style="width: 60%; padding: 5px; margin: 0 10px;"
+      onclick="this.select()"
+    >
+    <button onclick="copyUrl('rss-url')" class="btn btn-sm btn-secondary">Copy</button>
+  </div>
+  
   <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-    Subscribe to stay updated on upcoming events
+    Copy these URLs and paste them into your calendar or RSS reader app
   </p>
 </div>
+
+<script>
+function copyUrl(id) {
+  const input = document.getElementById(id);
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  alert('URL copied!');
+}
+</script>
 
 <!-- Your existing upcoming/past events sections below -->
 
