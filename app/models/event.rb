@@ -6,9 +6,8 @@ class Event < ApplicationRecord
 
   # New join associations for excuses (many-to-many)
   has_many :events_to_excuses,
-    class_name: "EventsToExcuse",
-    foreign_key: :event_id,
-    dependent: :destroy
+           class_name: 'EventsToExcuse',
+           dependent: :destroy
   has_many :excuses, through: :events_to_excuses, dependent: :destroy
 
   # Validations
@@ -16,31 +15,34 @@ class Event < ApplicationRecord
   validates :date, presence: true
   validates :end_time, presence: true
   validate :end_time_after_start_time
-  validates :checkin_passcode, format: { with: /\A\d{4}\z/, message: "must be a 4-digit number" }, if: :allow_self_checkin?
+  validates :checkin_passcode, format: { with: /\A\d{4}\z/, message: 'must be a 4-digit number' },
+                               if: :allow_self_checkin?
 
   # Virtual attributes for repeating events (not saved to the database)
   attr_accessor :repeat_weekly, :repeat_until
-  
+
   # Callbacks
   before_validation :generate_checkin_passcode, if: :should_generate_passcode?
 
   # Scopes for filtering
   scope :upcoming, -> { where(date: Time.zone.today..).order(:date) }
   scope :past, -> { where(date: ...Time.zone.today).order(date: :desc) }
-  
+
   # Validation to ensure end_time is after date's start time
   def end_time_after_start_time
     return if end_time.blank? || date.blank?
-    if end_time < date
-      errors.add(:end_time, "must be after the start time")
-    end
+
+    return unless end_time < date
+
+    errors.add(:end_time, 'must be after the start time')
   end
 
   # Method to find overlapping events
   def overlapping_events
     return Event.none if date.blank? || end_time.blank?
+
     Event.where.not(id: id)
-        .where("date < ? AND end_time > ?", end_time, date)
+      .where('date < ? AND end_time > ?', end_time, date)
   end
 
   # Method to get attendance stats for this event
@@ -70,32 +72,30 @@ class Event < ApplicationRecord
   end
 
   # Method to get count of approved excuses
-  def approved_excuses_count
-    approved_excuses.count
-  end
+  delegate :count, to: :approved_excuses, prefix: true
 
   # Check if a given user has an approved excuse for this event
   def approved_excuse_for_user?(user)
     approved_excuses.exists?(member_id: user.id)
   end
-  alias_method :user_has_approved_excuse?, :approved_excuse_for_user?
+  alias user_has_approved_excuse? approved_excuse_for_user?
 
   # Method to get users with approved excuses
   def users_with_approved_excuses
     User.joins(excuses: :events)
-        .where(events: { id: id }, excuses: { status: 'approved' })
-        .distinct
+      .where(events: { id: id }, excuses: { status: 'approved' })
+      .distinct
   end
 
   # Self-checkin methods
   def self_checkin_available?
     return false unless allow_self_checkin?
     return false if date.blank? || end_time.blank?
-    
+
     current_time = Time.current
     checkin_start = date.in_time_zone - 10.minutes
     checkin_end = end_time.in_time_zone + 10.minutes
-    
+
     current_time.between?(checkin_start, checkin_end)
   end
 
@@ -103,23 +103,49 @@ class Event < ApplicationRecord
   def self_checkin_window_info
     return { available: false, reason: 'Self check-in not enabled' } unless allow_self_checkin?
     return { available: false, reason: 'Missing date or end_time' } if date.blank? || end_time.blank?
-    
+
     current_time = Time.current
     checkin_start = date.in_time_zone - 10.minutes
     checkin_end = end_time.in_time_zone + 10.minutes
-    
+
     {
       available: current_time.between?(checkin_start, checkin_end),
       current_time: current_time,
       checkin_start: checkin_start,
       checkin_end: checkin_end,
       minutes_until_start: ((checkin_start - current_time) / 60).round,
-      minutes_until_end: ((checkin_end - current_time) / 60).round
+      minutes_until_end: ((checkin_end - current_time) / 60).round,
     }
   end
 
   def verify_passcode(input_passcode)
     checkin_passcode.present? && checkin_passcode == input_passcode.to_s.strip
+  end
+
+  # convert event to iCalendar format
+  def to_ical_event
+    event = Icalendar::Event.new
+    event.dtstart = Icalendar::Values::DateTime.new(date)
+    event.dtend = Icalendar::Values::DateTime.new(end_time)
+    event.summary = title
+    event.description = description if respond_to?(:description)
+    event.location = location if respond_to?(:location)
+    event.url = Rails.application.routes.url_helpers.event_url(self, host: 'localhost:3000')
+    event.uid = "event-#{id}@yourapp.com"
+    event.created = created_at
+    event.last_modified = updated_at
+    event
+  end
+
+  # for RSS feed item
+  def to_rss_item
+    {
+      title: title,
+      description: rss_description,
+      pub_date: created_at,
+      link: Rails.application.routes.url_helpers.event_url(self, host: 'localhost:3000'),
+      guid: "event-#{id}",
+    }
   end
 
   private
@@ -137,10 +163,16 @@ class Event < ApplicationRecord
   def destroy_related_excuses
     # Only destroy excuses that are exclusively linked to this event
     excuses.each do |excuse|
-      if excuse.events.count == 1  # only linked to this event
-        excuse.destroy
-      end
+      excuse.destroy if excuse.events.count == 1 # only linked to this event
     end
   end
 
+  def rss_description
+    parts = []
+    parts << "Date: #{date.strftime('%B %d, %Y at %I:%M %p')}"
+    parts << "End Time: #{end_time.strftime('%I:%M %p')}"
+    parts << "Location: #{location}" if respond_to?(:location) && location.present?
+    parts << description if respond_to?(:description) && description.present?
+    parts.join("\n")
+  end
 end

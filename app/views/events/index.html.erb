@@ -13,6 +13,18 @@
   <% end %>
 </div>
 
+<!-- Add this near the top of app/views/events/index.html.erb -->
+<div class="feed-subscriptions" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+  <h4>Subscribe to Events</h4>
+  <%= link_to "Calendar Feed (.ics)", events_path(format: :ics), class: "btn btn-primary", style: "margin-right: 10px;" %>
+  <%= link_to "RSS Feed", events_path(format: :rss), class: "btn btn-secondary" %>
+  <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+    Subscribe to stay updated on upcoming events
+  </p>
+</div>
+
+<!-- Your existing upcoming/past events sections below -->
+
 <% if @upcoming_events.empty? && @past_events.empty? %>
   <!-- Empty State -->
   <div class="row justify-content-center">
