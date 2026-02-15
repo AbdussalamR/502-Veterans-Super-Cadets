@@ -9,16 +9,16 @@
 #   Character.create(name: 'Luke', movie: movies.first)
 
 # Clear out any previous seed users if they exist
-User.where(email: "admin@test.com").destroy_all
+# User.where(email: "email to delete").destroy_all
 
 
-# REPLACE email with  with your actual Gmail address
-User.find_or_create_by!(email: "zscollege01@tamu.edu") do |user|
-  user.full_name = "Zaahir Sharma" # You can put your real name here
-  user.uid = "12345" # This is a placeholder; Google will update it when you log in
-  user.provider = "google_oauth2"
-  user.role = "super_admin"
-  user.approval_status = "approved"
-end
+# # REPLACE email with  with your actual Gmail address
+# User.find_or_create_by!(email: "your email") do |user|
+#   user.full_name = "Your Name" # You can put your real name here
+#   user.uid = "12345" # This is a placeholder; Google will update it when you log in
+#   user.provider = "google_oauth2"
+#   user.role = "super_admin"
+#   user.approval_status = "approved"
+# end
 
-puts "Database seeded: raheem05@tamu.edu is now a Super Admin."
+# puts "Database seeded: your email is now a Super Admin."

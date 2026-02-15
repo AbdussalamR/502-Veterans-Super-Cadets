@@ -1,3 +1,46 @@
 {
-  "stack": "heroku-20"
+  "name": "Singing Cadets Platform",
+  "description": "Spring 2026 Phase 2 Deployment",
+  "stack": "heroku-24",
+  "keywords": ["rails", "postgresql"],
+  "addons": [
+    "heroku-postgresql:in-dyno"
+  ],
+  "environments": {
+    "review": {
+      "addons": [
+        "heroku-postgresql:in-dyno"
+      ],
+      "scripts": {
+        "postdeploy": "bundle exec rails db:schema:load"
+      },
+      "env": {
+        "RAILS_ENV": "review",
+        "DISABLE_DATABASE_ENVIRONMENT_CHECK": "1"
+      }
+    }
+  },
+  "env": {
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google OAuth Client ID",
+      "required": true
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google OAuth Client Secret",
+      "required": true
+    },
+    "SUPER_ADMIN_EMAILS": {
+      "description": "Comma separated list of admin emails ",
+      "required": true
+    },
+    "APP_HOST": {
+      "description": "The URL of your app (e.g., cadets-test.herokuapp.com)",
+      "required": false
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/ruby"
+    }
+  ]
 }
