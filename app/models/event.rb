@@ -130,7 +130,8 @@ class Event < ApplicationRecord
     event.summary = title
     event.description = description
     event.location = location
-    event.url = Rails.application.routes.url_helpers.event_url(self, host: Rails.application.config.action_controller.default_url_options[:host])
+    host = Rails.application.config.action_controller.default_url_options&.fetch(:host, 'localhost:3000')
+    event.url = Rails.application.routes.url_helpers.event_url(self, host: host)
     event.uid = "event-#{id}@singing-cadets-tamu"
     event.dtstamp = Time.current
     event.created = created_at

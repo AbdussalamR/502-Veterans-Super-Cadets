@@ -57,6 +57,7 @@ Rails.application.configure do
   # Disable lograge in test environment to avoid cluttering test output
   config.lograge.enabled = false if defined?(Lograge)
 
+  config.action_controller.default_url_options = { host: 'www.example.com' }
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 
