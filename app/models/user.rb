@@ -251,6 +251,15 @@ class User < ApplicationRecord
     })
   end
 
+  # Automatically generates a secure, unique token before the record is created.
+  # This token is used to provide a private, unguessable calendar subscription URL
+  # (e.g., for .ics feeds) without requiring user authentication.
+  before_create :generate_calendar_token
+
+  def generate_calendar_token
+    self.calendar_token = SecureRandom.hex(20)
+  end
+
   # Override from_google method to set default approval_status
   def self.from_google(email:, full_name:, uid:, avatar_url:)
     user = find_or_initialize_by(email: email)

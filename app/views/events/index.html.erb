@@ -13,6 +13,80 @@
   <% end %>
 </div>
 
+<!-- Clean Subscription Button -->
+<div class="mb-4">
+  <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+    <i class="bi bi-calendar-plus me-2"></i>Subscribe to Events
+  </button>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subscribeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sync with your Personal Calendar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>1. Copy your personal feed link:</h6>
+        <div class="input-group mb-3">
+          <input type="text" value="<%= events_url(format: :ics, token: current_user.calendar_token) %>" 
+                 class="form-control" id="icsLink" readonly>
+          <button class="btn btn-primary" onclick="copyToClipboard('icsLink')">Copy Link</button>
+        </div>
+
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <p><strong>Google Calendar:</strong></p>
+            <ol class="small">
+              <li>Open Google Calendar on a desktop.</li>
+              <li>Beside "Other calendars," click <strong>+</strong> then <strong>From URL</strong>.</li>
+              <li>Paste the link and click <strong>Add calendar</strong>.</li>
+            </ol>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Apple/iPhone:</strong></p>
+            <ol class="small">
+              <li>Open <strong>Settings</strong> > <strong>Calendar</strong>.</li>
+              <li>Tap <strong>Accounts</strong> > <strong>Add Account</strong> > <strong>Other</strong>.</li>
+              <li>Tap <strong>Add Subscribed Calendar</strong> and paste the link.</li>
+            </ol>
+          </div>
+        </div>
+        <hr>
+        <p class="small text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          RSS is also available for news readers:
+        </p>
+
+        <div class="input-group input-group-sm">
+          <input type="text"
+                value="<%= events_url(format: :rss, token: current_user.calendar_token) %>"
+                class="form-control d-none"
+                id="rssLink"
+                readonly>
+          <button class="btn btn-outline-primary"
+                  onclick="copyToClipboard('rssLink')">
+            Copy RSS Link
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(id) {
+  var copyText = document.getElementById(id);
+  copyText.select();
+  navigator.clipboard.writeText(copyText.value);
+  alert("Link copied to clipboard!");
+}
+</script>
+
+<!-- Your existing upcoming/past events sections below -->
+
 <% if @upcoming_events.empty? && @past_events.empty? %>
   <!-- Empty State -->
   <div class="row justify-content-center">

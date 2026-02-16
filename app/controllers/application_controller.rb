@@ -76,4 +76,16 @@ class ApplicationController < ActionController::Base
 
     redirect_to root_path, alert: 'You must be a super admin to access this page.'
   end
+
+  def skip_authentication?
+    # Auth controllers always skip
+    return true if controller_name == 'auth' || (controller_name == 'omniauth_callbacks' && controller_path.include?('users'))
+  
+    # Allow Event index (Feeds) ONLY if a valid token is provided
+    if controller_name == 'events' && action_name == 'index' && params[:token].present?
+      return User.exists?(calendar_token: params[:token])
+    end
+
+    false
+  end
 end

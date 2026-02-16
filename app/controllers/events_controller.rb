@@ -2,20 +2,24 @@
 
 class EventsController < ApplicationController
   include Loggable
-  
+
   before_action :set_event, only: %i[show edit update destroy]
   before_action :ensure_admin, only: %i[new create edit update destroy]
+  skip_before_action :ensure_admin, only: %i[index show] # Allow public access to feeds
 
   rescue_from ActionController::RoutingError, with: :handle_routing_error
 
-  # GET /events or /events.json
+  # GET /events or /events.json or /events.ics or /events.rss
   def index
-    # simple order by upcoming to past
-    # @events = Event.order(date: :desc)
-
-    # If we ever want to separate upcoming and past events:
     @upcoming_events = Event.upcoming.order(date: :asc)
     @past_events     = Event.past.order(date: :desc)
+    @events = @upcoming_events # For feeds, use upcoming events
+
+    respond_to do |format|
+      format.html  # Your existing HTML view
+      format.ics { render_calendar }
+      format.rss   # Renders index.rss.builder
+    end
   end
 
   # GET /events/1 or /events/1.json
@@ -33,7 +37,7 @@ class EventsController < ApplicationController
   def create
     @event = Event.new(event_params)
 
-    if @event.repeat_weekly.to_s == "1" && @event.repeat_until.present?
+    if @event.repeat_weekly.to_s == '1' && @event.repeat_until.present?
       create_recurring_events(@event)
     else
       save_single_event(@event)
@@ -69,6 +73,18 @@ class EventsController < ApplicationController
 
   private
 
+  def render_calendar
+    calendar = Icalendar::Calendar.new
+    calendar.prodid = '-//Cadets Events//EN'
+    calendar.x_wr_calname = 'Cadets Events Calendar'
+
+    @events.each do |event|
+      calendar.add_event(event.to_ical_event)
+    end
+
+    render plain: calendar.to_ical, content_type: 'text/calendar'
+  end
+
   def save_single_event(event)
     respond_to do |format|
       if @event.save
@@ -85,10 +101,14 @@ class EventsController < ApplicationController
 
   def create_recurring_events(template_event)
     repeat_until_str = template_event.repeat_until.to_s.strip
-    repeat_until = Date.parse(repeat_until_str) rescue nil
+    repeat_until = begin
+      Date.parse(repeat_until_str)
+    rescue StandardError
+      nil
+    end
 
     unless repeat_until
-      flash[:alert] = "Invalid repeat until date."
+      flash[:alert] = 'Invalid repeat until date.'
       return render :new, status: :unprocessable_entity
     end
 
@@ -108,7 +128,9 @@ class EventsController < ApplicationController
 
     events.each(&:save!)
 
-    log_create_success(template_event, { event_title: "#{template_event.title} (and #{events.size - 1} more)", event_date: template_event.date })
+    log_create_success(template_event,
+                       { event_title: "#{template_event.title} (and #{events.size - 1} more)",
+                         event_date: template_event.date, })
 
     respond_to do |format|
       format.html { redirect_to events_path, notice: "#{events.size} events were successfully created." }
@@ -116,15 +138,13 @@ class EventsController < ApplicationController
     end
   end
 
-
-  # Use callbacks to share common setup or constraints between actions.
   def set_event
     @event = Event.find(params[:id])
   end
 
-  # Only allow a list of trusted parameters through.
   def event_params
-    params.require(:event).permit(:title, :date, :end_time, :location, :description, :allow_self_checkin, :repeat_weekly, :repeat_until)
+    params.require(:event).permit(:title, :date, :end_time, :location, :description, :allow_self_checkin,
+                                  :repeat_weekly, :repeat_until)
   end
 
   def handle_routing_error
