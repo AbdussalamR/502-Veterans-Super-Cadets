@@ -1,3 +1,6 @@
+*** GO TO RAHEEM'S PERSONAL REPO TO VIEW PR HISTORY ***
+https://github.com/AbdussalamR/502-Veterans-Super-Cadets
+
 # Singing Cadets Events & Attendance Platform
 
 A comprehensive web application for managing events, attendance, disciplinary actions, and member workflows for the Texas A&M Singing Cadets organization.
