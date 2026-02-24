@@ -48,10 +48,19 @@ class CreateExcuseJoinTables < ActiveRecord::Migration[7.0]
       remove_column :excuses, :reviewed_by_id, :bigint if column_exists?(:excuses, :reviewed_by_id)
     end
 
-    add_foreign_key :events_to_excuse, :events, column: :event_id unless foreign_key_exists?(:events_to_excuse, :events, column: :event_id)
-    add_foreign_key :events_to_excuse, :excuses, column: :excuse_id if table_exists?(:excuses) && !foreign_key_exists?(:events_to_excuse, :excuses, column: :excuse_id)
-    add_foreign_key :reviewers_to_excuse, :users, column: :reviewer_id unless foreign_key_exists?(:reviewers_to_excuse, :users, column: :reviewer_id)
-    add_foreign_key :reviewers_to_excuse, :excuses, column: :excuse_id if table_exists?(:excuses) && !foreign_key_exists?(:reviewers_to_excuse, :excuses, column: :excuse_id)
+    add_foreign_key :events_to_excuse, :events, column: :event_id unless foreign_key_exists?(:events_to_excuse, 
+                                                                                             :events, column: :event_id)
+    add_foreign_key :events_to_excuse, :excuses, column: :excuse_id if table_exists?(:excuses) && !foreign_key_exists?(
+      :events_to_excuse, :excuses, column: :excuse_id
+    )
+    add_foreign_key :reviewers_to_excuse, :users, column: :reviewer_id unless foreign_key_exists?(:reviewers_to_excuse, 
+                                                                                                  :users, column: :reviewer_id)
+    if table_exists?(:excuses) && !foreign_key_exists?(
+      :reviewers_to_excuse, :excuses, column: :excuse_id
+    )
+      add_foreign_key :reviewers_to_excuse, :excuses, 
+                      column: :excuse_id
+    end
   end
 
   def down

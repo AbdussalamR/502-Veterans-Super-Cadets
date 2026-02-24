@@ -34,7 +34,8 @@ RSpec.describe Excuse, type: :model do
       event = create(:event)
       user = create(:user, approval_status: 'approved')
       reviewer = create(:user, approval_status: 'approved')
-      excuse = Excuse.new(member: user, event: event, reason: 'Test', proof_link: 'https://example.com/proof', reviewed_by: reviewer)
+      excuse = Excuse.new(member: user, event: event, reason: 'Test', proof_link: 'https://example.com/proof', 
+                          reviewed_by: reviewer)
       expect(excuse.reviewed_by).to eq(reviewer)
       expect(excuse.reviewed_by_id).to eq(reviewer.id)
     end

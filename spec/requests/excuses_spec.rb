@@ -26,7 +26,10 @@ RSpec.describe "Excuses", type: :request do
   end
 
   describe "GET /show" do
-    let(:excuse) { Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current, proof_link: 'https://example.com/proof') }
+    let(:excuse) {
+      Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current, 
+                     proof_link: 'https://example.com/proof')
+    }
 
     context 'as authenticated user' do
       before { sign_in user }
@@ -99,7 +102,10 @@ RSpec.describe "Excuses", type: :request do
   end
 
   describe "PATCH /update" do
-    let(:excuse) { Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current, proof_link: 'https://example.com/proof') }
+    let(:excuse) {
+      Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current, 
+                     proof_link: 'https://example.com/proof')
+    }
 
     context 'as admin user' do
       before { sign_in admin_user }

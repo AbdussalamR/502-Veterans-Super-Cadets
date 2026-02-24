@@ -1,0 +1,245 @@
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-warning text-white border-0 py-3">
+        <h4 class="mb-0">
+          <i class="bi bi-<%= heading.include?('Edit') ? 'pencil' : 'plus-circle' %> me-2"></i><%= heading %>
+        </h4>
+      </div>
+      <div class="card-body p-4">
+        <%= form_with(model: demerit, class: "needs-validation") do |form| %>
+          <% if demerit.errors.any? %>
+            <div class="alert alert-danger border-danger border-start border-4">
+              <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <%= pluralize(demerit.errors.count, "error") %> prohibited this discipline record from being saved:
+              </h5>
+              <ul class="mb-0">
+                <% demerit.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <% unless @member %>
+            <div class="mb-4">
+              <%= form.label :member_id, class: "form-label fw-medium" do %>
+                <i class="bi bi-person me-2 text-primary"></i>Member
+              <% end %>
+              <%= form.collection_select :member_id, User.approved.where(role: 'user').order(:full_name), :id, :full_name, 
+                  { prompt: "Select a member" }, class: "form-select form-select-lg" %>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i>
+                Choose the member to whom these discipline points will be assigned
+              </div>
+            </div>
+          <% else %>
+            <%= form.hidden_field :member_id, value: @member.id %>
+            <div class="mb-4">
+              <label class="form-label fw-medium">
+                <i class="bi bi-person me-2 text-primary"></i>Member
+              </label>
+              <div class="p-3 bg-light rounded d-flex align-items-center">
+                <i class="bi bi-person-circle display-6 text-muted me-3"></i>
+                <div>
+                  <div class="fw-medium fs-5"><%= @member.full_name %></div>
+                  <small class="text-muted">
+                    <i class="bi bi-envelope me-1"></i><%= @member.email %>
+                  </small>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="mb-4">
+            <%= form.label :value, class: "form-label fw-medium" do %>
+              <i class="bi bi-hash me-2 text-primary"></i>Discipline Point Value
+            <% end %>
+            <% 
+              # Determine if the current value is one of the standard options or should use custom
+              value = demerit.value || 1
+              standard_values = [1, 2, 3, 4, 5, 6]
+              selected_value = standard_values.include?(value) ? value : "custom"
+            %>
+            <%= form.select :value, [
+                ["1 Tardy (0.33 absence points)", 1],
+                ["2 Tardies (0.66 absence points)", 2],
+                ["3 Tardies (1.0 absence point)", 3],
+                ["4 Tardies (1.33 absence points)", 4],
+                ["5 Tardies (1.66 absence points)", 5],
+                ["6 Tardies (2.0 absence points)", 6],
+                ["Custom Value...", "custom"]
+              ],
+              { selected: selected_value }, 
+              { class: "form-select form-select-lg", id: "demerit-value-select" }
+            %>
+            <div id="custom-value-input" class="mt-3" style="<%= selected_value == 'custom' ? '' : 'display: none;' %>">
+              <label class="form-label text-muted">Custom Value</label>
+              <%= form.number_field :custom_value, value: (selected_value == 'custom' ? value : nil), 
+                  step: 1, min: 1, class: "form-control form-control-lg", 
+                  placeholder: "Enter number of tardy equivalents" %>
+            </div>
+            <div class="form-text mt-2">
+              <i class="bi bi-info-circle me-1"></i>
+              <strong>How it works:</strong> Each discipline point value represents tardy equivalents. 
+              1 tardy = 0.33 absence points. For example: 3 tardies = 1 absence point.
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <%= form.label :reason, class: "form-label fw-medium" do %>
+              <i class="bi bi-chat-square-text me-2 text-primary"></i>Reason
+            <% end %>
+            <%= form.text_area :reason, rows: 4, class: "form-control", 
+                placeholder: "Explain why these discipline points are being assigned. Be specific and factual." %>
+            <div class="form-text">
+              <i class="bi bi-info-circle me-1"></i>
+              Provide a clear description of the incident or behavior that led to these discipline points
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <%= form.label :date, class: "form-label fw-medium" do %>
+              <i class="bi bi-calendar3 me-2 text-primary"></i>Date & Time
+            <% end %>
+            <%= form.datetime_field :date, class: "form-control form-control-lg" %>
+            <div class="form-text">
+              <i class="bi bi-info-circle me-1"></i>
+              When did the incident occur?
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex flex-wrap gap-2 justify-content-between">
+            <% if @member %>
+              <%= link_to internal_user_path(@member), class: "btn btn-outline-secondary btn-lg", id: "cancel-button" do %>
+                <i class="bi bi-x-circle me-2"></i>Cancel
+              <% end %>
+            <% else %>
+              <%= link_to internal_demerits_path, class: "btn btn-outline-secondary btn-lg", id: "cancel-button" do %>
+                <i class="bi bi-x-circle me-2"></i>Cancel
+              <% end %>
+            <% end %>
+            <%= form.submit submit_text, class: "btn btn-warning btn-lg text-white" do %>
+              <i class="bi bi-<%= submit_text.include?('Create') ? 'plus-circle' : 'check-circle' %> me-2"></i><%= submit_text %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- Help Card -->
+    <div class="card shadow-sm border-0 mt-4">
+      <div class="card-header bg-light border-0">
+        <h5 class="mb-0">
+          <i class="bi bi-question-circle text-primary me-2"></i>Understanding Discipline Points
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="d-flex">
+              <div class="me-3 text-primary">
+                <i class="bi bi-calculator-fill fs-4"></i>
+              </div>
+              <div>
+                <h6 class="mb-1">Calculation</h6>
+                <p class="text-muted small mb-0">
+                  Each tardy = 0.33 absence points. Discipline points accumulate toward the semester absence limit.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex">
+              <div class="me-3 text-warning">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+              </div>
+              <div>
+                <h6 class="mb-1">Threshold</h6>
+                <p class="text-muted small mb-0">
+                  More than 3 absence points per semester may result in grade penalties.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  .card {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const cancelBtn = document.getElementById('cancel-button');
+    const valueSelect = document.getElementById('demerit-value-select');
+    const customValueInput = document.getElementById('custom-value-input');
+    const customValueField = document.querySelector('input[name="demerit[custom_value]"]');
+    let formChanged = false;
+    
+    // Handle custom value selection
+    if (valueSelect && customValueField) {
+      // Initial setup for the form - set the custom value field name if needed
+      if (valueSelect.value === 'custom') {
+        customValueInput.style.display = 'block';
+        customValueField.setAttribute('name', 'demerit[value]');
+      }
+
+      valueSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+          customValueInput.style.display = 'block';
+          customValueField.setAttribute('name', 'demerit[value]');
+          customValueField.focus();
+        } else {
+          customValueInput.style.display = 'none';
+          customValueField.setAttribute('name', 'demerit[custom_value]');
+        }
+      });
+      
+      // Ensure custom values are integers
+      customValueField.addEventListener('change', function() {
+        const value = parseFloat(this.value);
+        if (value) {
+          // Round to nearest integer
+          this.value = Math.round(value);
+        }
+      });
+    }
+    
+    // Track changes to form fields
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+      input.addEventListener('change', function() {
+        formChanged = true;
+      });
+      input.addEventListener('input', function() {
+        formChanged = true;
+      });
+    });
+    
+    // Confirm before leaving if there are unsaved changes
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function(e) {
+        if (formChanged) {
+          if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
+            e.preventDefault();
+          }
+        }
+      });
+    }
+  });
+</script>

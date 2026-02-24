@@ -8,7 +8,7 @@
   </div>
 <% end %>
 
-<%= form_tag event_attendances_path(@event), method: :post do %>
+<%= form_tag internal_event_attendances_path(@event), method: :post do %>
   <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <tr>
       <th>Name</th>
@@ -79,7 +79,7 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
           <i class="bi bi-arrow-return-left me-2"></i>Continue Editing
         </button>
-        <a href="<%= event_path(@event) %>" class="btn btn-danger" id="discard-changes-btn">
+        <a href="<%= internal_event_path(@event) %>" class="btn btn-danger" id="discard-changes-btn">
           <i class="bi bi-x-circle me-2"></i>Discard Changes
         </a>
       </div>
@@ -123,7 +123,7 @@
       if (!formChanged) {
         // No changes, navigate directly to the event page
         e.preventDefault();
-        window.location.href = '<%= event_path(@event) %>';
+        window.location.href = '<%= internal_event_path(@event) %>';
       } else {
         // If changes exist, show the confirmation modal
         e.preventDefault();
@@ -141,7 +141,7 @@
         } else {
           // Fallback if Bootstrap is not available
           if (confirm('You have unsaved changes. Are you sure you want to leave without saving?')) {
-            window.location.href = '<%= event_path(@event) %>';
+            window.location.href = '<%= internal_event_path(@event) %>';
           }
         }
       }

@@ -5,13 +5,16 @@ Rails.application.routes.draw do
   get 'excuses/show'
   get 'excuses/new'
   get 'excuses/create'
-  root to: 'pages#home'
+  root to: redirect('/public/home')
   
-  # Public Pages
-  get 'performance_request', to: 'pages#performance_request'
-  get 'media_gallery', to: 'pages#media_gallery'
-  get 'audition_information', to: 'pages#audition_information'
-  get 'contact', to: 'pages#contact'
+  # Public Pages Namespace
+  namespace :public, path: 'public' do
+    get 'home', to: 'pages#home'
+    get 'performance_request', to: 'pages#performance_request'
+    get 'media_gallery', to: 'pages#media_gallery'
+    get 'audition_information', to: 'pages#audition_information'
+    get 'contact', to: 'pages#contact'
+  end
 
   # Manual authentication routes (using custom controller to avoid Devise mapping issues)
   get '/users/sign_in', to: 'auth#sign_in'
@@ -41,43 +44,45 @@ Rails.application.routes.draw do
     Rails.logger.warn "Devise routes not loaded: #{e.message}"
   end
 
-  # User management routes with different path to avoid conflict
-  resources :users, path: 'user_management' do
-    member do
-      patch :promote_to_officer
-      patch :promote_to_super_admin
-      patch :demote_to_user
-      patch :demote_to_officer
-      get :attendance_history
+  # Internal Member Routes
+  namespace :internal, path: 'internal' do
+    resources :users, path: 'user_management' do
+      member do
+        patch :promote_to_officer
+        patch :promote_to_super_admin
+        patch :demote_to_user
+        patch :demote_to_officer
+        get :attendance_history
+      end
+      
+      collection do
+        get :absence_report
+      end
+    end
+
+    resources :events do
+      resources :attendances, only: %i[new create update]
+      member do
+        get :self_checkin, to: 'attendances#self_checkin_form'
+        post :self_checkin, to: 'attendances#self_checkin'
+      end
+    end
+
+    resources :excuses, only: [:index, :show, :new, :create, :update] do
+      member do
+        post :review
+      end
     end
     
-    collection do
-      get :absence_report
-    end
+    resources :demerits
+    
+    # Special route for creating demerits for a specific member
+    get '/users/:member_id/demerits/new', to: 'demerits#new', as: 'new_member_demerit'
+    
+    # Member-specific routes
+    get '/my-demerits', to: 'members#my_demerits', as: 'my_demerits'
+    get '/help', to: 'help#show', as: 'help'
   end
-
-  resources :events do
-    resources :attendances, only: %i[new create update]
-    member do
-      get :self_checkin, to: 'attendances#self_checkin_form'
-      post :self_checkin, to: 'attendances#self_checkin'
-    end
-  end
-
-  resources :excuses, only: [:index, :show, :new, :create, :update] do
-    member do
-      post :review
-    end
-  end
-  
-  resources :demerits
-  
-  # Special route for creating demerits for a specific member
-  get '/users/:member_id/demerits/new', to: 'demerits#new', as: 'new_member_demerit'
-  
-  # Member-specific routes
-  get '/my-demerits', to: 'members#my_demerits', as: 'my_demerits'
-  get '/help', to: 'help#show', as: 'help'
 
   # Admin routes
   namespace :admin do

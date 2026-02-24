@@ -2,7 +2,9 @@ require 'rails_helper'
 
 RSpec.describe "Event Feeds", type: :request do
   let!(:user) { FactoryBot.create(:user, calendar_token: "secure_token_123") }
-  let!(:future_event) { FactoryBot.create(:event, title: "Choir Practice", date: 1.day.from_now, end_time: 1.day.from_now + 2.hours) }
+  let!(:future_event) do
+    FactoryBot.create(:event, title: "Choir Practice", date: 1.day.from_now, end_time: 1.day.from_now + 2.hours)
+  end
 
   describe "ICS Feed Access" do
     it "blocks access without a token (Integrity Check)" do

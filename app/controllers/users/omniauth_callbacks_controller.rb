@@ -38,7 +38,7 @@ module Users
             role: user.role 
           })
           flash[:success] = 'Successfully signed in with Google!'
-          redirect_to events_path
+          redirect_to internal_events_path
         else
           # User is pending approval
           log_action('oauth_sign_in_pending', { 
@@ -141,7 +141,7 @@ module Users
     end
 
     def after_sign_in_path_for(resource_or_scope)
-      stored_location_for(resource_or_scope) || events_path
+      stored_location_for(resource_or_scope) || internal_events_path
     end
 
     private

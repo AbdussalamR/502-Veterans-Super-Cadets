@@ -1,0 +1,148 @@
+<!-- filepath: c:\csce431\501-cadets\app\views\excuses\show.html.erb -->
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <% if @excuse.events.any? %>
+              Excuse for <%= @excuse.events.first.title %><%= " (+#{@excuse.events.size - 1} more)" if @excuse.events.size > 1 %>
+            <% else %>
+              Excuse
+            <% end %>
+          </h4>
+          <%# Show first event's date prominently if single, otherwise say multiple and list below %>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-calendar3 text-white me-2"></i>
+            <% if @excuse.events.one? %>
+              <span class="fw-medium"><%= @excuse.events.first.date.strftime("%A, %B %d, %Y at %I:%M %p") rescue '—' %></span>
+            <% elsif @excuse.events.any? %>
+              <span class="fw-medium">Multiple dates</span>
+            <% else %>
+              <span class="fw-medium">—</span>
+            <% end %>
+          </div>
+        </div>
+        <div class="card-body">
+          <%# Determine display status: prefer officer_status (provisional) when present %>
+          <% display_status = (@excuse.respond_to?(:officer_status) && @excuse.officer_status.present?) ? @excuse.officer_status : @excuse.status %>
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Status:</strong></span>
+            <span class="badge 
+              <%= case display_status
+                when 'pending' then 'bg-warning text-dark'
+                when 'denied' then 'bg-danger'
+                when 'approved' then 'bg-success'
+                else 'bg-secondary'
+              end %>">
+              <%= display_status.to_s.capitalize %>
+            </span>
+            <% if @excuse.respond_to?(:officer_status) && @excuse.officer_status.present? && @excuse.status == 'pending' %>
+              <small class="text-muted ms-2">(provisional — officer decision)</small>
+            <% end %>
+          </div>
+
+          <%# Reviewers list: show all reviewers and when they reviewed %>
+          <% if @excuse.reviewer_entries.any? %>
+            <div class="mb-3">
+              <span class="fw-semibold"><strong>Reviewed by:</strong></span>
+              <ul class="list-unstyled mt-2">
+                <% @excuse.reviewer_entries.each do |entry| %>
+                  <% reviewer = entry.reviewer %>
+                  <li class="mb-1">
+                    <strong><%= reviewer.full_name %></strong>
+                    <small class="text-muted"> — <%= entry.created_at.in_time_zone('Central Time (US & Canada)').strftime("%B %d, %Y at %I:%M %p") %></small>
+                    <% if reviewer.role == 'officer' %>
+                      <span class="badge bg-warning ms-2">Officer</span>
+                    <% elsif reviewer.role == 'admin' or reviewer.role == 'super_admin' %>
+                      <span class="badge bg-danger ms-2">Admin</span>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Member:</strong></span>
+            <%= @excuse.member.full_name %>
+          </div>
+
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Submitted On:</strong></span>
+            <%= @excuse.submission_date&.in_time_zone('Central Time (US & Canada)')&.strftime("%B %d, %Y at %I:%M %p") %>
+          </div>
+
+          <%# New: Events covered list (handles multiple events) %>
+          <% if @excuse.events.count > 1 %>
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Events covered:</strong></span>
+            <ul class="list-unstyled mt-2">
+              <% if @excuse.events.any? %>
+                <% @excuse.events.each do |ev| %>
+                  <li class="mb-1">
+                    <%= link_to ev.title, internal_event_path(ev), class: "fw-medium" %>
+                    <div class="text-muted small"><%= ev.date.strftime("%A, %B %d, %Y at %I:%M %p") rescue '—' %></div>
+                  </li>
+                <% end %>
+              <% else %>
+                <li class="text-muted fst-italic">No events associated.</li>
+              <% end %>
+            </ul>
+          </div>
+          <% end %>
+
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Reason:</strong></span>
+            <div class="border rounded p-2 bg-light"><%= @excuse.reason.presence || "<span class='text-muted fst-italic'>No reason given.</span>".html_safe %></div>
+          </div>
+
+          <div class="mb-3">
+            <span class="fw-semibold"><strong>Proof:</strong></span>
+            <div>
+              <% if @excuse.proof_link.present? %>
+                <%= link_to @excuse.proof_link, @excuse.proof_link, target: "_blank", rel: "noopener", class: "btn btn-link px-0" %>
+              <% else %>
+                <span class="text-muted fst-italic">No proof provided.</span>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Officers make provisional decisions (do NOT change final status) %>
+          <% if current_user.officer? && @excuse.status == 'pending' %>
+            <div class="d-flex gap-2 mb-3">
+              <%= button_to 'Provisional Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-outline-success' %>
+              <%= button_to 'Provisional Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-outline-danger' %>
+            </div>
+          <% end %>
+
+          <%# Admins finalize the decision (set actual status) only when the excuse is pending %>
+          <% if current_user.super_admin? && @excuse.status == 'pending' %>
+          <% if @excuse.officer_status.present? %>
+            <div class="mb-2"><small class="text-muted">This item has an officer provisional decision below. Admins may finalize it or choose differently.</small></div>
+          <% end %>
+          <div class="d-flex gap-2 mb-3">
+            <%= button_to 'Finalize Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-success' %>
+            <%= button_to 'Finalize Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-danger' %>
+          </div>
+        <% end %>
+
+          <%# Allow admins/officers to "second" processed final items only (this is separate) %>
+          <% if (current_user.admin? || current_user.officer?) && %w[approved denied].include?(@excuse.status) %>
+            <% unless @excuse.reviewers.exists?(id: current_user.id) %>
+              <div class="mb-3">
+                <%= button_to 'Mark reviewed', review_internal_excuse_path(@excuse), method: :post, class: 'btn btn-outline-primary' %>
+                <small class="form-text text-muted mt-1">Click to mark that you've reviewed/observed this processed decision.</small>
+              </div>
+            <% else %>
+              <div class="mb-3">
+                <span class="text-muted">You have already marked this as reviewed.</span>
+              </div>
+            <% end %>
+          <% end %>
+          <%= link_to 'Back', internal_excuses_path, class: 'btn btn-secondary mt-2' %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

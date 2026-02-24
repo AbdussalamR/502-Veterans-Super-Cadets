@@ -57,12 +57,6 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user, :user_signed_in?
 
-  def skip_authentication?
-    # Skip authentication for auth controller and OAuth callbacks
-    controller_name == 'auth' ||
-      (controller_name == 'omniauth_callbacks' && controller_path.include?('users'))
-  end
-
   def ensure_admin
     authenticate_user!
     return if current_user&.admin?
@@ -82,9 +76,7 @@ class ApplicationController < ActionController::Base
     return true if controller_name == 'auth' || (controller_name == 'omniauth_callbacks' && controller_path.include?('users'))
   
     # Allow Event index (Feeds) ONLY if a valid token is provided
-    if controller_name == 'events' && action_name == 'index' && params[:token].present?
-      return User.exists?(calendar_token: params[:token])
-    end
+    return User.exists?(calendar_token: params[:token]) if controller_name == 'events' && action_name == 'index' && params[:token].present?
 
     false
   end

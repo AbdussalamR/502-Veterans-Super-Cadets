@@ -60,26 +60,27 @@ class AttendancesController < ApplicationController
 
   # For updating attendance later if needed
   def update
-    redirect_to new_event_attendance_path(@event)
+    redirect_to new_internal_event_attendance_path(@event)
   end
 
   # Shows the self-checkin form for members
   def self_checkin_form
     unless @event.allow_self_checkin?
       flash[:error] = 'Self check-in is not enabled for this event.'
-      redirect_to events_path and return
+      redirect_to internal_events_path and return
     end
 
     unless @event.self_checkin_available?
-      flash[:error] = 'Self check-in is not currently available for this event. Check-in is only available from 10 minutes before to 10 minutes after the event.'
-      redirect_to events_path and return
+      flash[:error] = 
+        'Self check-in is not currently available for this event. Check-in is only available from 10 minutes before to 10 minutes after the event.'
+      redirect_to internal_events_path and return
     end
 
     # Check if user already checked in
     existing_attendance = @event.attendances.find_by(user: current_user)
     if existing_attendance
       flash[:notice] = 'You have already checked in for this event.'
-      redirect_to events_path and return
+      redirect_to internal_events_path and return
     end
   end
 
@@ -87,26 +88,27 @@ class AttendancesController < ApplicationController
   def self_checkin
     unless @event.allow_self_checkin?
       flash[:error] = 'Self check-in is not enabled for this event.'
-      redirect_to events_path and return
+      redirect_to internal_events_path and return
     end
 
     unless @event.self_checkin_available?
-      flash[:error] = 'Self check-in is not currently available for this event. Check-in is only available from 10 minutes before to 10 minutes after the event.'
-      redirect_to self_checkin_event_path(@event) and return
+      flash[:error] = 
+        'Self check-in is not currently available for this event. Check-in is only available from 10 minutes before to 10 minutes after the event.'
+      redirect_to self_checkin_internal_event_path(@event) and return
     end
 
     # Check if user already checked in
     existing_attendance = @event.attendances.find_by(user: current_user)
     if existing_attendance
       flash[:notice] = 'You have already checked in for this event.'
-      redirect_to events_path and return
+      redirect_to internal_events_path and return
     end
 
     # Verify passcode
     passcode = params[:passcode]
     unless @event.verify_passcode(passcode)
       flash[:error] = 'Invalid passcode. Please try again.'
-      redirect_to self_checkin_event_path(@event) and return
+      redirect_to self_checkin_internal_event_path(@event) and return
     end
 
     # Create attendance record
@@ -119,10 +121,10 @@ class AttendancesController < ApplicationController
         user_name: current_user.full_name
       })
       flash[:success] = 'Successfully checked in!'
-      redirect_to events_path
+      redirect_to internal_events_path
     else
       flash[:error] = "Error checking in: #{attendance.errors.full_messages.join(', ')}"
-      redirect_to self_checkin_event_path(@event)
+      redirect_to self_checkin_internal_event_path(@event)
     end
   end
 
@@ -132,6 +134,6 @@ class AttendancesController < ApplicationController
     @event = Event.find(params[:event_id] || params[:id])
   rescue ActiveRecord::RecordNotFound
     flash[:error] = 'Event not found'
-    redirect_to events_path
+    redirect_to internal_events_path
   end
 end

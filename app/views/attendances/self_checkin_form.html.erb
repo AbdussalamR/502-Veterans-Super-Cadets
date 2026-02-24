@@ -2,12 +2,12 @@
 <nav aria-label="breadcrumb" class="mb-4">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
-      <%= link_to events_path, class: "text-decoration-none" do %>
+      <%= link_to internal_events_path, class: "text-decoration-none" do %>
         <i class="bi bi-calendar-event me-1"></i>Events
       <% end %>
     </li>
     <li class="breadcrumb-item">
-      <%= link_to @event.title, event_path(@event), class: "text-decoration-none" %>
+      <%= link_to @event.title, internal_event_path(@event), class: "text-decoration-none" %>
     </li>
     <li class="breadcrumb-item active" aria-current="page">Check In</li>
   </ol>
@@ -55,7 +55,7 @@
         </div>
 
         <!-- Passcode Form -->
-        <%= form_with url: self_checkin_event_path(@event), method: :post, local: true, class: "needs-validation" do |form| %>
+        <%= form_with url: self_checkin_internal_event_path(@event), method: :post, local: true, class: "needs-validation" do |form| %>
           <div class="mb-4">
             <%= label_tag :passcode, "Enter Passcode", class: "form-label fw-bold" %>
             <%= text_field_tag :passcode, nil, 
@@ -76,7 +76,7 @@
           <!-- Submit Button -->
           <div class="d-grid gap-2 mb-3">
             <%= submit_tag "Check In", class: "btn btn-success btn-lg" %>
-            <%= link_to "Cancel", event_path(@event), class: "btn btn-outline-secondary" %>
+            <%= link_to "Cancel", internal_event_path(@event), class: "btn btn-outline-secondary" %>
           </div>
         <% end %>
 
