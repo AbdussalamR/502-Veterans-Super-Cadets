@@ -1,0 +1,36 @@
+/* Public facing UI styles */
+
+$maroon: #500000;
+
+.bg-maroon {
+  background-color: $maroon !important;
+}
+
+.text-maroon {
+  color: $maroon !important;
+}
+
+.border-maroon {
+  border-color: $maroon !important;
+}
+
+.btn-maroon {
+  background-color: $maroon;
+  color: white;
+  border-color: $maroon;
+  
+  &:hover {
+    background-color: darken($maroon, 10%);
+    color: white;
+  }
+}
+
+.btn-outline-maroon {
+  color: $maroon;
+  border-color: $maroon;
+  
+  &:hover {
+    background-color: $maroon;
+    color: white;
+  }
+}

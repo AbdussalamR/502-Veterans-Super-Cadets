@@ -11,7 +11,6 @@
 # Clear out any previous seed users if they exist
 # User.where(email: "email to delete").destroy_all
 
-
 # REPLACE email with  with your actual Gmail address
 User.find_or_create_by!(email: "zscollege01@tamu.edu") do |user|
   user.full_name = "Zaahir Sharma" # You can put your real name here

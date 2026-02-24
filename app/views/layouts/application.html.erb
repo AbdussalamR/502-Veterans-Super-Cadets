@@ -166,9 +166,43 @@
       </div>
     </nav>
   <% else %>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #500000;">
       <div class="container-fluid">
-        <%= link_to "Singing Cadets", root_path, class: "navbar-brand" %>
+        <%= link_to root_path, class: "navbar-brand d-flex align-items-center" do %>
+          <!-- Placeholder for Logo -->
+          <div class="logo-placeholder me-2" style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Logo Placeholder">
+            <i class="bi bi-music-note-beamed text-white"></i>
+          </div>
+          <span class="fw-bold">Singing Cadets</span>
+        <% end %>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavbarNav" aria-controls="publicNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="publicNavbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <%= link_to "Home", root_path, class: "nav-link #{'active fw-bold' if current_page?(root_path)}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "Book Us", performance_request_path, class: "nav-link #{'active fw-bold' if current_page?(performance_request_path)}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "Media", media_gallery_path, class: "nav-link #{'active fw-bold' if current_page?(media_gallery_path)}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "Auditions", audition_information_path, class: "nav-link #{'active fw-bold' if current_page?(audition_information_path)}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "Contact", contact_path, class: "nav-link #{'active fw-bold' if current_page?(contact_path)}" %>
+            </li>
+          </ul>
+          
+          <div class="navbar-nav ms-auto">
+            <%= link_to "Member Login", "/users/sign_in", class: "btn btn-outline-light mt-2 mt-lg-0" %>
+          </div>
+        </div>
       </div>
     </nav>
   <% end %>

@@ -5,7 +5,13 @@ Rails.application.routes.draw do
   get 'excuses/show'
   get 'excuses/new'
   get 'excuses/create'
-  root to: 'events#index'
+  root to: 'pages#home'
+  
+  # Public Pages
+  get 'performance_request', to: 'pages#performance_request'
+  get 'media_gallery', to: 'pages#media_gallery'
+  get 'audition_information', to: 'pages#audition_information'
+  get 'contact', to: 'pages#contact'
 
   # Manual authentication routes (using custom controller to avoid Devise mapping issues)
   get '/users/sign_in', to: 'auth#sign_in'
@@ -24,7 +30,6 @@ Rails.application.routes.draw do
   # Redirect old paths to new ones
   get '/users/auth/google_oauth2', to: redirect('/auth/google_oauth2')
   get '/users/auth/google_oauth2/callback', to: redirect('/auth/google_oauth2/callback')
-
 
   # Devise routes for users (backup - may not work until DB is migrated)
   begin
