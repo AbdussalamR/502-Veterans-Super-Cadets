@@ -24,6 +24,19 @@
           </div>
         </div>
         <div class="card-body">
+          <%# Recurring badge %>
+          <% if @excuse.recurring? %>
+            <div class="mb-3">
+              <span class="badge bg-info">Recurring</span>
+              <span class="text-muted ms-2">
+                Every <%= @excuse.recurring_day_names %>
+                <% if @excuse.start_date.present? && @excuse.end_date.present? %>
+                  from <%= @excuse.start_date.strftime("%B %d, %Y") %> to <%= @excuse.end_date.strftime("%B %d, %Y") %>
+                <% end %>
+              </span>
+            </div>
+          <% end %>
+
           <%# Determine display status: prefer officer_status (provisional) when present %>
           <% display_status = (@excuse.respond_to?(:officer_status) && @excuse.officer_status.present?) ? @excuse.officer_status : @excuse.status %>
           <div class="mb-3">
@@ -140,6 +153,18 @@
               </div>
             <% end %>
           <% end %>
+          <%# AC6: Cancel future recurring excuses %>
+          <% if @excuse.recurring? && @excuse.member_id == current_user.id && @excuse.has_future_events? %>
+            <div class="mb-3">
+              <%= button_to 'Cancel Future Recurring Excuses',
+                    cancel_recurring_excuse_path(@excuse),
+                    method: :post,
+                    class: 'btn btn-outline-warning',
+                    data: { confirm: "Are you sure you want to cancel all future events from this recurring excuse? This cannot be undone." } %>
+              <small class="form-text text-muted d-block mt-1">This will remove the excuse from all future events that haven't occurred yet.</small>
+            </div>
+          <% end %>
+
           <%= link_to 'Back', excuses_path, class: 'btn btn-secondary mt-2' %>
         </div>
       </div>

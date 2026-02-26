@@ -25,6 +25,15 @@ FactoryBot.define do
     trait :pending do
       status { 'pending' }
     end
+
+    trait :recurring do
+      recurring { true }
+      recurring_days { '1,3' }
+      start_date { 1.week.from_now.beginning_of_day }
+      end_date { 5.weeks.from_now.end_of_day }
+      frequency { 'weekly' }
+      event { nil }
+    end
   end
 end
 

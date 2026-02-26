@@ -40,9 +40,12 @@
                     <span class="text-light ms-2 small">(+<%= excuse.events.size - 1 %> more)</span>
                   <% end %>
                 <% else %>
-                  — 
+                  —
                 <% end %>
               </strong>
+              <% if excuse.recurring? %>
+                <span class="badge bg-info float-end">Recurring</span>
+              <% end %>
             </div>
             <div class="card-body d-flex flex-column">
               <div class="d-flex align-items-center mb-2">
