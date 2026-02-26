@@ -27,6 +27,12 @@ class Excuse < ApplicationRecord
   validates :proof_link, presence: true
   validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: false
 
+  # Recurring excuse validations
+  validates :start_date, presence: true, if: :recurring?
+  validates :end_date, presence: true, if: :recurring?
+  validates :recurring_days, presence: { message: "must have at least one day selected" }, if: :recurring?
+  validate :end_date_after_start_date, if: :recurring?
+
   # Return the primary/representative event for this excuse.
   # Use a deterministic ordering (by date) so `excuse.event` returns the same
   # event everywhere (index, show, etc.).
@@ -150,5 +156,54 @@ class Excuse < ApplicationRecord
     add_reviewer(admin)
 
     save
+  end
+
+  # --- Recurring excuse helpers ---
+
+  DAY_NAMES = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].freeze
+
+  def recurring?
+    recurring
+  end
+
+  # Parse "1,3,5" into [1, 3, 5]
+  def recurring_days_array
+    return [] if recurring_days.blank?
+    recurring_days.split(',').map(&:to_i)
+  end
+
+  # Returns human-readable day names, e.g. "Monday, Wednesday, Friday"
+  def recurring_day_names
+    recurring_days_array.map { |d| DAY_NAMES[d] }.compact.join(', ')
+  end
+
+  # Find events that match the recurring pattern (day of week + date range)
+  def find_matching_events
+    return Event.none if start_date.blank? || end_date.blank? || recurring_days.blank?
+
+    days = recurring_days_array
+    Event.where(date: start_date.beginning_of_day..end_date.end_of_day).select do |event|
+      days.include?(event.date.wday)
+    end
+  end
+
+  # Cancel future recurring excuses by removing join records for events that haven't happened yet
+  def cancel_future_events!
+    return unless recurring?
+
+    future_joins = events_to_excuses.joins(:event).where('events.date > ?', Time.current)
+    future_joins.destroy_all
+  end
+
+  def has_future_events?
+    return false unless recurring?
+    events.where('date > ?', Time.current).exists?
+  end
+
+  private
+
+  def end_date_after_start_date
+    return if start_date.blank? || end_date.blank?
+    errors.add(:end_date, "must be after start date") if end_date <= start_date
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_14_210034) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_25_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -101,6 +101,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_14_210034) do
     t.datetime "start_date"
     t.datetime "end_date"
     t.string "frequency"
+    t.boolean "recurring", default: false, null: false
+    t.string "recurring_days"
     t.index ["member_id"], name: "index_excuses_on_member_id"
   end
 

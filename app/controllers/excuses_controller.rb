@@ -2,7 +2,7 @@ class ExcusesController < ApplicationController
   include Loggable
 
   before_action :authenticate_user!
-  before_action :set_excuse, only: [:show, :update, :review]
+  before_action :set_excuse, only: [:show, :update, :review, :cancel_recurring]
 
   def index
     if current_user.admin? || current_user.officer?
@@ -46,29 +46,53 @@ class ExcusesController < ApplicationController
     @excuse.status = 'pending'
     @excuse.submission_date = Time.current
 
-    # Save first so join records can reference a persisted excuse
-    if @excuse.save
-      # Attach multiple events if provided (support both single :event_id for backward compatibility)
-      if excuse_params[:event_ids].present?
-        Array(excuse_params[:event_ids]).each do |eid|
-          event = Event.find_by(id: eid)
+    # Handle recurring excuses
+    if @excuse.recurring?
+      @excuse.frequency = 'weekly'
+
+      # Find matching events based on recurring pattern
+      matching_events = @excuse.find_matching_events
+
+      # AC5: If no events match, show a helpful message
+      if matching_events.empty?
+        flash.now[:alert] = "No scheduled events match your selected days (#{@excuse.recurring_day_names}) between #{@excuse.start_date.strftime('%B %d, %Y')} and #{@excuse.end_date.strftime('%B %d, %Y')}. Please adjust your selection."
+        render :new and return
+      end
+
+      if @excuse.save
+        matching_events.each { |event| @excuse.events << event }
+
+        log_create_success(@excuse, { event_ids: @excuse.event_ids, member_id: current_user.id, recurring: true })
+        redirect_to excuses_path, notice: "Recurring excuse submitted! Applied to #{matching_events.size} event(s)."
+      else
+        log_create_failure(@excuse)
+        render :new
+      end
+    else
+      # Save first so join records can reference a persisted excuse
+      if @excuse.save
+        # Attach multiple events if provided (support both single :event_id for backward compatibility)
+        if excuse_params[:event_ids].present?
+          Array(excuse_params[:event_ids]).each do |eid|
+            event = Event.find_by(id: eid)
+            @excuse.events << event if event
+          end
+        elsif excuse_params[:event_id].present?
+          event = Event.find_by(id: excuse_params[:event_id])
           @excuse.events << event if event
         end
-      elsif excuse_params[:event_id].present?
-        event = Event.find_by(id: excuse_params[:event_id])
-        @excuse.events << event if event
-      end
 
-      if excuse_params[:reviewed_by_id].present?
-        @excuse.reviewed_by_id = excuse_params[:reviewed_by_id]
-        @excuse.save
-      end
+        if excuse_params[:reviewed_by_id].present?
+          @excuse.reviewed_by_id = excuse_params[:reviewed_by_id]
+          @excuse.save
+        end
 
-      log_create_success(@excuse, { event_ids: @excuse.event_ids, member_id: current_user.id })
-      redirect_to excuses_path, notice: 'Excuse submitted!'
-    else
-      log_create_failure(@excuse)
-      render :new
+        log_create_success(@excuse, { event_ids: @excuse.event_ids, member_id: current_user.id })
+        redirect_to excuses_path, notice: 'Excuse submitted!'
+      else
+        log_create_failure(@excuse)
+        render :new
+      end
     end
   end
 
@@ -163,6 +187,24 @@ class ExcusesController < ApplicationController
     redirect_to excuse_path(@excuse), notice: 'Marked as reviewed.'
   end
 
+  # POST /excuses/:id/cancel_recurring
+  # AC6: Members can cancel future recurring excuses
+  def cancel_recurring
+    unless @excuse.member_id == current_user.id || current_user.admin?
+      redirect_to excuses_path, alert: 'Not authorized.' and return
+    end
+
+    unless @excuse.recurring?
+      redirect_to excuse_path(@excuse), alert: 'This is not a recurring excuse.' and return
+    end
+
+    removed_count = @excuse.events.where('date > ?', Time.current).count
+    @excuse.cancel_future_events!
+
+    log_action('recurring_excuse_cancelled', { excuse_id: @excuse.id, removed_events: removed_count })
+    redirect_to excuse_path(@excuse), notice: "Cancelled #{removed_count} future event(s) from this recurring excuse."
+  end
+
   private
 
   def set_excuse
@@ -172,6 +214,7 @@ class ExcusesController < ApplicationController
   def excuse_params
     # accept a link to proof instead of an uploaded file
     # allow event_ids array for multiple events
-    params.require(:excuse).permit(:event_id, { event_ids: [] }, :reason, :proof_link, :reviewed_by_id)
+    params.require(:excuse).permit(:event_id, { event_ids: [] }, :reason, :proof_link, :reviewed_by_id,
+                                   :recurring, :start_date, :end_date, :recurring_days)
   end
 end
