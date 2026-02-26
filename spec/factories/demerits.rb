@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :demerit do
-    member { nil }
-    given_by { nil }
+    association :member, factory: :user
+    association :given_by, factory: :user
     value { 1 }
-    date { "2025-10-18 18:46:39" }
-    reason { "MyString" }
+    date { Time.current }
+    reason { 'Test demerit reason' }
   end
 end

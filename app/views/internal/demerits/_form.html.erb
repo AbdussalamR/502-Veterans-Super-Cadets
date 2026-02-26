@@ -7,7 +7,7 @@
         </h4>
       </div>
       <div class="card-body p-4">
-        <%= form_with(model: demerit, class: "needs-validation") do |form| %>
+        <%= form_with(model: demerit, url: demerit.persisted? ? internal_demerit_path(demerit) : internal_demerits_path, class: "needs-validation") do |form| %>
           <% if demerit.errors.any? %>
             <div class="alert alert-danger border-danger border-start border-4">
               <h5 class="alert-heading">

@@ -6,7 +6,7 @@
           <h4 class="mb-0"></h4>
         </div>
         <div class="card-body">
-          <%= form_with(model: event, class: "needs-validation", data: { turbo: false }) do |form| %>
+          <%= form_with(model: event, url: event.persisted? ? internal_event_path(event) : internal_events_path, class: "needs-validation", data: { turbo: false }) do |form| %>
             <% if event.errors.any? %>
               <div class="alert alert-danger">
                 <h5><%= pluralize(event.errors.count, "error") %> prohibited this event from being saved:</h5>
