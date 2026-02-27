@@ -40,7 +40,7 @@ module Internal
                              value: @demerit.value 
                            })
         flash[:success] = "Discipline points were successfully assigned to #{@demerit.member.full_name}."
-        redirect_to @demerit.member
+        redirect_to internal_user_path(@demerit.member)
       else
         log_create_failure(@demerit)
         flash.now[:error] = "Error creating discipline record: #{@demerit.errors.full_messages.join(', ')}"
