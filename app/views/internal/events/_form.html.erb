@@ -6,7 +6,7 @@
           <h4 class="mb-0"></h4>
         </div>
         <div class="card-body">
-          <%= form_with(model: event, class: "needs-validation", data: { turbo: false }) do |form| %>
+          <%= form_with(model: [:internal, event], class: "needs-validation", data: { turbo: false }) do |form| %>
             <% if event.errors.any? %>
               <div class="alert alert-danger">
                 <h5><%= pluralize(event.errors.count, "error") %> prohibited this event from being saved:</h5>
@@ -42,6 +42,22 @@
               <%= form.label :description, class: "form-label" %>
               <%= form.text_area :description, rows: 4, class: "form-control" %>
             </div>
+
+            <hr class="my-4">
+            <h5 class="text-maroon mb-3"><i class="bi bi-globe me-2"></i>Public Calendar Settings</h5>
+
+            <div class="form-check form-switch mb-3">
+              <%= form.check_box :is_public, class: "form-check-input", id: "publicSwitch" %>
+              <%= form.label :is_public, "Display on Public Calendar?", class: "form-check-label fw-bold" %>
+              <div class="form-text">If enabled, this performance will be visible to the general public.</div>
+            </div>
+
+            <div class="mb-4">
+              <%= form.label :ticket_url, "Ticket URL (Optional)", class: "form-label" %>
+              <%= form.url_field :ticket_url, class: "form-control", placeholder: "https://example.com/tickets" %>
+              <div class="form-text small text-muted">Link to Eventbrite, Ticketmaster, or organization site.</div>
+            </div>
+            <hr class="my-4">
             
             <div class="mb-3">
               <div class="form-check">

@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     get 'performance_request', to: 'pages#performance_request'
     get 'media_gallery', to: 'pages#media_gallery'
     get 'audition_information', to: 'pages#audition_information'
+    get 'calendar', to: 'pages#calendar'
     get 'contact', to: 'pages#contact'
   end
 

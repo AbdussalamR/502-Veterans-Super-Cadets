@@ -50,8 +50,8 @@ module Internal
       respond_to do |format|
         if @event.update(event_params)
           log_update_success(@event, { event_title: @event.title, event_date: @event.date })
-          format.html { redirect_to @event, notice: 'Event was successfully updated.', status: :see_other }
-          format.json { render :show, status: :ok, location: @event }
+          format.html { redirect_to [:internal, @event], notice: 'Event was successfully updated.', status: :see_other }
+          format.json { render :show, status: :ok, location: [:internal, @event] }
         else
           log_update_failure(@event)
           format.html { render :edit, status: :unprocessable_entity }
@@ -92,8 +92,8 @@ module Internal
       respond_to do |format|
         if @event.save
           log_create_success(@event, { event_title: @event.title, event_date: @event.date })
-          format.html { redirect_to @event, notice: 'Event was successfully created.' }
-          format.json { render :show, status: :created, location: @event }
+          format.html { redirect_to [:internal, @event], notice: 'Event was successfully created.' }
+          format.json { render :show, status: :created, location: [:internal, @event] }
         else
           log_create_failure(@event)
           format.html { render :new, status: :unprocessable_entity }
@@ -147,7 +147,7 @@ module Internal
 
     def event_params
       params.require(:event).permit(:title, :date, :end_time, :location, :description, :allow_self_checkin,
-                                    :repeat_weekly, :repeat_until)
+                                    :repeat_weekly, :repeat_until, :is_public, :ticket_url)
     end
 
     def handle_routing_error

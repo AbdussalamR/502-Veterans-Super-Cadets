@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_14_210034) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -76,6 +76,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_14_210034) do
     t.datetime "end_time"
     t.boolean "allow_self_checkin", default: false, null: false
     t.string "checkin_passcode"
+    t.boolean "is_public"
+    t.string "ticket_url"
   end
 
   create_table "events_to_excuse", force: :cascade do |t|

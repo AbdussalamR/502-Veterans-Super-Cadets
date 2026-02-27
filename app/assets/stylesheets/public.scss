@@ -34,3 +34,55 @@ $maroon: #500000;
     color: white;
   }
 }
+
+$maroon: #500000;
+
+.eh-main-title {
+  font-family: 'Arial Black', sans-serif;
+  text-transform: uppercase;
+  color: $maroon;
+  border-bottom: 2px solid #ddd;
+}
+
+/* Fix FullCalendar buttons to be Maroon */
+.fc .fc-button-primary {
+  background-color: $maroon !important;
+  border-color: $maroon !important;
+  text-transform: capitalize;
+}
+
+.fc .fc-button-primary:disabled {
+  background-color: #888 !important;
+}
+
+/* Today highlight */
+.fc .fc-day-today {
+  background-color: #fffde7 !important;
+}
+
+/* Make numbers look like the EH example */
+.fc .fc-daygrid-day-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #444;
+}
+
+/* Serif fonts for subheaders */
+.text-serif {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+}
+
+#public-calendar {
+  min-height: 600px;
+  background: white;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* Force the calendar to be visible even if empty */
+.fc {
+  min-height: 500px;
+}

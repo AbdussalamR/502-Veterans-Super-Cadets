@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Event < ApplicationRecord
+  alias_attribute :start_time, :date
   has_many :attendances, dependent: :destroy
   has_many :attending_users, through: :attendances, source: :user
 
