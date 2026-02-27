@@ -225,7 +225,7 @@
               <div class="d-flex align-items-center">
                 <i class="bi bi-activity text-muted me-2"></i>
                 <small class="text-muted">
-                  <%= pluralize(user.attendances.count, 'event attended') %>
+                  <%= pluralize(user.attendances.count, 'event') + ' attended'%>
                 </small>
               </div>
             </div>
@@ -258,7 +258,7 @@
                   <i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span>
                 <% end %>
                 <%= link_to attendance_history_user_path(user), class: "btn btn-outline-info btn-sm", title: "Attendance History" do %>
-                  <i class="bi bi-clock-history"></i><span class="btn-text ms-1">History</span>
+                  <i class="bi bi-clock-history"></i><span class="btn-text ms-1">Attendance</span>
                 <% end %>
               </div>
               
