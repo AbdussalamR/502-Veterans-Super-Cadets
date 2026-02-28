@@ -21,9 +21,9 @@ A comprehensive web application for managing events, attendance, disciplinary ac
 
 ## Description
 
-The Singing Cadets Events & Attendance Platform is a full-stack Ruby on Rails application designed to streamline operations for the Texas A&M Singing Cadets. The platform provides comprehensive tools for managing member attendance, tracking disciplinary actions, processing absence excuses, coordinating events, and facilitating administrative workflows with role-based access control.
+The Singing Cadets Events & Attendance Platform is a full-stack Ruby on Rails application designed to streamline operations for the Texas A&M Singing Cadets. The platform provides comprehensive tools for managing member attendance (including tardy tracking), tracking disciplinary actions, processing absence excuses, coordinating events (with recurring event support), and facilitating administrative workflows with role-based access control.
 
-Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Bootstrap 5, and Stimulus JavaScript framework, the application supports three user roles (members, officers, and directors) with distinct permissions and capabilities. The system features Google OAuth2 authentication, fractional absence point calculations (0.33/0.66/1.0 point system), multi-event excuse management, and comprehensive reporting dashboards.
+Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Bootstrap 5, and Stimulus JavaScript framework, the application supports three user roles (members, officers, and directors) with distinct permissions and capabilities. The system features Google OAuth2 authentication, an absence point system (1 point per absence, 0.33 per tardy, demerits at value x 0.33), multi-event excuse management with two-tier approval, self-check-in with passcodes, and calendar subscription feeds (iCal/RSS).
 
 ## Requirements
 
@@ -34,8 +34,6 @@ Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Boot
 - **Ruby on Rails** 7.0.2+ (web application framework)
 - **PostgreSQL** 9.3+ (relational database)
 - **Bundler** 2.0+ (Ruby dependency manager)
-- **Node.js** 16.20.2+ (JavaScript runtime for asset compilation)
-- **Yarn** or npm (JavaScript package manager)
 
 **Ruby Gems (Dependencies):**
 - **devise** - User authentication framework
@@ -45,11 +43,18 @@ Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Boot
 - **puma** (>= 5.0) - Web server
 - **turbo-rails** - Hotwire's SPA-like page accelerator
 - **stimulus-rails** - JavaScript framework for progressive enhancement
-- **importmap-rails** - JavaScript module management
+- **importmap-rails** - JavaScript module management (no Node.js/Yarn required)
 - **propshaft** - Modern asset pipeline
 - **bootsnap** - Boot time optimization
 - **lograge** - Structured logging
 - **logstash-event** - JSON logging format
+- **icalendar** - iCalendar (.ics) feed generation
+- **yaml_db** - YAML database utilities
+- **solid_cable** - Database-backed ActionCable adapter
+- **solid_cache** - Database-backed cache store
+- **solid_queue** - Database-backed job queue
+- **kamal** - Docker-based deployment tool
+- **thruster** - HTTP asset caching/compression
 
 **Development & Testing:**
 - **rspec-rails** - Testing framework
@@ -59,13 +64,14 @@ Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Boot
 - **simplecov** - Code coverage analysis
 - **brakeman** - Security vulnerability scanner
 - **rubocop-rails-omakase** - Ruby style guide enforcement
+- **dotenv-rails** - Environment variable management
 
 **Database Structure:**
-- **Users** - Authentication, roles (user/officer/super_admin), approval workflow
-- **Events** - Rehearsals, performances with date/time/location, self-check-in capability
-- **Attendances** - Attendance records with status (present/excused/absent) and notes
-- **Excuses** - Absence excuse submissions with multi-event support (bulk excuses)
-- **Demerits** - Disciplinary point tracking system
+- **Users** - Authentication, roles (user/officer/super_admin), approval workflow, calendar_token for feed subscriptions
+- **Events** - Rehearsals, performances with date/time/location, self-check-in capability (passcode-based)
+- **Attendances** - Attendance records with status (present/excused/absent/tardy) and notes
+- **Excuses** - Absence excuse submissions with multi-event support, recurring excuse fields (start_date, end_date, frequency), two-tier approval (officer_status + final status)
+- **Demerits** - Disciplinary point tracking system with configurable point values
 - **EventsToExcuse** - Many-to-many relationship between events and excuses
 - **ReviewersToExcuse** - Many-to-many relationship for excuse review workflow
 
@@ -83,8 +89,8 @@ Built with modern web technologies including Ruby on Rails 7.0, PostgreSQL, Boot
 - **Chart.js** (optional) - Data visualization for attendance statistics
 
 **Deployment Services (Optional):**
-- **Heroku** - Cloud platform (production deployment)
-- **Docker** - Containerization (development environment)
+- **Heroku** - Cloud platform (production deployment, heroku-24 stack)
+- **Docker Compose** - PostgreSQL 16 for local development
 - **Kamal** - Docker-based deployment tool
 
 **External APIs:**
@@ -108,9 +114,11 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 # Super Admin Emails (Optional - comma-separated list)
 SUPER_ADMIN_EMAILS=admin1@tamu.edu,admin2@tamu.edu
 
+# Application Host (Optional - used for OAuth callback URLs)
+APP_HOST=your-app.herokuapp.com
+
 # Rails Environment
 RAILS_ENV=development  # or production
-NODE_ENV=development   # or production
 
 # Production-Only Variables
 RAILS_MASTER_KEY=your_master_key_for_credentials
@@ -123,7 +131,7 @@ RAILS_LOG_TO_STDOUT=true
 - `config/database.yml` - Database connection settings
 - `config/credentials.yml.enc` - Encrypted credentials (use `rails credentials:edit`)
 - `config/master.key` - Master key for credentials (DO NOT commit to version control)
-- `.env` (optional) - Environment variables for local development
+- `.env` (optional) - Environment variables for local development (managed by dotenv-rails)
 
 **Setting Up Google OAuth2:**
 
@@ -150,13 +158,6 @@ rbenv global 3.0.0
 # Install PostgreSQL
 # macOS: brew install postgresql
 # Ubuntu: sudo apt-get install postgresql postgresql-contrib
-
-# Install Node.js 16.20.2+
-# macOS: brew install node
-# Ubuntu: sudo apt-get install nodejs npm
-
-# Install Yarn
-npm install -g yarn
 ```
 
 **Setup Steps:**
@@ -172,18 +173,12 @@ npm install -g yarn
    ```bash
    # Install Ruby gems
    bundle install
-
-   # Install JavaScript packages
-   yarn install
    ```
 
 3. **Configure environment variables:**
    ```bash
-   # Copy example env file (if provided)
-   cp .env.example .env
-   
-   # Edit .env file with your configuration
-   # Add your Google OAuth credentials
+   # Create a .env file for local development
+   # Add your Google OAuth credentials and database config
    ```
 
 4. **Set up the database:**
@@ -211,30 +206,38 @@ npm install -g yarn
    - Open browser to http://localhost:3000
    - Sign in with Google OAuth
 
-### Option 2: Docker Development Setup
+### Option 2: Docker Compose (Database Only)
+
+The included `docker-compose.yml` provides a PostgreSQL 16 instance for local development.
 
 **Prerequisites:**
 - Docker Desktop installed
-- Docker Compose (optional)
 
 **Setup Steps:**
 
-1. **Build and run Docker container:**
+1. **Start the PostgreSQL container:**
    ```bash
-   docker build -t cadets-app .
-   docker run -p 3000:3000 cadets-app
+   docker-compose up -d
+   ```
+   This starts PostgreSQL on port **5433** (mapped from container port 5432).
+
+2. **Configure database connection:**
+   Set your environment variables to connect to the Docker PostgreSQL instance:
+   ```bash
+   DATABASE_USER=postgres
+   DATABASE_PASSWORD=postgres
+   DATABASE_PORT=5433
    ```
 
-2. **Inside the container:**
+3. **Set up and run the Rails app locally:**
    ```bash
-   cd /501-cadets
    bundle install
    rails db:create
    rails db:migrate
-   rails s --binding=0.0.0.0
+   rails server
    ```
 
-3. **Access the application:**
+4. **Access the application:**
    - Open browser to http://localhost:3000
 
 ### Setting Up Admin/Officer Roles
@@ -254,12 +257,12 @@ Add super admin emails to `SUPER_ADMIN_EMAILS` environment variable before first
    ```ruby
    # Find your user
    user = User.find_by(email: "your.email@tamu.edu")
-   
+
    # Set role (choose one)
    user.update!(role: 'super_admin', approval_status: 'approved')  # Director
    user.update!(role: 'officer', approval_status: 'approved')      # Officer
    user.update!(role: 'user', approval_status: 'approved')         # Member
-   
+
    # Verify changes
    puts "Role: #{user.role}, Status: #{user.approval_status}"
    ```
@@ -272,18 +275,19 @@ Add super admin emails to `SUPER_ADMIN_EMAILS` environment variable before first
 
 **Members (role: 'user'):**
 - View personal attendance history and statistics
-- View personal demerit records
-- Submit absence excuses for upcoming events
-- Track absence points (0.33/0.66/1.0 fractional system)
+- View personal demerit records and absence points
+- Submit absence excuses for upcoming events (single or multiple events)
+- Track absence points (1 point per absence, 0.33 per tardy, demerits at value x 0.33)
 - View event schedules
-- Self-check-in to events (when enabled)
+- Self-check-in to events (when enabled, within the check-in time window)
+- Subscribe to event calendar feeds (iCal/RSS)
 
 **Officers (role: 'officer'):**
 - All member permissions, plus:
-- Take attendance for events
+- Take attendance for events (present/absent/excused/tardy)
 - Approve/reject member registrations
-- Create, edit, and delete events
-- Review and process absence excuses (preliminary review)
+- Create, edit, and delete events (including recurring weekly events)
+- Review and process absence excuses (provisional/preliminary decision)
 - Issue demerits to members
 - View comprehensive member attendance reports
 - Generate absence point reports
@@ -291,12 +295,10 @@ Add super admin emails to `SUPER_ADMIN_EMAILS` environment variable before first
 
 **Directors/Super Admins (role: 'super_admin'):**
 - All officer permissions, plus:
-- Final approval of absence excuses
+- Final approval/denial of absence excuses (after officer review)
 - Promote/demote user roles
-- Manage officer transitions
-- Access comprehensive system analytics
-- View audit logs and system health
-- Archive old events and reset attendance
+- Delete user accounts
+- Access absence reports for all members
 
 ### Common Workflows
 
@@ -304,29 +306,39 @@ Add super admin emails to `SUPER_ADMIN_EMAILS` environment variable before first
 1. Navigate to Events page
 2. Select event from list
 3. Click "Take Attendance"
-4. Mark each member as Present, Excused, or Absent
+4. Mark each member as Present, Absent, Excused, or Tardy
 5. Add optional notes for individual members
 6. Save attendance
+
+**Self-Check-In (Members):**
+1. Navigate to the event page
+2. Click "Self Check-In" (available within ±10 minutes of event start time through end time)
+3. Enter the 4-digit passcode provided by an officer
+4. Attendance is automatically recorded as "Present"
 
 **Submitting Excuses (Members):**
 1. Navigate to "My Excuses"
 2. Click "New Excuse"
 3. Select events to excuse (single or multiple)
-4. Provide reason and supporting documentation link
+4. Provide reason and supporting documentation link (URL)
 5. Submit for review
 
-**Processing Excuses (Officers/Directors):**
-1. Navigate to "Excuses" management page
-2. Review pending excuses
-3. Officers: Preliminary approve/reject
-4. Directors: Final approval after officer review
-5. System automatically updates attendance records
+**Processing Excuses (Two-Tier Approval):**
+1. **Officer Review:** Navigate to "Excuses" management page, review pending excuses, make provisional approve/reject decision
+2. **Director Review:** Director reviews officer's provisional decision, makes final approval or denial
+3. Upon final approval, attendance records for related events are automatically updated to "excused"
+4. Upon final denial, any previously excused attendance records are reverted to "absent"
 
 **Member Registration Approval (Officers/Directors):**
 1. Navigate to Admin > Registration Approvals
 2. Review pending member applications
-3. Approve or reject with optional notes
-4. Approved members receive system access
+3. Approve or reject
+4. Approved members can sign in; rejected members are blocked
+
+**Calendar Subscription:**
+1. Each user has a unique calendar token (generated automatically)
+2. Subscribe to the iCal feed URL in any calendar app (Google Calendar, Apple Calendar, etc.)
+3. Events are synced automatically
 
 ## Features
 
@@ -334,114 +346,133 @@ Add super admin emails to `SUPER_ADMIN_EMAILS` environment variable before first
 
 **Authentication & Authorization:**
 - Google OAuth2 single sign-on integration
-- Role-based access control (3 tiers)
-- Registration approval workflow
+- Role-based access control (3 tiers: member, officer, director)
+- Registration approval workflow (pending/approved/rejected)
 - Session management and security
 
 **Event Management:**
-- Create rehearsals and performances
-- Specify date, time, location, and description
-- Enable/disable self-check-in capability
-- Generate unique check-in passcodes
-- Archive old events automatically
+- Create rehearsals and performances with title, date, end time, location, and description
+- Recurring weekly event creation (specify repeat_until date)
+- Enable/disable self-check-in capability per event
+- Auto-generated 4-digit check-in passcodes
+- Self-check-in time window enforcement (±10 minutes from event start through end time)
+- Calendar feed subscriptions (iCal .ics and RSS formats)
 
 **Attendance Tracking:**
-- Multi-status attendance (present/excused/absent)
-- Fractional absence point system (0.33, 0.66, 1.0, 1.33...)
-- Real-time attendance statistics
-- Historical attendance reports
+- Four attendance statuses: present, absent, excused, tardy
+- Absence point system:
+  - Absences: 1 point each
+  - Tardies: 0.33 points each
+  - Demerits: value x 0.33 points
+- Real-time attendance statistics per event
+- Historical attendance reports per member
 - Bulk attendance recording
 - Optional notes for each attendance record
 
 **Excuse Management:**
-- Multi-event excuse submissions (bulk excuses)
-- Date range specifications
-- Two-tier review process (officer + director)
-- Automatic attendance updates upon approval
-- Supporting documentation links
-- Excuse history tracking
+- Multi-event excuse submissions (select multiple events per excuse)
+- Recurring excuse support (start_date, end_date, frequency)
+- Two-tier review process:
+  1. Officer makes provisional decision (officer_status)
+  2. Director/Super Admin makes final decision (status)
+- Automatic attendance updates upon approval (marks as "excused")
+- Automatic reversion upon denial (marks back as "absent")
+- Supporting documentation via proof links (URLs)
+- Excuse history tracking with reviewer audit trail
 
 **Disciplinary System:**
 - Demerit issuance and tracking
-- Point value assignment
+- Configurable point values per demerit (default: 1)
+- Demerits contribute to absence points (value x 0.33)
 - Reason documentation
-- Member demerit history
-- Comprehensive demerit reports
+- Member demerit history (via /my-demerits)
+- Tracks who issued each demerit
 
 **Reporting & Analytics:**
-- Individual member attendance history
-- Absence point calculations and reports
-- Event attendance summaries
-- Member statistics dashboards
+- Individual member attendance history with percentage calculations
+- Absence point reports across all approved members
+- Event attendance summaries (present/absent/excused/tardy counts and percentages)
 - Demerit tracking reports
-- Approval status analytics
 
 **Administrative Tools:**
-- Bulk member management
-- Role promotion/demotion
-- Event archival system
-- Member information form integration (Google Forms)
-- Structured logging with Lograge
-- Security audit trails
+- User search and filtering by role
+- Role promotion/demotion (super_admin only)
+- User account deletion (super_admin only)
+- Registration approval management with status filtering
+- Structured logging with Lograge (JSON format)
+- Help page for users
 
 ### Technical Features
 
 - **Responsive Design:** Bootstrap 5-based UI works on desktop, tablet, and mobile
 - **Progressive Enhancement:** Stimulus controllers for JavaScript functionality
 - **Turbo Navigation:** Fast, SPA-like page transitions without full reloads
-- **Structured Logging:** JSON-formatted logs with Logstash integration
-- **Test Coverage:** Comprehensive RSpec test suite with FactoryBot
-- **Security:** CSRF protection, SQL injection prevention, XSS mitigation
-- **Performance:** Database indexing, query optimization, caching strategies
-- **Accessibility:** ARIA labels, semantic HTML, keyboard navigation
+- **Importmap:** Modern JavaScript module management without Node.js or bundlers
+- **Calendar Feeds:** iCalendar (.ics) and RSS feed generation for event subscriptions
+- **Structured Logging:** JSON-formatted logs with Logstash integration via Lograge
+- **Test Coverage:** Comprehensive RSpec test suite with FactoryBot and Capybara
+- **Security:** CSRF protection, OAuth2, SQL injection prevention, XSS mitigation
+- **Database Indexing:** Indexes on user email, role, approval_status, calendar_token, and attendance uniqueness constraints
 
 ## Documentation
 
 ### Project Structure
 ```
-501-cadets/
+502-Veterans-Super-Cadets/
 ├── app/
-│   ├── controllers/      # Request handling and business logic
-│   ├── models/          # Data models and Active Record
-│   ├── views/           # ERB templates
-│   ├── javascript/      # Stimulus controllers and JS
-│   ├── assets/          # Stylesheets and images
-│   └── helpers/         # View helper methods
+│   ├── controllers/      # Request handling (14 controllers)
+│   │   ├── concerns/     # Shared controller concerns (Loggable)
+│   │   ├── admin/        # Admin namespace (registrations)
+│   │   └── users/        # User namespace (omniauth, sessions)
+│   ├── models/           # Data models and Active Record (9 models)
+│   │   └── concerns/     # Shared model concerns (LoggableModel)
+│   ├── views/            # ERB templates
+│   ├── javascript/       # Stimulus controllers
+│   ├── assets/           # Stylesheets and images
+│   └── helpers/          # View helper methods
 ├── config/
-│   ├── routes.rb        # URL routing configuration
-│   ├── database.yml     # Database connection settings
-│   ├── initializers/    # Rails initializers
-│   └── environments/    # Environment-specific configs
+│   ├── routes.rb         # URL routing configuration
+│   ├── database.yml      # Database connection settings
+│   ├── importmap.rb      # JavaScript module mapping
+│   ├── initializers/     # Rails initializers (devise, omniauth, lograge)
+│   └── environments/     # Environment-specific configs
 ├── db/
-│   ├── migrate/         # Database migrations
-│   ├── schema.rb        # Current database schema
-│   └── seeds.rb         # Seed data
-├── spec/                # RSpec tests
-├── lib/tasks/           # Custom Rake tasks
-└── public/              # Static assets
+│   ├── migrate/          # Database migrations (21 migrations)
+│   ├── schema.rb         # Current database schema
+│   └── seeds.rb          # Seed data
+├── spec/                 # RSpec tests (models, requests, views, controllers)
+├── docker-compose.yml    # PostgreSQL 16 for local development
+├── Procfile              # Heroku release commands
+├── app.json              # Heroku deployment manifest
+└── public/               # Static assets
 
 ```
 
 ### Key Models
 
-- **User:** Authentication, roles, approval workflow, absence calculations
-- **Event:** Event scheduling, check-in management, attendance associations
-- **Attendance:** Attendance records, status management, event/user relationships
-- **Excuse:** Multi-event excuses (bulk), two-tier approval
-- **Demerit:** Disciplinary tracking, point system, member associations
-- **EventsToExcuse:** Join table for event-excuse relationships
-- **ReviewersToExcuse:** Join table for excuse review workflow
+- **User:** Authentication, roles (user/officer/super_admin), approval workflow, absence point calculations, calendar token for feed subscriptions
+- **Event:** Event scheduling, recurring event support, self-check-in management (passcode, time window), iCal/RSS conversion
+- **Attendance:** Attendance records with 4 statuses (present/absent/excused/tardy), unique per user-event pair
+- **Excuse:** Multi-event excuses, two-tier approval (officer provisional + admin final), recurring excuse support
+- **Demerit:** Disciplinary tracking with point values, absence point contribution (value x 0.33)
+- **EventsToExcuse:** Join table for event-excuse many-to-many relationships
+- **ReviewersToExcuse:** Join table for excuse review audit trail
 
 ### API Endpoints
 
 The application uses RESTful routes following Rails conventions:
-- `/events` - Event CRUD operations
-- `/attendances` - Attendance management
-- `/excuses` - Excuse submission and review
+- `/` - Root (events index)
+- `/events` - Event CRUD operations (also serves .ics and .rss feeds)
+- `/events/:id/self_checkin` - Self-check-in form and submission
+- `/events/:id/attendances` - Attendance management (nested under events)
+- `/excuses` - Excuse submission, review, and processing
 - `/demerits` - Demerit management
-- `/users` - User management and reports
+- `/my-demerits` - Current user's demerit dashboard
+- `/user_management` - User listing, role management, attendance history
+- `/user_management/absence_report` - Absence point report for all members
 - `/admin/registrations` - Registration approvals
-- `/auth/*` - Authentication endpoints
+- `/auth/*` - Authentication endpoints (sign in, sign out, OAuth redirect)
+- `/help` - Help page
 
 ### Testing
 
@@ -457,6 +488,9 @@ COVERAGE=true bundle exec rspec
 
 # Run security audit
 bundle exec brakeman
+
+# Run linter
+bundle exec rubocop
 ```
 
 ### Rake Tasks
@@ -472,7 +506,8 @@ rails db:reset
 
 ### Development Team
 - **Texas A&M Singing Cadets** - Project sponsors and stakeholders
-- **CSCE 431 Software Engineering Team Fall 2025** - Original development team - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
+- **CSCE 431 Software Engineering Team Fall 2025** - Original development team (Phase 1) - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
+- **CSCE 431 Software Engineering Team Spring 2026** - Phase 2 development team - [Team member names here]
 
 ### AI & Development Tools
 This project was developed with assistance from:
@@ -485,7 +520,6 @@ This project was developed with assistance from:
 - **Google Cloud Platform** - OAuth2 authentication infrastructure
 - **Texas A&M University** - Institutional support and resources
 - **Dr. Pauline Wade** - Faculty advisor and project sponsor
-- **Original Development Team** - CSCE 431 students who built the initial platform
 
 ## Third-Party Libraries
 
@@ -496,20 +530,22 @@ This project was developed with assistance from:
 - **puma** (>= 5.0) - High-performance web server
 - **turbo-rails** - Hotwire's Turbo framework
 - **stimulus-rails** - JavaScript framework
+- **importmap-rails** - JavaScript module management
+- **propshaft** - Modern asset pipeline
 - **lograge** - Structured logging
+- **logstash-event** - JSON log formatting
+- **icalendar** - iCalendar feed generation
+- **yaml_db** - YAML database utilities
+- **solid_cable** - Database-backed ActionCable
+- **solid_cache** - Database-backed cache
+- **solid_queue** - Database-backed job queue
+- **kamal** - Docker deployment
+- **thruster** - HTTP asset caching
 - **rspec-rails** - Testing framework
 - **factory_bot_rails** - Test data generation
 - **capybara** - Integration testing
 - **bootsnap** - Application boot optimizer
-- **propshaft** - Asset pipeline
-
-### JavaScript Libraries
-- **@rails/actioncable** (^6.0.0) - WebSocket framework
-- **@rails/activestorage** (^6.0.0) - File upload framework
-- **@rails/ujs** (^6.0.0) - Unobtrusive JavaScript helpers
-- **@rails/webpacker** (5.4.3) - JavaScript bundler integration
-- **turbolinks** (^5.2.0) - Fast navigation
-- **webpack** (^4.46.0) - Module bundler
+- **dotenv-rails** - Environment variable management
 
 ### Front-End Frameworks (CDN)
 - **Bootstrap 5.1.3** - CSS framework
@@ -535,7 +571,8 @@ For bugs, feature requests, or technical support:
 
 ### Project Maintenance
 - **Current Maintainers:** Texas A&M Singing Cadets organization
-- **Original Developers:** CSCE 431 Software Engineering Team (Fall 2025) - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
+- **Phase 1 Developers:** CSCE 431 Software Engineering Team (Fall 2025) - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
+- **Phase 2 Developers:** CSCE 431 Software Engineering Team (Spring 2026) - Daniel Trinh, Junseok Kim, Abdussalam Raheem, Zaahir Sharma, Deniz Telci
 - **Contact:** Through Texas A&M Singing Cadets official channels
 
 ### Organization
@@ -546,8 +583,8 @@ For bugs, feature requests, or technical support:
 
 ---
 
-**Last Updated:** December 2025  
-**Version:** 1.0.0  
-**License:** Proprietary - Texas A&M Singing Cadets  
-**Rails Version:** 7.0.2+  
+**Last Updated:** February 2026
+**Version:** 2.0.0
+**License:** Proprietary - Texas A&M Singing Cadets
+**Rails Version:** 7.0.2+
 **Ruby Version:** 3.0+
