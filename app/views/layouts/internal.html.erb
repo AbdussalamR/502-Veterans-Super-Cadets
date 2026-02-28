@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Singing Cadets</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  
+  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbo-track': 'reload' %>
+  <%= javascript_importmap_tags %>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <!-- Mobile-Friendly Styles -->
+  <style>
+    /* Ensure proper touch targets for mobile */
+    @media (max-width: 991.98px) {
+      .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .dropdown-menu {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      }
+      
+      .dropdown-item {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+      }
+      
+      /* Better spacing for mobile navbar */
+      .navbar-collapse {
+        margin-top: 0.5rem;
+      }
+      
+      /* Make badges more visible on mobile */
+      .navbar-nav .badge {
+        font-size: 0.75rem;
+        padding: 0.25em 0.5em;
+      }
+      
+      /* Prevent text wrapping in mobile nav */
+      .navbar-nav .nav-link {
+        white-space: nowrap;
+      }
+    }
+    
+    /* Tablet optimization */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .container {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+    }
+    
+    /* iPhone and Android specific optimizations */
+    @media (max-width: 767.98px) {
+      .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      
+      .navbar-brand {
+        font-size: 1.1rem;
+      }
+      
+      /* Stack flash messages nicely */
+      .alert {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      /* Make close buttons easier to tap */
+      .btn-close {
+        padding: 0.5rem;
+        margin: -0.25rem -0.25rem -0.25rem auto;
+      }
+    }
+    
+    /* Prevent zoom on input focus (iOS Safari) */
+    @media screen and (max-width: 767.98px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+  </style>
+  
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <%= link_to "Singing Cadets", internal_events_path, class: "navbar-brand" %>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-nav me-auto">
+          <%= link_to "Events", internal_events_path, class: "nav-link" %>
+          <%= link_to internal_excuses_path, class: "nav-link d-flex align-items-center" do %>
+            Excuses
+            <%# Show role-appropriate pending count badges %>
+            <% if current_user.super_admin? %>
+              <% pending_admin_count = Excuse.pending_admin_approval.count %>
+              <% if pending_admin_count > 0 %>
+                <span class="badge bg-danger ms-2"><%= pending_admin_count %></span>
+              <% end %>
+            <% elsif current_user.officer? %>
+              <% pending_officer_count = Excuse.pending_unprocessed.count %>
+              <% if pending_officer_count > 0 %>
+                <span class="badge bg-danger ms-2"><%= pending_officer_count %></span>
+              <% end %>
+            <% end %>
+          <% end %>
+          <%= link_to "Music Drive", "https://drive.google.com/drive/u/3/folders/0ACAwK4ezZTfMUk9PVA", class: "nav-link", target: "_blank", rel: "noopener" %>
+          
+          <% if current_user.admin? %>
+            <%= link_to "Member Management", internal_users_path, class: "nav-link" %>
+            <%= link_to "Discipline Points", internal_demerits_path, class: "nav-link" %>
+            <% pending_registrations = User.pending.count %>
+            <%= link_to admin_registrations_path, class: "nav-link d-flex align-items-center" do %>
+              Registration Approval
+              <% if pending_registrations > 0 %>
+                <span class="badge bg-danger ms-2"><%= pending_registrations %></span>
+              <% end %>
+            <% end %>
+          <% elsif current_user.user? %>
+            <%= link_to internal_my_demerits_path, class: "nav-link" do %>
+              Discipline Points
+              <% if current_user.received_demerits.count > 0 %>
+                <span class="badge bg-danger"><%= current_user.received_demerits.count %></span>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+        
+        <div class="navbar-nav ms-auto">
+          <div class="dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <%= current_user.full_name %>
+              <span class="badge bg-<%= current_user.super_admin? ? 'danger' : (current_user.officer? ? 'warning' : 'secondary') %> ms-1">
+                <%= current_user.role_display_name %>
+              </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><%= link_to "Profile", internal_user_path(current_user), class: "dropdown-item" %></li>
+              <li><%= link_to "Help", internal_help_path, class: "dropdown-item" %></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><%= button_to "Sign out", "/auth/sign_out", method: :delete, class: "dropdown-item", style: "background: none; border: none; width: 100%; text-align: left;" %></li>
+            </ul>
+          </div>
+        </div>
+        </div>
+      </div>
+    </nav>
+
+  <div class="container mt-4">
+    <% if flash.any? %>
+      <% flash.each do |key, value| %>
+        <div class="alert alert-<%= key == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
+          <%= value.html_safe %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%= yield %>
+  </div>
+
+
+</body>
+</html>

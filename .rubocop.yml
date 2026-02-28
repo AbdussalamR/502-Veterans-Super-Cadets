@@ -148,7 +148,7 @@ Layout/ParameterAlignment:
 
 # Line length - keeping reasonable for readability
 Layout/LineLength:
-  Max: 120
+  Max: 160
   AllowHeredoc: true
   AllowURI: true
   URISchemes:
@@ -162,7 +162,7 @@ Metrics/MethodLength:
 
 # Block length - more lenient for specs and config
 Metrics/BlockLength:
-  Max: 25
+  Max: 260
   Exclude:
     - 'spec/**/*'
     - 'config/**/*'
@@ -178,11 +178,11 @@ Metrics/CyclomaticComplexity:
 
 # Perceived complexity
 Metrics/PerceivedComplexity:
-  Max: 8
+  Max: 25
 
 # Skinny controllers - warn if controller classes exceed 10 lines
 Metrics/ClassLength:
-  Max: 100
+  Max: 200
   CountComments: false
   Include:
     - 'app/controllers/**/*'

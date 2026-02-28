@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Event < ApplicationRecord
+  alias_attribute :start_time, :date
   has_many :attendances, dependent: :destroy
   has_many :attending_users, through: :attendances, source: :user
 
@@ -131,7 +132,7 @@ class Event < ApplicationRecord
     event.description = description
     event.location = location
     host = Rails.application.config.action_controller.default_url_options&.fetch(:host, 'localhost:3000')
-    event.url = Rails.application.routes.url_helpers.event_url(self, host: host)
+    event.url = Rails.application.routes.url_helpers.internal_event_url(self, host: host)
     event.uid = "event-#{id}@singing-cadets-tamu"
     event.dtstamp = Time.current
     event.created = created_at
@@ -145,7 +146,7 @@ class Event < ApplicationRecord
       title: title,
       description: rss_description,
       pub_date: created_at,
-      link: Rails.application.routes.url_helpers.event_url(self, host: 'localhost:3000'),
+      link: Rails.application.routes.url_helpers.internal_event_url(self, host: 'localhost:3000'),
       guid: "event-#{id}",
     }
   end

@@ -1,0 +1,81 @@
+<div class="container my-5">
+  <h1 class="eh-main-title mb-4">Texas A&M University - Singing Cadets</h1>
+  <p class="text-serif text-maroon h4 mb-5">Performance Schedule</p>
+
+  <!-- This is the container for the calendar where Stimulus mounts -->
+  <div id="public-calendar" 
+       data-controller="public-calendar" 
+       data-public-calendar-target="calendar">
+  </div>
+</div>
+
+<!-- Custom TAMU Maroon Styles for this view -->
+<style>
+  .bg-tamu-maroon {
+    background-color: #500000 !important;
+  }
+  .text-tamu-maroon {
+    color: #500000 !important;
+  }
+  .btn-tamu-maroon {
+    background-color: #500000;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    display: block;
+    text-align: center;
+  }
+  .btn-tamu-maroon:hover {
+    background-color: #380000; 
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(80, 0, 0, 0.3);
+  }
+  /* Force the close button to be white */
+  .modal-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+  }
+</style>
+
+<!-- Modal Popup (Hidden until clicked) -->
+<div class="modal fade" id="calendarEventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg overflow-hidden">
+      
+      <!-- Maroon Header -->
+      <div class="modal-header bg-tamu-maroon text-white border-0 py-3">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button type="button" class="btn-close modal-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body p-4 bg-light">
+        <!-- Event Details -->
+        <div class="bg-white p-3 rounded shadow-sm mb-3 border">
+          <p class="mb-2 fs-5">
+            <strong class="text-tamu-maroon"><i class="bi bi-clock me-2"></i>Time:</strong> 
+            <span id="modalTime" class="text-dark"></span>
+          </p>
+          <p class="mb-0 fs-5">
+            <strong class="text-tamu-maroon"><i class="bi bi-geo-alt me-2"></i>Location:</strong> 
+            <span id="modalLocation" class="text-dark"></span>
+          </p>
+        </div>
+
+        <!-- Description -->
+        <p id="modalDescription" class="text-secondary mt-3 px-1"></p>
+        
+        <!-- Big Prominent Button -->
+        <div class="mt-4 pt-2">
+          <a href="#" id="modalTicketLink" class="btn-tamu-maroon w-100 shadow-sm d-none text-decoration-none" target="_blank">
+            <i class="bi bi-ticket-perforated me-2"></i> Get Tickets
+          </a>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>

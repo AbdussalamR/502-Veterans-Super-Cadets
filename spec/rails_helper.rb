@@ -80,6 +80,7 @@ module AuthenticationHelper
   def sign_out
     allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(nil)
     allow_any_instance_of(ApplicationController).to receive(:user_signed_in?).and_return(false)
+    allow_any_instance_of(ApplicationController).to receive(:authenticate_user!).and_call_original
   end
 end
 

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'events/index', type: :view do
+RSpec.describe 'internal/events/index', type: :view do
   let(:user) { create(:user) }
   let(:events) do
     [
@@ -55,8 +55,10 @@ RSpec.describe 'events/index', type: :view do
     let(:excused_user2) { create(:user, approval_status: 'approved') }
 
     before do
-      Excuse.create!(member: excused_user1, event: event_with_excuses, reason: 'Sick', status: 'approved', proof_link: 'https://example.com/proof1')
-      Excuse.create!(member: excused_user2, event: event_with_excuses, reason: 'Doctor', status: 'approved', proof_link: 'https://example.com/proof2')
+      Excuse.create!(member: excused_user1, event: event_with_excuses, reason: 'Sick', status: 'approved', 
+                     proof_link: 'https://example.com/proof1')
+      Excuse.create!(member: excused_user2, event: event_with_excuses, reason: 'Doctor', status: 'approved', 
+                     proof_link: 'https://example.com/proof2')
       assign(:upcoming_events, [event_with_excuses])
       assign(:past_events, [])
       allow(view).to receive(:current_user).and_return(admin_user)

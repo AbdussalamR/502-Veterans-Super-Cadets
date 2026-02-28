@@ -25,7 +25,8 @@ class Excuse < ApplicationRecord
 
   # proof_link is now required and must look like a URL
   validates :proof_link, presence: true
-  validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: false
+  validates :proof_link, 
+format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: false
 
   # Recurring excuse validations
   validates :start_date, presence: true, if: :recurring?
