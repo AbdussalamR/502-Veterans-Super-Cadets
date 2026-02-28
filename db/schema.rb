@@ -103,6 +103,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
     t.datetime "start_date"
     t.datetime "end_date"
     t.string "frequency"
+    t.boolean "recurring", default: false, null: false
+    t.string "recurring_days"
     t.index ["member_id"], name: "index_excuses_on_member_id"
   end
 
