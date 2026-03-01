@@ -24,6 +24,7 @@ class Event < ApplicationRecord
 
   # Callbacks
   before_validation :generate_checkin_passcode, if: :should_generate_passcode?
+  after_create :link_to_matching_recurring_excuses
 
   # Scopes for filtering
   scope :upcoming, -> { where(date: Time.zone.today..).order(:date) }
@@ -167,6 +168,25 @@ class Event < ApplicationRecord
     # Only destroy excuses that are exclusively linked to this event
     excuses.each do |excuse|
       excuse.destroy if excuse.events.count == 1 # only linked to this event
+    end
+  end
+
+  def link_to_matching_recurring_excuses
+    Excuse.where(recurring: true)
+          .where('start_date <= ? AND end_date >= ?', date.to_date, date.to_date)
+          .find_each do |excuse|
+      next unless excuse.recurring_days_array.include?(date.wday)
+      next if excuse.events.exists?(id: id)
+
+      excuse.events << self
+
+      next unless excuse.status == 'approved'
+
+      Attendance.find_or_initialize_by(event_id: id, user_id: excuse.member_id).tap do |a|
+        a.status = 'excused'
+        a.note = "Excused - Approved excuse ##{excuse.id}"
+        a.save
+      end
     end
   end
 

@@ -148,6 +148,68 @@ RSpec.describe Event, type: :model do
       expect(users).not_to include(user3)
     end
   end
+  describe '#link_to_matching_recurring_excuses' do
+    let(:member) { create(:user) }
+
+    # A Monday within the recurring range
+    let(:monday_in_range) { Date.parse('2026-03-09') } # Monday
+
+    let!(:recurring_excuse) do
+      Excuse.create!(
+        member: member,
+        recurring: true,
+        recurring_days: '1', # Monday = 1
+        start_date: Date.parse('2026-03-02'),
+        end_date: Date.parse('2026-03-30'),
+        status: 'pending',
+        reason: 'Recurring absence',
+        proof_link: 'https://example.com/proof'
+      )
+    end
+
+    it 'auto-links a new event on a matching day within the date range' do
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      expect(recurring_excuse.events.reload).to include(event)
+    end
+
+    it 'does not link an event outside the date range' do
+      out_of_range = Date.parse('2026-04-06') # Monday, after end_date
+      event = Event.create!(title: 'Late Monday', date: out_of_range.to_time, end_time: out_of_range.to_time + 2.hours)
+      expect(recurring_excuse.events.reload).not_to include(event)
+    end
+
+    it 'does not link an event on a non-matching day' do
+      tuesday = Date.parse('2026-03-10') # Tuesday = 2, not in recurring_days
+      event = Event.create!(title: 'Tuesday Practice', date: tuesday.to_time, end_time: tuesday.to_time + 2.hours)
+      expect(recurring_excuse.events.reload).not_to include(event)
+    end
+
+    it 'marks attendance as excused when excuse is already approved' do
+      recurring_excuse.update!(status: 'approved')
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+
+      attendance = Attendance.find_by(event: event, user: member)
+      expect(attendance).to be_present
+      expect(attendance.status).to eq('excused')
+    end
+
+    it 'does not create attendance for a pending excuse' do
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+
+      attendance = Attendance.find_by(event: event, user: member)
+      expect(attendance).to be_nil
+    end
+
+    it 'does not create duplicate links' do
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      expect(recurring_excuse.events.reload.where(id: event.id).count).to eq(1)
+
+      # Manually trigger the callback again to simulate a duplicate scenario
+      event.send(:link_to_matching_recurring_excuses)
+      expect(recurring_excuse.events.reload.where(id: event.id).count).to eq(1)
+    end
+  end
+
   describe 'self check-in functionality' do
     describe 'passcode generation' do
       it 'automatically generates a 4-digit passcode when allow_self_checkin is enabled' do
