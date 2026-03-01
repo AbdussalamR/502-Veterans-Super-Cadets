@@ -151,8 +151,8 @@ RSpec.describe Event, type: :model do
   describe '#link_to_matching_recurring_excuses' do
     let(:member) { create(:user) }
 
-    # A Monday within the recurring range
-    let(:monday_in_range) { Date.parse('2026-03-09') } # Monday
+    # Use noon to avoid midnight timezone boundary shifts across CI environments
+    let(:monday_in_range) { Time.zone.local(2026, 3, 9, 12, 0) } # Monday
 
     let!(:recurring_excuse) do
       Excuse.create!(
@@ -168,25 +168,25 @@ RSpec.describe Event, type: :model do
     end
 
     it 'auto-links a new event on a matching day within the date range' do
-      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range, end_time: monday_in_range + 2.hours)
       expect(recurring_excuse.events.reload).to include(event)
     end
 
     it 'does not link an event outside the date range' do
-      out_of_range = Date.parse('2026-04-06') # Monday, after end_date
-      event = Event.create!(title: 'Late Monday', date: out_of_range.to_time, end_time: out_of_range.to_time + 2.hours)
+      out_of_range = Time.zone.local(2026, 4, 6, 12, 0) # Monday, after end_date
+      event = Event.create!(title: 'Late Monday', date: out_of_range, end_time: out_of_range + 2.hours)
       expect(recurring_excuse.events.reload).not_to include(event)
     end
 
     it 'does not link an event on a non-matching day' do
-      tuesday = Date.parse('2026-03-10') # Tuesday = 2, not in recurring_days
-      event = Event.create!(title: 'Tuesday Practice', date: tuesday.to_time, end_time: tuesday.to_time + 2.hours)
+      tuesday = Time.zone.local(2026, 3, 10, 12, 0) # Tuesday = 2, not in recurring_days
+      event = Event.create!(title: 'Tuesday Practice', date: tuesday, end_time: tuesday + 2.hours)
       expect(recurring_excuse.events.reload).not_to include(event)
     end
 
     it 'marks attendance as excused when excuse is already approved' do
       recurring_excuse.update!(status: 'approved')
-      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range, end_time: monday_in_range + 2.hours)
 
       attendance = Attendance.find_by(event: event, user: member)
       expect(attendance).to be_present
@@ -194,14 +194,14 @@ RSpec.describe Event, type: :model do
     end
 
     it 'does not create attendance for a pending excuse' do
-      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range, end_time: monday_in_range + 2.hours)
 
       attendance = Attendance.find_by(event: event, user: member)
       expect(attendance).to be_nil
     end
 
     it 'does not create duplicate links' do
-      event = Event.create!(title: 'Monday Practice', date: monday_in_range.to_time, end_time: monday_in_range.to_time + 2.hours)
+      event = Event.create!(title: 'Monday Practice', date: monday_in_range, end_time: monday_in_range + 2.hours)
       expect(recurring_excuse.events.reload.where(id: event.id).count).to eq(1)
 
       # Manually trigger the callback again to simulate a duplicate scenario
