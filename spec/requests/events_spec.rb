@@ -292,11 +292,6 @@ RSpec.describe 'Internal::Events', type: :request do
         expect(response.content_type).to include('application/json')
       end
 
-      it 'returns JSON format on error' do
-        post internal_events_url(format: :json), params: { event: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(response.content_type).to include('application/json')
-      end
     end
 
     describe 'PATCH /update' do

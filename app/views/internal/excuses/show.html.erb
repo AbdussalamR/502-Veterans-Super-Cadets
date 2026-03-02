@@ -122,7 +122,7 @@
           </div>
 
           <%# Officers make provisional decisions (do NOT change final status) %>
-          <% if current_user.officer? && @excuse.status == 'pending' %>
+          <% if current_user.officer? && @excuse.status == 'Pending Section Leader Review' %>
             <div class="d-flex gap-2 mb-3">
               <%= button_to 'Provisional Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-outline-success' %>
               <%= button_to 'Provisional Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-outline-danger' %>

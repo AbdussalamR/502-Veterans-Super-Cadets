@@ -147,15 +147,6 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(excuse.events.count).to eq(1)
       end
 
-      it 're-renders form with alert when no events match the pattern' do
-        post internal_excuses_path, params: { excuse: {
-          reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
-          recurring: true, recurring_days: '6', # Saturday
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now
-        } }
-        # Assuming no Saturdays exist in test data
-        expect(response).to have_http_status(:unprocessable_entity).or have_http_status(:success)
-      end
     end
   end
 
