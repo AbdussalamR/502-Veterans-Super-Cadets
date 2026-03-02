@@ -1,4 +1,3 @@
-<!-- filepath: c:\csce431\501-cadets\app\views\excuses\index.html.erb -->
 <div class="d-flex align-items-center justify-content-between mb-4">
   <h1 class="display-5 fw-bold">Excuses</h1>
   <% if !(current_user.admin? || current_user.officer?) %>
@@ -7,11 +6,11 @@
 </div>
 <p class="text-muted mb-0">View and submit excuse requests</p>
 
-<%# Build sections explicitly %>
-<% pending_admin = @excuses.select { |e| e.status == 'pending' && e.respond_to?(:officer_status) && e.officer_status.present? && e.events.present? } %>
-<% pending = @excuses.select { |e| e.status == 'pending' && (!e.respond_to?(:officer_status) || e.officer_status.blank?) && e.events.present? } %>
-<% approved = @excuses.select { |e| e.status == 'approved' && e.events.present? } %>
-<% denied = @excuses.select { |e| e.status == 'denied' && e.events.present? } %>
+<%# Buckets updated to include the new 'Pending Section Leader Review' status %>
+<% pending_admin = @excuses.select { |e| e.status == 'pending' && e.officer_status.present? } %>
+<% pending = @excuses.select { |e| (e.status == 'pending' || e.status == 'Pending Section Leader Review') && e.officer_status.blank? } %>
+<% approved = @excuses.select { |e| e.status == 'approved' } %>
+<% denied = @excuses.select { |e| e.status == 'denied' } %>
 
 <% sections = [
   { title: 'Pending Admin Approval', items: pending_admin, css: 'text-info' },
@@ -67,12 +66,12 @@
               <p class="mb-1"><strong>Status:</strong>
                 <span class="badge 
                   <%= case display_status
-                    when 'pending' then 'bg-warning text-dark'
+                    when 'pending', 'Pending Section Leader Review' then 'bg-warning text-dark'
                     when 'denied' then 'bg-danger'
                     when 'approved' then 'bg-success'
                     else 'bg-secondary'
                   end %>">
-                  <%= display_status.to_s.capitalize %>
+                  <%= display_status == 'Pending Section Leader Review' ? 'Pending (SL Review)' : display_status.to_s.capitalize %>
                 </span>
               </p>
 

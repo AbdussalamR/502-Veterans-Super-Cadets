@@ -1,98 +1,76 @@
-<!-- filepath: app/views/excuses/new.html.erb -->
 <div class="container my-5">
   <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
+    <div class="col-md-6">
       <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0">Submit Excuse</h4>
+        <div class="card-header bg-primary text-white py-3">
+          <h5 class="mb-0">Submit Excuse</h5>
         </div>
         <div class="card-body">
-          <% if flash[:alert] %>
-            <div class="alert alert-warning"><%= flash[:alert] %></div>
-          <% end %>
-
-          <%= form_with model: @excuse, url: internal_excuses_path, local: true, html: { id: "excuse-form" } do |form| %>
-            <% if @excuse.errors.any? %>
-              <div class="alert alert-danger">
-                <h5><%= pluralize(@excuse.errors.count, "error") %> prohibited this excuse from being saved:</h5>
-                <ul class="mb-0">
-                  <% @excuse.errors.each do |error| %>
-                    <li><%= error.full_message %></li>
-                  <% end %>
-                </ul>
-              </div>
-            <% end %>
-
-            <%# AC1: Recurring toggle %>
-            <div class="mb-3 form-check form-switch">
-              <%= form.check_box :recurring, class: "form-check-input", id: "excuse_recurring" %>
-              <%= form.label :recurring, "Mark as Recurring Excuse", class: "form-check-label fw-semibold" %>
+          <%= form_with model: @excuse, url: internal_excuses_path, local: true, id: "excuse-form" do |f| %>
+            
+            <!-- AC1: Recurring toggle (The Switch) -->
+            <div class="mb-4 form-check form-switch">
+              <%= f.check_box :recurring, class: "form-check-input", id: "recurring-toggle", style: "width: 2.5em; height: 1.25em;" %>
+              <%= f.label :recurring, "Mark as Recurring Excuse", class: "form-check-label ms-2 fw-bold" %>
             </div>
 
-            <%# === Non-recurring: manual event selection === %>
-            <div id="single-excuse-fields">
-              <%# Date selector for filtering events %>
+            <!-- MODE A: SINGLE EXCUSE FIELDS -->
+            <div id="single-fields">
               <div class="mb-3">
-                <label for="event-date-filter" class="form-label">Filter Events by Date</label>
-                <input type="date" id="event-date-filter" class="form-control" />
+                <label class="form-label text-muted small fw-bold">Filter Events by Date</label>
+                <input type="date" id="event-date-filter" class="form-control">
               </div>
 
               <div class="mb-3">
-                <%= form.label :event_ids, "Events (select one or more)", class: "form-label" %>
-                <select name="excuse[event_ids][]" id="excuse_event_ids" class="form-select" multiple size="6">
-                  <%# build an array of selected ids (supports single param :event_id or array :event_ids or existing @excuse.events) %>
-                  <% selected_ids = Array(params[:event_ids] || params[:event_id] || @excuse.events.map(&:id)).map(&:to_s) %>
-                  <% Event.all.order(date: :desc).each do |event| %>
-                    <option value="<%= event.id %>" data-date="<%= event.date.strftime('%Y-%m-%d') %>" <%= 'selected' if selected_ids.include?(event.id.to_s) %>>
-                      <%= event.title %> (<%= event.date.strftime('%B %d, %Y %I:%M %p') %>)
-                    </option>
-                  <% end %>
-                </select>
-                <small class="form-text text-muted">Hold Ctrl (Cmd) to select multiple events.</small>
+                <label class="form-label text-muted small fw-bold">Events (select one or more)</label>
+                <%= f.select :event_ids, 
+                      Event.upcoming.map { |e| ["#{e.title} (#{e.date.strftime('%B %d, %Y %I:%M %p')})", e.id, { 'data-date': e.date.to_date }] }, 
+                      {}, 
+                      { multiple: true, class: "form-select", size: 8, id: "event-select" } %>
+                <div class="form-text small">Hold Ctrl (Cmd) to select multiple events.</div>
               </div>
             </div>
 
-            <%# === AC2: Recurring fields (hidden by default) === %>
-            <div id="recurring-excuse-fields" style="display: none;">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Day(s) of the Week</label>
-                <div class="d-flex flex-wrap gap-2">
-                  <% %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].each_with_index do |day, index| %>
-                    <div class="form-check">
-                      <input type="checkbox" class="form-check-input recurring-day-checkbox"
-                             id="recurring_day_<%= index %>" value="<%= index %>"
-                             <%= 'checked' if @excuse.recurring_days.to_s.split(',').include?(index.to_s) %>>
-                      <label class="form-check-label" for="recurring_day_<%= index %>"><%= day[0..2] %></label>
-                    </div>
-                  <% end %>
+            <!-- MODE B: RECURRING FIELDS -->
+            <div id="recurring-fields" style="display: none;">
+              <label class="form-label text-muted small fw-bold">Day(s) of the Week</label>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <% %w[Sun Mon Tue Wed Thu Fri Sat].each_with_index do |day, i| %>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input day-cb" id="day_<%= i %>" value="<%= i %>">
+                    <label class="form-check-label small" for="day_<%= i %>"><%= day %></label>
+                  </div>
+                <% end %>
+              </div>
+              <%= f.hidden_field :recurring_days, id: "recurring-days-hidden" %>
+
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <%= f.label :start_date, "Start Date", class: "form-label text-muted small fw-bold" %>
+                  <%= f.date_field :start_date, class: "form-control" %>
                 </div>
-                <%# Hidden field to submit the combined recurring_days value %>
-                <%= form.hidden_field :recurring_days, id: "excuse_recurring_days" %>
-              </div>
-
-              <div class="mb-3">
-                <%= form.label :start_date, "Start Date", class: "form-label" %>
-                <%= form.date_field :start_date, class: "form-control", id: "excuse_start_date" %>
-              </div>
-
-              <div class="mb-3">
-                <%= form.label :end_date, "End Date", class: "form-label" %>
-                <%= form.date_field :end_date, class: "form-control", id: "excuse_end_date" %>
+                <div class="col-6 mb-3">
+                  <%= f.label :end_date, "End Date", class: "form-label text-muted small fw-bold" %>
+                  <%= f.date_field :end_date, class: "form-control" %>
+                </div>
               </div>
             </div>
 
+            <!-- COMMON FIELDS -->
             <div class="mb-3">
-              <%= form.label :reason, class: "form-label" %>
-              <%= form.text_area :reason, id: "excuse_reason", rows: 3, class: "form-control" %>
+              <%= f.label :reason, "Reason", class: "form-label text-muted small fw-bold" %>
+              <%= f.text_area :reason, class: "form-control", rows: 3 %>
             </div>
-            <div class="field mb-3">
-              <%= form.label :proof_link, "Proof link (required)", class: "form-label" %>
-              <%= form.text_field :proof_link, placeholder: "https://example.com/proof or Google Drive link", class: "form-control", id: "excuse_proof_link", required: true %>
-              <small class="form-text text-muted">Paste a URL to your proof document or image.</small>
+
+            <div class="mb-4">
+              <%= f.label :proof_link, "Proof link (required)", class: "form-label text-muted small fw-bold" %>
+              <%= f.text_field :proof_link, class: "form-control", placeholder: "https://example.com/proof" %>
+              <div class="form-text small">Paste a URL to your proof document or image.</div>
             </div>
-            <div class="d-flex justify-content-between">
-              <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-              <%= form.submit "Submit Excuse", class: "btn btn-primary", id: "submit-btn" %>
+
+            <div class="d-flex justify-content-between pt-3 border-top">
+              <%= link_to "Cancel", internal_excuses_path, class: "btn btn-secondary px-4" %>
+              <%= f.submit "Submit Excuse", class: "btn btn-primary px-4" %>
             </div>
           <% end %>
         </div>
@@ -102,144 +80,59 @@
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const cancelBtn = document.getElementById("cancel-btn");
-    const reasonField = document.getElementById("excuse_reason");
-    const proofField = document.getElementById("excuse_proof_link");
-    const form = document.getElementById("excuse-form");
-    const recurringCheckbox = document.getElementById("excuse_recurring");
-    const singleFields = document.getElementById("single-excuse-fields");
-    const recurringFields = document.getElementById("recurring-excuse-fields");
-    const recurringDaysHidden = document.getElementById("excuse_recurring_days");
-    const dayCheckboxes = document.querySelectorAll(".recurring-day-checkbox");
-
-    // Get event ids from params or @excuse (joined as comma-separated string)
-    const initialEventIds = "<%= Array(params[:event_ids] || params[:event_id] || @excuse.events.map(&:id)).join(',') %>";
-
-    // --- Recurring toggle ---
-    function toggleRecurringFields() {
-      if (recurringCheckbox.checked) {
-        singleFields.style.display = "none";
-        recurringFields.style.display = "block";
-      } else {
-        singleFields.style.display = "block";
-        recurringFields.style.display = "none";
-      }
-    }
-
-    recurringCheckbox.addEventListener("change", toggleRecurringFields);
-    // Set initial state (for re-renders after validation errors)
-    toggleRecurringFields();
-
-    // --- Sync day checkboxes to hidden field ---
-    function syncRecurringDays() {
-      const selected = [];
-      dayCheckboxes.forEach(function(cb) {
-        if (cb.checked) selected.push(cb.value);
-      });
-      recurringDaysHidden.value = selected.join(",");
-    }
-
-    dayCheckboxes.forEach(function(cb) {
-      cb.addEventListener("change", syncRecurringDays);
-    });
-    // Sync on page load
-    syncRecurringDays();
-
-    // --- Cancel button ---
-    cancelBtn.addEventListener("click", function() {
-      const reasonNotEmpty = reasonField.value.trim() !== "";
-      const proofNotEmpty = proofField && proofField.value.trim() !== "";
-
-      let backUrl;
-      const ids = initialEventIds ? initialEventIds.split(',') : [];
-      if (ids.length === 1 && ids[0] !== "") {
-        backUrl = "<%= url_for(controller: 'events', action: 'show', id: '') %>" + ids[0];
-      } else {
-        backUrl = "<%= internal_excuses_path %>";
-      }
-
-      if (reasonNotEmpty || proofNotEmpty) {
-        if (confirm("You have started filling out the form, are you sure you want to cancel? Your changes will be lost.")) {
-          window.location.href = backUrl;
-        }
-      } else {
-        window.location.href = backUrl;
-      }
-    });
-
-    // --- Form validation ---
-    form.addEventListener("submit", function(event) {
-      // Sync recurring days before validation
-      syncRecurringDays();
-
-      const reasonNotEmpty = reasonField.value.trim() !== "";
-      const proofNotEmpty = proofField && proofField.value.trim() !== "";
-      const isRecurring = recurringCheckbox.checked;
-
-      let messages = [];
-      if (!reasonNotEmpty) messages.push("a reason");
-      if (!proofNotEmpty) messages.push("a proof link");
-
-      if (isRecurring) {
-        // Validate recurring fields
-        if (recurringDaysHidden.value.trim() === "") messages.push("at least one day of the week");
-        const startDate = document.getElementById("excuse_start_date").value;
-        const endDate = document.getElementById("excuse_end_date").value;
-        if (!startDate) messages.push("a start date");
-        if (!endDate) messages.push("an end date");
-        if (startDate && endDate && startDate >= endDate) messages.push("an end date after the start date");
-      } else {
-        // Validate single event selection
-        const eventSelect = document.getElementById("excuse_event_ids");
-        const selectedCount = eventSelect ? eventSelect.selectedOptions.length : 0;
-        if (selectedCount === 0) messages.push("at least one event");
-      }
-
-      if (messages.length > 0) {
-        event.preventDefault();
-        alert("You must provide " + messages.join(" and ") + " before submitting.");
-      }
-    });
-
-    // --- Date filter logic (only for non-recurring mode) ---
+  // This function handles the toggle logic
+  function setupExcuseToggle() {
+    const toggle = document.getElementById("recurring-toggle");
+    const singleDiv = document.getElementById("single-fields");
+    const recurringDiv = document.getElementById("recurring-fields");
     const dateFilter = document.getElementById("event-date-filter");
-    const eventSelect = document.getElementById("excuse_event_ids");
-    const allOptions = Array.from(eventSelect.options);
+    const eventSelect = document.getElementById("event-select");
+    const hiddenDaysInput = document.getElementById("recurring-days-hidden");
+    const dayCheckboxes = document.querySelectorAll(".day-cb");
 
-    dateFilter.addEventListener("change", function() {
-      const selectedDate = dateFilter.value;
-      const selectedValues = Array.from(eventSelect.selectedOptions).map(o => o.value);
+    // Guard clause: if we aren't on the page with the toggle, stop.
+    if (!toggle || !singleDiv || !recurringDiv) return;
 
-      eventSelect.innerHTML = "";
-      allOptions.forEach(option => {
-        const optionDate = option.getAttribute("data-date");
-        if (!selectedDate || optionDate === selectedDate || selectedValues.includes(option.value)) {
-          const clone = option.cloneNode(true);
-          if (selectedValues.includes(option.value)) {
-            clone.selected = true;
-          }
-          eventSelect.appendChild(clone);
-        }
-      });
+    console.log("Excuse form JS initialized"); // DEBUG: Check your browser console (F12)
 
-      if (eventSelect.options.length === 1) {
-        eventSelect.selectedIndex = 0;
+    function updateFormMode() {
+      if (toggle.checked) {
+        singleDiv.style.display = "none";
+        recurringDiv.style.display = "block";
+      } else {
+        singleDiv.style.display = "block";
+        recurringDiv.style.display = "none";
       }
-    });
-
-    eventSelect.addEventListener("change", function() {
-      const selectedOption = eventSelect.options[eventSelect.selectedIndex];
-      if (selectedOption && selectedOption.getAttribute("data-date")) {
-        dateFilter.value = selectedOption.getAttribute("data-date");
-      }
-    });
-
-    // On page load, if an event is pre-selected, set the date filter
-    const initialSelected = eventSelect.selectedOptions && eventSelect.selectedOptions[0];
-    if (initialSelected && initialSelected.getAttribute("data-date") && dateFilter) {
-      dateFilter.value = initialSelected.getAttribute("data-date");
-      dateFilter.dispatchEvent(new Event('change', { bubbles: true }));
     }
-  });
+
+    // Filter logic
+    if (dateFilter && eventSelect) {
+      dateFilter.addEventListener("change", function() {
+        const selectedDate = this.value;
+        Array.from(eventSelect.options).forEach(opt => {
+          const optDate = opt.getAttribute("data-date");
+          opt.style.display = (!selectedDate || optDate === selectedDate) ? "block" : "none";
+        });
+      });
+    }
+
+    // Day Checkbox sync
+    function syncDays() {
+      let selected = [];
+      dayCheckboxes.forEach(cb => { if(cb.checked) selected.push(cb.value); });
+      hiddenDaysInput.value = selected.join(",");
+    }
+
+    toggle.addEventListener("change", updateFormMode);
+    dayCheckboxes.forEach(cb => cb.addEventListener("change", syncDays));
+    
+    // Set initial state on load
+    updateFormMode();
+    syncDays();
+  }
+
+  // Support for Rails Turbo, Turbolinks, and standard page loads
+  document.addEventListener("turbo:load", setupExcuseToggle);
+  document.addEventListener("turbolinks:load", setupExcuseToggle);
+  document.addEventListener("DOMContentLoaded", setupExcuseToggle);
 </script>

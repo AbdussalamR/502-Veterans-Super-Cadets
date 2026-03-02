@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 FactoryBot.define do
   factory :user do
     sequence(:email) { |n| "user#{n}@example.com" }
@@ -8,6 +6,7 @@ FactoryBot.define do
     provider { 'google_oauth2' }
     role { 'user' }
     approval_status { 'approved' }
+    association :section
 
     trait :officer do
       role { 'officer' }
@@ -15,14 +14,6 @@ FactoryBot.define do
 
     trait :super_admin do
       role { 'super_admin' }
-    end
-
-    trait :pending do
-      approval_status { 'pending' }
-    end
-
-    trait :rejected do
-      approval_status { 'rejected' }
     end
   end
 end

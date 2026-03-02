@@ -303,4 +303,12 @@ class User < ApplicationRecord
 
     user
   end
+
+  belongs_to :section, optional: true
+
+  # Helper to check if this user is a leader of their section
+  def section_leader?
+    officer? && section.present?
+  end
+  
 end

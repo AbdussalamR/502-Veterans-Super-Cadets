@@ -20,7 +20,15 @@ class Event < ApplicationRecord
                                if: :allow_self_checkin?
 
   # Virtual attributes for repeating events (not saved to the database)
-  attr_accessor :repeat_weekly, :repeat_until
+  attr_accessor :repeat_weekly
+  
+  def repeat_until
+    @repeat_until
+  end
+
+  def repeat_until=(value)
+    @repeat_until = value.is_a?(String) ? (Date.parse(value) rescue nil) : value
+  end
 
   # Callbacks
   before_validation :generate_checkin_passcode, if: :should_generate_passcode?

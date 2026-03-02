@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
+ActiveRecord::Schema[7.0].define(version: 2026_03_02_042819) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -117,6 +117,12 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
     t.index ["reviewer_id"], name: "index_reviewers_to_excuse_on_reviewer_id"
   end
 
+  create_table "sections", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", null: false
     t.string "full_name"
@@ -128,10 +134,12 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
     t.string "role", default: "user", null: false
     t.string "approval_status", default: "pending"
     t.string "calendar_token"
+    t.bigint "section_id"
     t.index ["approval_status"], name: "index_users_on_approval_status"
     t.index ["calendar_token"], name: "index_users_on_calendar_token"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["role"], name: "index_users_on_role"
+    t.index ["section_id"], name: "index_users_on_section_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -145,4 +153,5 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_26_050709) do
   add_foreign_key "excuses", "users", column: "member_id"
   add_foreign_key "reviewers_to_excuse", "excuses"
   add_foreign_key "reviewers_to_excuse", "users", column: "reviewer_id"
+  add_foreign_key "users", "sections"
 end
