@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'attendances/new', type: :view do
+RSpec.describe 'internal/attendances/new', type: :view do
   let(:admin_user) { create(:user, :officer) }
   let(:event) do
     Event.create!(
