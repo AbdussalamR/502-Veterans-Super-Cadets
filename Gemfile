@@ -3,9 +3,10 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem 'concurrent-ruby', '~> 1.2.0'
+# gem 'concurrent-ruby', '~> 1.2.0'
 gem 'nokogiri', '~> 1.16.2', platforms: [:ruby]
-gem 'rails', '~> 7.0.2', '>= 7.0.2.3'
+# gem 'rails', '~> 7.0.2', '>= 7.0.2.3'
+gem 'rails', '~> 8.0'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem 'propshaft'
 # Use postgresql as the database for Active Record
