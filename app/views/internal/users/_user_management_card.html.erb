@@ -1,0 +1,93 @@
+<div class="col-lg-6 col-xl-4 user-card">
+  <div class="card shadow-sm border-0 hover-lift h-100">
+    <!-- User Header -->
+    <div class="card-header <%= 
+      case user.role
+      when 'super_admin' then 'bg-danger bg-opacity-10 border-danger border-opacity-25'
+      when 'officer' then 'bg-warning bg-opacity-10 border-warning border-opacity-25'
+      else 'bg-light'
+      end
+    %> py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <div class="me-3">
+            <% if user.avatar_url.present? %>
+              <img src="<%= user.avatar_url %>" alt="<%= user.full_name %>" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+            <% else %>
+              <i class="bi bi-person-circle display-5 <%= user.super_admin? ? 'text-danger' : (user.officer? ? 'text-warning' : 'text-secondary') %>"></i>
+            <% end %>
+          </div>
+          <div>
+            <h6 class="card-title mb-1 fw-bold">
+              <%= link_to user.full_name, internal_user_path(user), class: "text-decoration-none text-dark" %>
+            </h6>
+            <span class="badge <%= user.super_admin? ? 'bg-danger' : (user.officer? ? 'bg-warning text-dark' : 'bg-secondary') %>">
+              <i class="bi bi-<%= user.super_admin? ? 'shield-fill-exclamation' : (user.officer? ? 'award' : 'person') %> me-1"></i>
+              <%= user.role_display_name %>
+            </span>
+          </div>
+        </div>
+        <% if user == current_user %><span class="badge bg-info">You</span><% end %>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bi bi-envelope text-muted me-2"></i>
+          <small class="text-muted"><%= user.email %></small>
+        </div>
+        <div class="d-flex align-items-center mb-2">
+          <i class="bi bi-music-note text-muted me-2"></i>
+          <small class="text-muted">Section: <%= user.section&.name || 'Unassigned' %></small>
+        </div>
+      </div>
+
+      <div class="row text-center mb-3">
+        <div class="col-6">
+          <div class="p-2 rounded bg-info bg-opacity-10">
+            <div class="h6 text-info mb-1"><%= user.attendances.count %></div>
+            <small class="text-muted">Events</small>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-2 rounded bg-success bg-opacity-10">
+            <div class="h6 text-success mb-1"><%= user.attendances.where(status: 'present').count %></div>
+            <small class="text-muted">Present</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer bg-light border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex gap-2">
+          <%= link_to internal_user_path(user), class: "btn btn-outline-primary btn-sm", title: "Profile" do %><i class="bi bi-eye"></i><span class="btn-text ms-1">Profile</span><% end %>
+          <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit" do %><i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span><% end %>
+          <%= link_to attendance_history_internal_user_path(user), class: "btn btn-outline-info btn-sm", title: "History" do %><i class="bi bi-clock-history"></i><span class="btn-text ms-1">History</span><% end %>
+        </div>
+        
+        <% if current_user.super_admin? && user != current_user %>
+          <div class="dropdown">
+            <button class="btn btn-outline-success btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear me-1"></i>Actions</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <% case user.role %>
+              <% when 'user' %>
+                <li><%= button_to promote_to_officer_internal_user_path(user), method: :patch, data: { confirm: "Promote to officer?" }, class: "dropdown-item text-success" do %><i class="bi bi-arrow-up-circle me-2"></i>Promote to Officer<% end %></li>
+                <li><%= button_to promote_to_super_admin_internal_user_path(user), method: :patch, data: { confirm: "Promote to director?" }, class: "dropdown-item text-danger" do %><i class="bi bi-shield-exclamation me-2"></i>Promote to Director<% end %></li>
+              <% when 'officer' %>
+                <li><%= button_to promote_to_super_admin_internal_user_path(user), method: :patch, data: { confirm: "Promote to director?" }, class: "dropdown-item text-danger" do %><i class="bi bi-shield-exclamation me-2"></i>Promote to Director<% end %></li>
+                <li><%= button_to demote_to_user_internal_user_path(user), method: :patch, data: { confirm: "Demote to member?" }, class: "dropdown-item text-warning" do %><i class="bi bi-arrow-down-circle me-2"></i>Demote to Member<% end %></li>
+              <% when 'super_admin' %>
+                <li><%= button_to demote_to_officer_internal_user_path(user), method: :patch, data: { confirm: "Demote to officer?" }, class: "dropdown-item text-warning" do %><i class="bi bi-arrow-down-circle me-2"></i>Demote to Officer<% end %></li>
+                <li><%= button_to demote_to_user_internal_user_path(user), method: :patch, data: { confirm: "Demote to member?" }, class: "dropdown-item text-warning" do %><i class="bi bi-arrow-down-circle me-2"></i>Demote to Member<% end %></li>
+              <% end %>
+              <li><hr class="dropdown-divider"></li>
+              <li><%= button_to internal_user_path(user), method: :delete, data: { confirm: "PERMANENTLY DELETE #{user.full_name}?" }, class: "dropdown-item text-danger" do %><i class="bi bi-trash me-2"></i>Delete User<% end %></li>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

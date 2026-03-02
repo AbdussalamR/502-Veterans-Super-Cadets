@@ -17,6 +17,11 @@
         <i class="bi bi-table me-2"></i>View Member Information
       <% end %>
     <% end %>
+    <% if current_user.super_admin? %>
+      <%= link_to internal_sections_path, class: "btn btn-outline-primary" do %>
+        <i class="bi bi-music-note-list me-2"></i>Manage Sections
+      <% end %>
+    <% end %>
     <%= link_to admin_registrations_path, class: "btn btn-outline-warning" do %>
       <i class="bi bi-person-check me-2"></i>Registration Approval
     <% end %>
@@ -30,10 +35,10 @@
   <!-- Statistics Dashboard -->
   <div class="row mb-5">
     <% 
-      total_users = @users.count
-      super_admins = @users.select(&:super_admin?)
-      officers = @users.select(&:officer?)
-      regular_users = @users.select(&:user?)
+      total_users = @all_filtered_users.count
+      super_admins = @all_filtered_users.select(&:super_admin?)
+      officers = @all_filtered_users.select(&:officer?)
+      regular_users = @all_filtered_users.select(&:user?)
     %>
     
     <div class="col-md-3">
@@ -45,7 +50,7 @@
           <h3 class="text-danger mb-1"><%= super_admins.count %></h3>
           <p class="text-muted mb-0">Directors</p>
           <small class="text-muted">
-            <%= super_admins.count > 0 ? "#{(super_admins.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+            <%= total_users > 0 ? "#{(super_admins.count.to_f / total_users * 100).round(1)}%" : "0%" %>
           </small>
         </div>
       </div>
@@ -60,7 +65,7 @@
           <h3 class="text-warning mb-1"><%= officers.count %></h3>
           <p class="text-muted mb-0">Officers</p>
           <small class="text-muted">
-            <%= officers.count > 0 ? "#{(officers.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+            <%= total_users > 0 ? "#{(officers.count.to_f / total_users * 100).round(1)}%" : "0%" %>
           </small>
         </div>
       </div>
@@ -75,7 +80,7 @@
           <h3 class="text-secondary mb-1"><%= regular_users.count %></h3>
           <p class="text-muted mb-0">Regular Members</p>
           <small class="text-muted">
-            <%= regular_users.count > 0 ? "#{(regular_users.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+            <%= total_users > 0 ? "#{(regular_users.count.to_f / total_users * 100).round(1)}%" : "0%" %>
           </small>
         </div>
       </div>
@@ -88,7 +93,7 @@
             <i class="bi bi-people-fill"></i>
           </div>
           <h3 class="text-primary mb-1"><%= total_users %></h3>
-          <p class="text-muted mb-0">Total Members</p>
+          <p class="text-muted mb-0">Total Results</p>
           <small class="text-muted">Active Members</small>
         </div>
       </div>
@@ -132,207 +137,62 @@
     </div>
   <% end %>
 
-  <!-- Search Results Info -->
-  <% if @search_term.present? || @selected_role.present? %>
-    <div class="alert alert-info mb-4">
-      <i class="bi bi-info-circle me-2"></i>
-      <% if @search_term.present? && @selected_role.present? %>
-        Showing <%= @users.count %> user(s) matching "<%= @search_term %>" with role "<%= @selected_role.humanize %>"
-      <% elsif @search_term.present? %>
-        Showing <%= @users.count %> user(s) matching "<%= @search_term %>"
-      <% elsif @selected_role.present? %>
-        Showing <%= @users.count %> user(s) with role "<%= @selected_role.humanize %>"
-      <% end %>
-    </div>
-  <% end %>
-
-  <!-- Users Grid -->
-  <div class="row g-4" id="usersGrid">
-    <% if @users.any? %>
-      <% @users.each do |user| %>
-      <div class="col-lg-6 col-xl-4 user-card" 
-           data-name="<%= user.full_name.downcase %>" 
-           data-email="<%= user.email.downcase %>"
-           data-role="<%= user.role %>">
-        <div class="card shadow-sm border-0 hover-lift h-100">
-          <!-- User Header -->
-          <div class="card-header <%= 
-            case user.role
-            when 'super_admin' then 'bg-danger bg-opacity-10 border-danger border-opacity-25'
-            when 'officer' then 'bg-warning bg-opacity-10 border-warning border-opacity-25'
-            else 'bg-light'
-            end
-          %> py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex align-items-center">
-                <div class="me-3">
-                  <% if user.avatar_url.present? %>
-                    <img src="<%= user.avatar_url %>" alt="<%= user.full_name %>" 
-                         class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
-                  <% else %>
-                    <i class="bi bi-person-circle display-5 <%= 
-                      case user.role
-                      when 'super_admin' then 'text-danger'
-                      when 'officer' then 'text-warning'
-                      else 'text-secondary'
-                      end
-                    %>"></i>
-                  <% end %>
-                </div>
-                <div>
-                  <h6 class="card-title mb-1 fw-bold">
-                    <%= link_to user.full_name, internal_user_path(user), class: "text-decoration-none text-dark" %>
-                  </h6>
-                  <span class="badge <%= 
-                    case user.role
-                    when 'super_admin' then 'bg-danger'
-                    when 'officer' then 'bg-warning text-dark'
-                    else 'bg-secondary'
-                    end
-                  %>">
-                    <i class="bi bi-<%= 
-                      case user.role
-                      when 'super_admin' then 'shield-fill-exclamation'
-                      when 'officer' then 'award'
-                      else 'person'
-                      end
-                    %> me-1"></i>
-                    <%= user.role_display_name %>
-                  </span>
-                </div>
-              </div>
-              
-              <!-- Current User Indicator -->
-              <% if user == current_user %>
-                <span class="badge bg-info">
-                  <i class="bi bi-person-check me-1"></i>You
-                </span>
-              <% end %>
-            </div>
-          </div>
-
-          <!-- User Details -->
-          <div class="card-body">
-            <div class="mb-3">
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-envelope text-muted me-2"></i>
-                <small class="text-muted"><%= user.email %></small>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-calendar3 text-muted me-2"></i>
-                <small class="text-muted">Member since <%= user.created_at.strftime("%B %Y") %></small>
-              </div>
-              <div class="d-flex align-items-center">
-                <i class="bi bi-activity text-muted me-2"></i>
-                <small class="text-muted">
-                  <%= pluralize(user.attendances.count, 'event attended') %>
-                </small>
-              </div>
-            </div>
-
-            <!-- User Statistics -->
-            <div class="row text-center mb-3">
-              <div class="col-6">
-                <div class="p-2 rounded bg-info bg-opacity-10">
-                  <div class="h6 text-info mb-1"><%= user.attendances.count %></div>
-                  <small class="text-muted">Events</small>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="p-2 rounded bg-success bg-opacity-10">
-                  <div class="h6 text-success mb-1"><%= user.attendances.where(status: 'present').count %></div>
-                  <small class="text-muted">Present</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- User Actions -->
-          <div class="card-footer bg-light border-0">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex gap-2">
-                <%= link_to internal_user_path(user), class: "btn btn-outline-primary btn-sm", title: "View Profile" do %>
-                  <i class="bi bi-eye"></i><span class="btn-text ms-1">Profile</span>
-                <% end %>
-                <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit User" do %>
-                  <i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span>
-                <% end %>
-                <%= link_to attendance_history_internal_user_path(user), class: "btn btn-outline-info btn-sm", title: "Attendance History" do %>
-                  <i class="bi bi-clock-history"></i><span class="btn-text ms-1">History</span>
-                <% end %>
-              </div>
-              
-              <!-- Role Actions -->
-              <% if current_user.super_admin? && user != current_user %>
-                <div class="dropdown">
-                  <button class="btn btn-outline-success btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-gear me-1"></i>Actions
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <% case user.role %>
-                    <% when 'user' %>
-                      <li>
-                        <%= button_to promote_to_officer_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to promote #{user.full_name} to officer?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start" do %>
-                          <i class="bi bi-arrow-up-circle me-2 text-success"></i>Promote to Officer
-                        <% end %>
-                      </li>
-                      <li>
-                        <%= button_to promote_to_super_admin_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to promote #{user.full_name} to director?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start text-danger" do %>
-                          <i class="bi bi-shield-exclamation me-2"></i>Promote to Director
-                        <% end %>
-                      </li>
-                    <% when 'officer' %>
-                      <li>
-                        <%= button_to promote_to_super_admin_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to promote #{user.full_name} to director?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start text-danger" do %>
-                          <i class="bi bi-shield-exclamation me-2"></i>Promote to Director
-                        <% end %>
-                      </li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li>
-                        <%= button_to demote_to_user_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to demote #{user.full_name} to member?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start text-warning" do %>
-                          <i class="bi bi-arrow-down-circle me-2"></i>Demote to Member
-                        <% end %>
-                      </li>
-                    <% when 'super_admin' %>
-                      <li>
-                        <%= button_to demote_to_officer_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to demote #{user.full_name} to officer?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start text-warning" do %>
-                          <i class="bi bi-arrow-down-circle me-2"></i>Demote to Officer
-                        <% end %>
-                      </li>
-                      <li>
-                        <%= button_to demote_to_user_internal_user_path(user), method: :patch,
-                            data: { confirm: "Are you sure you want to demote #{user.full_name} to member?" },
-                            class: "dropdown-item border-0 bg-transparent w-100 text-start text-warning" do %>
-                          <i class="bi bi-arrow-down-circle me-2"></i>Demote to Member
-                        <% end %>
-                      </li>
-                    <% end %>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                      <%= button_to internal_user_path(user), method: :delete,
-                          data: { confirm: "Are you sure you want to PERMANENTLY DELETE #{user.full_name}? This action cannot be undone and will remove all their data including attendance records." },
-                          class: "dropdown-item border-0 bg-transparent w-100 text-start text-danger" do %>
-                        <i class="bi bi-trash me-2"></i>Delete User
-                      <% end %>
-                    </li>
-                  </ul>
-                </div>
-              <% end %>
-            </div>
-          </div>
+  <!-- Hierarchical Users Grid -->
+  <div id="usersGrid">
+    <% if @all_filtered_users.any? %>
+      
+      <!-- 1. DIRECTORS SECTION -->
+      <% if @directors.any? %>
+        <div class="d-flex align-items-center mb-3 mt-5">
+          <h2 class="h4 mb-0 fw-bold text-danger">
+            <i class="bi bi-shield-lock-fill me-2"></i>Directors & Leadership
+          </h2>
+          <hr class="flex-grow-1 ms-3">
         </div>
-      </div>
+        <div class="row g-4 mb-5">
+          <% @directors.each do |user| %>
+            <%= render partial: 'user_management_card', locals: { user: user } %>
+          <% end %>
+        </div>
       <% end %>
+
+      <!-- 2. ORGANIZED SECTIONS -->
+      <% @sections.each do |section| %>
+        <%# Find users belonging to this specific section %>
+        <% section_members = @non_directors.select { |u| u.section_id == section.id } %>
+        
+        <% if section_members.any? %>
+          <div class="d-flex align-items-center mb-3 mt-4">
+            <h2 class="h4 mb-0 fw-bold text-primary">
+              <i class="bi bi-music-note-list me-2"></i><%= section.name %>
+            </h2>
+            <hr class="flex-grow-1 ms-3">
+          </div>
+          <div class="row g-4 mb-5">
+            <%# Sort: Section Leaders (Officers) first, then Members alphabetically %>
+            <% section_members.sort_by { |u| [u.officer? ? 0 : 1, u.full_name] }.each do |user| %>
+              <%= render partial: 'user_management_card', locals: { user: user } %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- 3. UNASSIGNED MEMBERS -->
+      <% unassigned = @non_directors.select { |u| u.section_id.nil? } %>
+      <% if unassigned.any? %>
+        <div class="d-flex align-items-center mb-3 mt-4">
+          <h2 class="h4 mb-0 fw-bold text-muted">
+            <i class="bi bi-question-circle me-2"></i>Unassigned / New Members
+          </h2>
+          <hr class="flex-grow-1 ms-3">
+        </div>
+        <div class="row g-4 mb-5">
+          <% unassigned.each do |user| %>
+            <%= render partial: 'user_management_card', locals: { user: user } %>
+          <% end %>
+        </div>
+      <% end %>
+
     <% else %>
       <!-- No Results Message -->
       <div class="col-12">
@@ -341,13 +201,9 @@
             <div class="card-body py-5">
               <i class="bi bi-search text-muted display-1 mb-3"></i>
               <h4 class="text-dark mb-2">No users found</h4>
-              <% if @search_term.present? || @selected_role.present? %>
-                <p class="text-muted">No users match your search criteria. Try adjusting your search terms or filters.</p>
-                <%= link_to internal_users_path, class: "btn btn-outline-primary" do %>
-                  <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
-                <% end %>
-              <% else %>
-                <p class="text-muted">There are no users in the system yet.</p>
+              <p class="text-muted">No users match your criteria.</p>
+              <%= link_to internal_users_path, class: "btn btn-outline-primary" do %>
+                <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
               <% end %>
             </div>
           </div>
@@ -364,10 +220,7 @@
         <div class="card-body text-center py-5">
           <i class="bi bi-shield-exclamation text-danger display-1 mb-4"></i>
           <h3 class="text-dark mb-3">Access Restricted</h3>
-          <p class="text-muted mb-4">
-            You don't have permission to view member management. 
-            This section is only available to officers and directors.
-          </p>
+          <p class="text-muted mb-4">This section is only available to officers and directors.</p>
           <%= link_to internal_events_path, class: "btn btn-primary" do %>
             <i class="bi bi-arrow-left me-2"></i>Return to Dashboard
           <% end %>
@@ -384,332 +237,36 @@
     position: relative;
     z-index: 1;
   }
-  
   .hover-lift:hover {
     transform: translateY(-2px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     z-index: 10;
   }
-  
-  .bg-opacity-5 {
-    --bs-bg-opacity: 0.05;
-  }
-  
-  .border-opacity-25 {
-    --bs-border-opacity: 0.25;
-  }
-  
-  .user-card {
-    transition: opacity 0.3s ease-in-out;
-  }
-  
-  .user-card.hidden {
-    display: none;
-  }
+  .bg-opacity-5 { --bs-bg-opacity: 0.05; }
+  .border-opacity-25 { --bs-border-opacity: 0.25; }
 
-  /* Mobile-Friendly Styles for Member Management */
   @media (max-width: 768px) {
-    /* Header responsive layout - THE FIX FOR TOP BUTTONS */
-    .d-flex.justify-content-between.align-items-center.mb-4 {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 1rem;
-    }
-
-    .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child {
-      width: 100%;
-    }
-
-    /* Stack buttons vertically and make full-width */
-    .d-flex.gap-2 {
-      width: 100%;
-      flex-direction: column !important;
-      gap: 0.5rem !important;
-    }
-
-    .d-flex.gap-2 .btn {
-      width: 100%;
-      min-height: 44px;
-      justify-content: center;
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
-    }
-
-    /* Page title sizing */
-    h1.display-5 {
-      font-size: 1.75rem !important;
-    }
-
-    h1.display-5 + p.text-muted {
-      font-size: 0.875rem !important;
-    }
-
-    /* Statistics cards - full width on mobile */
-    .row.mb-5 > div[class*="col-md-3"] {
-      width: 100%;
-      margin-bottom: 0.75rem;
-    }
-
-    .card-body .display-4 {
-      font-size: 2rem !important;
-    }
-
-    /* Search form - stack inputs vertically */
-    form .row > div[class*="col-md-"] {
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-
-    .input-group {
-      margin-bottom: 0.5rem;
-    }
-
-    form .btn {
-      width: 100%;
-      min-height: 44px;
-    }
-
-    /* User cards - full width on mobile */
-    .row.g-4 > div[class*="col-lg"] {
-      width: 100%;
-    }
-
-    /* Compact card layouts */
-    .card-header {
-      padding: 0.75rem !important;
-    }
-
-    .card-body {
-      padding: 0.75rem !important;
-    }
-
-    .card-footer {
-      padding: 0.75rem !important;
-    }
-
-    /* Handle email overflow */
-    .card-body small {
-      font-size: 0.75rem !important;
-      word-break: break-all;
-      line-height: 1.4;
-    }
-
-    /* Icon sizing for mobile */
-    .display-5 {
-      font-size: 2rem !important;
-    }
-
-    .display-6 {
-      font-size: 1.5rem !important;
-    }
-
-    /* Avatar sizing on mobile */
-    .rounded-circle {
-      width: 40px !important;
-      height: 40px !important;
-    }
-
-    /* Badge sizing */
-    .badge {
-      font-size: 0.7rem !important;
-      padding: 0.3em 0.5em;
-    }
-
-    /* Alert boxes */
-    .alert {
-      font-size: 0.9rem;
-      padding: 0.75rem;
-    }
-
-    /* User action buttons in card footer */
-    .card-footer .d-flex {
-      flex-direction: column !important;
-      gap: 0.5rem !important;
-    }
-
-    .card-footer .d-flex > div {
-      width: 100%;
-    }
-
-    .card-footer .d-flex .gap-2 {
-      display: grid !important;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.25rem !important;
-    }
-
-    .card-footer .btn-sm {
-      font-size: 0.75rem;
-      padding: 0.4rem 0.25rem;
-      min-height: 40px;
-    }
-
-    /* Hide text in small buttons on mobile, show only icons */
-    .card-footer .btn-sm .btn-text {
-      display: none;
-    }
-
-    .card-footer .btn-sm i {
-      margin: 0 !important;
-    }
-
-    /* Dropdown menu improvements */
-    .dropdown-menu {
-      font-size: 0.9rem;
-      min-width: 200px;
-    }
-
-    .dropdown-item {
-      padding: 0.75rem 1rem !important;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-    }
-
-    .dropdown-toggle {
-      min-height: 40px;
-      width: 100%;
-    }
-
-    /* User statistics in cards */
-    .row.text-center .col-6 {
-      font-size: 0.875rem;
-    }
-
-    .row.text-center .h6 {
-      font-size: 1rem !important;
-    }
-
-    /* Empty state cards */
-    .text-center.py-5 .card-body {
-      padding: 2rem 1rem !important;
-    }
-
-    .text-center.py-5 .display-1 {
-      font-size: 3rem !important;
-    }
-
-    /* Grid gap reduction */
-    .row.g-4 {
-      gap: 1rem !important;
-    }
-  }
-
-  /* Small phones - extra compact */
-  @media (max-width: 375px) {
-    h1.display-5 {
-      font-size: 1.5rem !important;
-    }
-
-    .card-title {
-      font-size: 0.95rem !important;
-    }
-
-    .btn {
-      font-size: 0.875rem;
-      padding: 0.5rem 0.75rem;
-    }
-
-    .card-body small {
-      font-size: 0.7rem !important;
-    }
-
-    .display-4 {
-      font-size: 1.75rem !important;
-    }
-
-    .card-footer .btn-sm {
-      font-size: 0.7rem;
-      padding: 0.35rem 0.2rem;
-    }
-  }
-
-  /* Landscape orientation on mobile */
-  @media (max-width: 768px) and (orientation: landscape) {
-    .row.mb-5 > div[class*="col-md-3"] {
-      width: 50%;
-      float: left;
-    }
-
-    .row.g-4 > div[class*="col-lg"] {
-      width: 50%;
-      float: left;
-    }
-
-    /* Keep header buttons stacked even in landscape */
-    .d-flex.gap-2 {
-      flex-direction: column !important;
-    }
-  }
-
-  /* Tablet optimization */
-  @media (min-width: 769px) and (max-width: 1024px) {
-    .row > div.col-lg-6 {
-      width: 100%;
-    }
-
-    .row > div.col-xl-4 {
-      width: 50%;
-    }
-
-    /* Header buttons can be horizontal on tablet */
-    .d-flex.gap-2 {
-      flex-direction: row !important;
-    }
-  }
-
-  /* Better button text rendering on mobile */
-  @media (max-width: 768px) {
-    .btn i {
-      margin-right: 0.5rem;
-    }
-
-    /* Make sure action buttons don't wrap awkwardly */
-    .btn {
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
+    .d-flex.justify-content-between.align-items-center.mb-4 { flex-direction: column !important; align-items: flex-start !important; gap: 1rem; }
+    .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child { width: 100%; }
+    .d-flex.gap-2 { width: 100%; flex-direction: column !important; gap: 0.5rem !important; }
+    .d-flex.gap-2 .btn { width: 100%; min-height: 44px; justify-content: center; display: flex; align-items: center; }
+    h1.display-5 { font-size: 1.75rem !important; }
+    .row.mb-5 > div[class*="col-md-3"] { width: 100%; margin-bottom: 0.75rem; }
+    form .row > div[class*="col-md-"] { width: 100%; margin-bottom: 0.5rem; }
+    .card-footer .d-flex .gap-2 { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 0.25rem !important; }
+    .card-footer .btn-sm .btn-text { display: none; }
   }
 </style>
 
-<!-- JavaScript for Enhanced UX -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('userSearch');
     const roleFilter = document.getElementById('roleFilter');
-    const form = document.querySelector('form');
+    if (roleFilter) { roleFilter.addEventListener('change', function() { this.form.submit(); }); }
     
-    // Auto-submit form when role filter changes
-    roleFilter.addEventListener('change', function() {
-      form.submit();
-    });
-    
-    // Add search suggestions or auto-submit functionality
-    let searchTimeout;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(function() {
-        // Auto-submit after 500ms of no typing (optional)
-        // form.submit();
-      }, 500);
-    });
-    
-    // Enhanced confirmation dialogs
     document.querySelectorAll('[data-confirm]').forEach(button => {
       button.addEventListener('click', function(e) {
-        const message = this.getAttribute('data-confirm');
-        if (!confirm(message)) {
-          e.preventDefault();
-        }
+        if (!confirm(this.getAttribute('data-confirm'))) { e.preventDefault(); }
       });
-    });
-    
-    // Add keyboard shortcut for search (Ctrl/Cmd + K)
-    document.addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInput.focus();
-      }
     });
   });
 </script>

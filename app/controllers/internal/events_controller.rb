@@ -39,6 +39,12 @@ module Internal
     def create
       @event = Event.new(event_params)
 
+      # Check validity first to prevent crashes in the recurring logic
+      if @event.invalid?
+        log_create_failure(@event)
+        render :new, status: :unprocessable_entity and return
+      end
+
       if @event.repeat_weekly.to_s == '1' && @event.repeat_until.present?
         create_recurring_events(@event)
       else

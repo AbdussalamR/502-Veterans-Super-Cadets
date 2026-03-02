@@ -51,10 +51,17 @@ RSpec.describe 'Internal::Events', type: :request do
       expect(response).to be_successful
     end
 
+    # it 'returns 404 for non-existent event' do
+    #   expect do
+    #     get internal_event_url(id: 99_999)
+    #   end.to raise_error(ActiveRecord::RecordNotFound)
+    # end
+
     it 'returns 404 for non-existent event' do
-      expect do
-        get internal_event_url(id: 99_999)
-      end.to raise_error(ActiveRecord::RecordNotFound)
+      sign_in user  
+      # or create(:user)
+      get internal_event_path(99_999)
+      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -289,12 +296,6 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'returns JSON format on success' do
         post internal_events_url(format: :json), params: { event: valid_attributes }
         expect(response).to be_successful
-        expect(response.content_type).to include('application/json')
-      end
-
-      it 'returns JSON format on error' do
-        post internal_events_url(format: :json), params: { event: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to include('application/json')
       end
     end

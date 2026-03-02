@@ -26,6 +26,12 @@
       </div>
 
       <div class="col-12">
+        <%= form.label :section_id, "Assign to Voice Section", class: "form-label fw-bold" %>
+        <%= form.collection_select :section_id, Section.all, :id, :name, { include_blank: "No Section / Unassigned" }, class: "form-select" %>
+        <div class="form-text">Officers (Section Leaders) can only review excuses for members in their assigned section.</div>
+      </div>
+
+      <div class="col-12">
         <div class="form-text">
           <strong>Current Role:</strong> 
           <span class="badge <%= 
@@ -52,3 +58,5 @@
   <%= link_to 'Member Profile', internal_user_path(@user), class: 'btn btn-outline-primary' %>
   <%= link_to 'All Members', internal_users_path, class: 'btn btn-outline-secondary' %>
 </div>
+
+

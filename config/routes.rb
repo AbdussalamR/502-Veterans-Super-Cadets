@@ -73,6 +73,9 @@ Rails.application.routes.draw do
     end
     
     resources :demerits
+
+    # Allows Director to Manage Dynamic Sections (Tenor 1, Tenor 2, etc.)
+    resources :sections, only: [:index, :create, :destroy]
     
     # Special route for creating demerits for a specific member
     get '/users/:member_id/demerits/new', to: 'demerits#new', as: 'new_member_demerit'

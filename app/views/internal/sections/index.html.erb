@@ -1,0 +1,33 @@
+<h1>Manage Voice Sections</h1>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <%= form_with model: [:internal, @section], local: true do |f| %>
+      <div class="input-group">
+        <%= f.text_field :name, placeholder: "New Section Name (e.g. Tenor 1)", class: "form-control" %>
+        <%= f.submit "Create Section", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Section Name</th>
+      <th>Member Count</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @sections.each do |s| %>
+      <tr>
+        <td><%= s.name %></td>
+        <td><%= s.users.count %></td>
+        <td>
+          <%= link_to "Remove", internal_section_path(s), method: :delete, data: { confirm: "Are you sure?" }, class: "text-danger" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

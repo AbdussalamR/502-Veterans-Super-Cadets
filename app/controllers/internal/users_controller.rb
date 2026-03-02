@@ -11,20 +11,34 @@ module Internal
                            attendance_history destroy]
 
     def index
-      @users = User.order(:full_name)
+      # 1. Base query with eager loading to prevent N+1 performance issues
+      @all_filtered_users = User.includes(:section, :attendances).order(:full_name)
 
-      # Handle search functionality
+      # 2. Handle search functionality
       if params[:search].present?
-        search_term = params[:search].strip
-        @users = @users.where(
+        search_term = params[:search].strip.downcase
+        @all_filtered_users = @all_filtered_users.where(
           'LOWER(full_name) LIKE ? OR LOWER(email) LIKE ?',
-          "%#{search_term.downcase}%",
-          "%#{search_term.downcase}%"
+          "%#{search_term}%",
+          "%#{search_term}%"
         )
       end
 
-      # Handle role filtering
-      @users = @users.where(role: params[:role]) if params[:role].present?
+      # 3. Handle role filtering
+      @all_filtered_users = @all_filtered_users.where(role: params[:role]) if params[:role].present?
+
+      # 4. Partition users into logical groups for the hierarchical view
+      # Convert to array to avoid re-running queries in the view
+      users_array = @all_filtered_users.to_a
+
+      # Group A: Directors (Super Admins) - Always at the top
+      @directors = users_array.select(&:super_admin?)
+
+      # Group B: Everyone else (to be grouped by section in the view)
+      @non_directors = users_array.reject(&:super_admin?)
+
+      # Fetch sections for iteration
+      @sections = Section.order(:name)
 
       # Store search parameters for form persistence
       @search_term = params[:search]
@@ -210,7 +224,8 @@ module Internal
     end
 
     def user_params
-      params.require(:user).permit(:full_name)
+      # Permission: AC 3: Allowing section_id to be saved
+      params.require(:user).permit(:full_name, :section_id)
     end
   
     def ensure_admin

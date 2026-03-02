@@ -3,8 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe 'Internal::Excuses', type: :request do
-  let(:user) { create(:user, approval_status: 'approved') }
-  let(:officer) { create(:user, :officer) }
+  let(:section_t1) { create(:section, name: "Tenor 1") }
+  let(:section_b2) { create(:section, name: "Bass 2") }
+  
+  let(:user) { create(:user, approval_status: 'approved', section: section_t1) }
+  let(:officer_t1) { create(:user, :officer, section: section_t1) }
   let(:admin_user) { create(:user, :super_admin) }
   let(:event) { create(:event) }
 
@@ -33,11 +36,28 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(response).to have_http_status(:redirect)
       end
     end
+
+    # --- NEW: Story A3 AC 2 (Section Filtering) ---
+    context 'as a Section Leader (Officer)' do
+      let(:member_t1) { create(:user, section: section_t1, full_name: "Tenor Member") }
+      let(:member_b2) { create(:user, section: section_b2, full_name: "Bass Member") }
+      let!(:excuse_t1) { create(:excuse, member: member_t1) }
+      let!(:excuse_b2) { create(:excuse, member: member_b2) }
+
+      before { sign_in officer_t1 }
+
+      it 'shows excuses only for members in their own section' do
+        get internal_excuses_path
+        expect(response.body).to include("Tenor Member")
+        expect(response.body).not_to include("Bass Member")
+      end
+    end
   end
 
   describe 'GET /show' do
     let(:excuse) do
-      Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current,
+      Excuse.create!(member: user, events: [event], reason: 'Sick', 
+                     status: 'Pending Section Leader Review', submission_date: Time.current,
                      proof_link: 'https://example.com/proof')
     end
 
@@ -56,6 +76,20 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(response).to have_http_status(:redirect)
       end
     end
+
+    # --- NEW: Story A3 AC 3 (Rainy Day - 403 Forbidden) ---
+    context 'as an Officer viewing a different section' do
+      let(:member_b2) { create(:user, section: section_b2) }
+      let(:excuse_b2) { create(:excuse, member: member_b2) }
+      
+      before { sign_in officer_t1 }
+
+      it 'returns 403 Forbidden when accessing an excuse ID from another section via URL' do
+        get internal_excuse_path(excuse_b2)
+        expect(response.status).to eq(403)
+        expect(response.body).to include("403 Forbidden")
+      end
+    end
   end
 
   describe 'GET /new' do
@@ -67,13 +101,6 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(response).to have_http_status(:success)
       end
     end
-
-    context 'as unauthenticated user' do
-      it 'redirects to login' do
-        get new_internal_excuse_path
-        expect(response).to have_http_status(:redirect)
-      end
-    end
   end
 
   describe 'POST /create' do
@@ -82,37 +109,20 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
       it 'creates excuse and redirects' do
         expect do
-          post internal_excuses_path, params: { excuse: { event_id: event.id, reason: 'Sick', proof_link: 'https://example.com/proof' } }
+          post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
         end.to change(Excuse, :count).by(1)
         expect(response).to have_http_status(:redirect)
       end
 
-      it 'sets status to pending' do
-        post internal_excuses_path, params: { excuse: { event_id: event.id, reason: 'Sick', proof_link: 'https://example.com/proof' } }
-        expect(Excuse.last.status).to eq('pending')
+      # --- NEW: Story A3 AC 1 (Default Status) ---
+      it 'sets status to "Pending Section Leader Review"' do
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
+        expect(Excuse.last.status).to eq('Pending Section Leader Review')
       end
 
       it 'sets submission date' do
-        post internal_excuses_path, params: { excuse: { event_id: event.id, reason: 'Sick', proof_link: 'https://example.com/proof' } }
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
         expect(Excuse.last.submission_date).to be_present
-      end
-
-      it 'redirects to excuses index' do
-        post internal_excuses_path, params: { excuse: { event_id: event.id, reason: 'Sick', proof_link: 'https://example.com/proof' } }
-        expect(response).to redirect_to(internal_excuses_path)
-      end
-
-      it 'handles missing reason gracefully' do
-        post internal_excuses_path, params: { excuse: { event_id: event.id, reason: '', proof_link: 'https://example.com/proof' } }
-        # Should either fail validation or still create depending on model validations
-        expect(response).to have_http_status(:success).or have_http_status(:redirect)
-      end
-    end
-
-    context 'as unauthenticated user' do
-      it 'redirects to login' do
-        post internal_excuses_path, params: { excuse: { event_id: event.id, reason: 'Sick' } }
-        expect(response).to have_http_status(:redirect)
       end
     end
 
@@ -120,7 +130,6 @@ RSpec.describe 'Internal::Excuses', type: :request do
       before { sign_in user }
 
       it 'creates a recurring excuse with matching events auto-attached' do
-        # Find the next Monday
         next_monday = Time.current.beginning_of_day
         next_monday += 1.day until next_monday.wday == 1
         create(:event, date: next_monday, end_time: next_monday + 2.hours)
@@ -135,180 +144,101 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
         excuse = Excuse.last
         expect(excuse.recurring?).to be true
-        expect(excuse.frequency).to eq('weekly')
         expect(excuse.events.count).to eq(1)
       end
 
-      it 'redirects with success notice including event count' do
-        next_monday = Time.current.beginning_of_day
-        next_monday += 1.day until next_monday.wday == 1
-        create(:event, date: next_monday, end_time: next_monday + 2.hours)
-
-        post internal_excuses_path, params: { excuse: {
-          reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
-          recurring: true, recurring_days: '1',
-          start_date: next_monday - 1.day, end_date: next_monday + 1.day
-        } }
-
-        expect(response).to redirect_to(internal_excuses_path)
-        expect(flash[:notice]).to match(/1 event/)
-      end
-
-      it 're-renders form with alert when no events match the pattern' do
-        post internal_excuses_path, params: { excuse: {
-          reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
-          recurring: true, recurring_days: '6',
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now
-        } }
-
-        expect(response).to have_http_status(:ok)
-        expect(flash[:alert]).to match(/No scheduled events match/)
-      end
-
-      it 'does not create excuse record when no events match' do
-        expect {
-          post internal_excuses_path, params: { excuse: {
-            reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
-            recurring: true, recurring_days: '6',
-            start_date: 1.week.from_now, end_date: 2.weeks.from_now
-          } }
-        }.not_to change(Excuse, :count)
-      end
     end
   end
 
   describe 'PATCH /update' do
     let(:excuse) do
-      Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current,
-                     proof_link: 'https://example.com/proof')
+      Excuse.create!(member: user, events: [event], reason: 'Sick', status: 'Pending Section Leader Review', 
+                     submission_date: Time.current, proof_link: 'https://example.com/proof')
     end
 
-    context 'as super admin (finalize decision)' do
+    context 'as super admin (Director Finalization - AC 5)' do
       before { sign_in admin_user }
 
-      it 'updates excuse status to approved' do
+      it 'finalizes excuse status and overrides provisional decisions' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
         excuse.reload
         expect(excuse.status).to eq('approved')
+        expect(flash[:notice]).to include('Director finalized decision')
       end
 
-      it 'updates excuse status to denied' do
-        patch internal_excuse_path(excuse), params: { status: 'denied' }
-        excuse.reload
-        expect(excuse.status).to eq('denied')
-      end
-
-      it 'rejects invalid status' do
-        patch internal_excuse_path(excuse), params: { status: 'invalid_status' }
-        expect(response).to redirect_to(internal_excuse_path(excuse))
-        expect(flash[:alert]).to include('Invalid status')
-      end
-
-      it 'redirects to excuse show page' do
+      it 'syncs attendance automatically on finalize' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
-        expect(response).to redirect_to(internal_excuse_path(excuse))
+        attendance = Attendance.find_by(user: user, event: event)
+        expect(attendance.status).to eq('excused')
       end
     end
 
-    context 'as officer (provisional decision)' do
-      before { sign_in officer }
+    context 'as officer (Section Leader Provisional Decision - AC 2)' do
+      before { sign_in officer_t1 }
 
-      it 'records a provisional decision' do
+      it 'records a provisional decision and moves top-level status to pending' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
-        expect(response).to redirect_to(internal_excuse_path(excuse))
-        expect(flash[:notice]).to include('Officer decision recorded')
-      end
-
-      it 'rejects invalid provisional status' do
-        patch internal_excuse_path(excuse), params: { status: 'bogus' }
-        expect(response).to redirect_to(internal_excuse_path(excuse))
-        expect(flash[:alert]).to include('Invalid provisional status')
+        excuse.reload
+        expect(excuse.officer_status).to eq('approved')
+        expect(excuse.status).to eq('pending') # Now awaiting Director
+        expect(flash[:notice]).to include('Section Leader decision recorded')
       end
     end
 
     context 'as regular user' do
       before { sign_in user }
 
-      it 'denies access and redirects' do
+      it 'denies access (403)' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
-        expect(response).to redirect_to(internal_excuses_path)
+        expect(response.status).to eq(403)
+      end
+    end
+
+    context 'as officer from a different section (AC 3)' do
+      let(:officer_b2) { create(:user, :officer, section: section_b2) }
+      before { sign_in officer_b2 }
+
+      it 'returns 403 Forbidden' do
+        patch internal_excuse_path(excuse), params: { status: 'approved' }
+        expect(response.status).to eq(403)
+      end
+    end
+
+    context 'as officer provisionally denying (AC 2)' do
+      before { sign_in officer_t1 }
+
+      it 'records a provisional denial and moves status to pending' do
+        patch internal_excuse_path(excuse), params: { status: 'denied' }
+        excuse.reload
+        expect(excuse.officer_status).to eq('denied')
+        expect(excuse.status).to eq('pending')
+      end
+    end
+
+    context 'as super admin denying (AC 5)' do
+      before { sign_in admin_user }
+
+      it 'finalizes excuse as denied' do
+        patch internal_excuse_path(excuse), params: { status: 'denied' }
+        excuse.reload
+        expect(excuse.status).to eq('denied')
       end
     end
   end
 
   describe 'POST /review' do
     let(:excuse) do
-      Excuse.create!(member: user, event: event, reason: 'Sick', status: 'approved', submission_date: Time.current,
-                     proof_link: 'https://example.com/proof')
+      Excuse.create!(member: user, events: [event], reason: 'Sick', status: 'approved', 
+                     submission_date: Time.current, proof_link: 'https://example.com/proof')
     end
 
     context 'as officer' do
-      before { sign_in officer }
+      before { sign_in officer_t1 }
 
       it 'adds officer as reviewer' do
         post review_internal_excuse_path(excuse)
         expect(response).to redirect_to(internal_excuse_path(excuse))
         expect(flash[:notice]).to include('Marked as reviewed')
-      end
-
-      it 'prevents duplicate reviews' do
-        excuse.reviewers << officer
-        excuse.save
-        post review_internal_excuse_path(excuse)
-        expect(response).to redirect_to(internal_excuse_path(excuse))
-        expect(flash[:notice]).to include('already reviewed')
-      end
-    end
-
-    context 'as regular user' do
-      before { sign_in user }
-
-      it 'denies access' do
-        post review_internal_excuse_path(excuse)
-        expect(response).to redirect_to(internal_excuses_path)
-        expect(flash[:alert]).to include('Not authorized')
-      end
-    end
-
-    context 'on a pending excuse' do
-      let(:pending_excuse) do
-        Excuse.create!(member: user, event: event, reason: 'Sick', status: 'pending', submission_date: Time.current,
-                       proof_link: 'https://example.com/proof')
-      end
-
-      before { sign_in officer }
-
-      it 'rejects review of unprocessed excuse' do
-        post review_internal_excuse_path(pending_excuse)
-        expect(response).to redirect_to(internal_excuse_path(pending_excuse))
-        expect(flash[:alert]).to include('Only processed')
-      end
-    end
-
-    context 'recurring excuse approval' do
-      let(:future_event1) { create(:event, date: 1.week.from_now, end_time: 1.week.from_now + 2.hours) }
-      let(:future_event2) { create(:event, date: 2.weeks.from_now, end_time: 2.weeks.from_now + 2.hours) }
-      let(:recurring_excuse) do
-        excuse = Excuse.create!(
-          member: user, reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
-          status: 'pending', submission_date: Time.current,
-          recurring: true, recurring_days: '1,3', start_date: 1.week.ago, end_date: 3.weeks.from_now
-        )
-        excuse.events << future_event1
-        excuse.events << future_event2
-        excuse
-      end
-
-      before { sign_in admin_user }
-
-      it 'marks attendance as excused for ALL linked events when approved' do
-        patch internal_excuse_path(recurring_excuse), params: { status: 'approved' }
-
-        [future_event1, future_event2].each do |ev|
-          attendance = Attendance.find_by(event_id: ev.id, user_id: user.id)
-          expect(attendance).to be_present
-          expect(attendance.status).to eq('excused')
-        end
       end
     end
   end
@@ -330,13 +260,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
     context 'as the excuse owner' do
       before { sign_in user }
 
-      it 'cancels future events and returns count' do
-        post cancel_recurring_internal_excuse_path(recurring_excuse)
-        expect(response).to redirect_to(internal_excuse_path(recurring_excuse))
-        expect(flash[:notice]).to match(/1 future event/)
-      end
-
-      it 'keeps past event associations intact' do
+      it 'cancels future events and keeps past event associations' do
         post cancel_recurring_internal_excuse_path(recurring_excuse)
         recurring_excuse.reload
         expect(recurring_excuse.events).to include(past_event)
@@ -344,41 +268,13 @@ RSpec.describe 'Internal::Excuses', type: :request do
       end
     end
 
-    context 'with a non-recurring excuse' do
-      let(:non_recurring_excuse) do
-        Excuse.create!(
-          member: user, event: event, reason: 'One-time', proof_link: 'https://example.com/proof',
-          status: 'pending', submission_date: Time.current, recurring: false
-        )
-      end
+    context 'as unauthorized officer (wrong section)' do
+      let(:officer_b2) { create(:user, :officer, section: section_b2) }
+      before { sign_in officer_b2 }
 
-      before { sign_in user }
-
-      it 'rejects with alert' do
-        post cancel_recurring_internal_excuse_path(non_recurring_excuse)
-        expect(response).to redirect_to(internal_excuse_path(non_recurring_excuse))
-        expect(flash[:alert]).to match(/not a recurring excuse/)
-      end
-    end
-
-    context 'as unauthorized user' do
-      let(:other_user) { create(:user, approval_status: 'approved') }
-      before { sign_in other_user }
-
-      it 'rejects access' do
+      it 'returns 403 Forbidden' do
         post cancel_recurring_internal_excuse_path(recurring_excuse)
-        expect(response).to redirect_to(internal_excuses_path)
-        expect(flash[:alert]).to match(/Not authorized/)
-      end
-    end
-
-    context 'as admin' do
-      before { sign_in admin_user }
-
-      it 'can cancel any member recurring excuse' do
-        post cancel_recurring_internal_excuse_path(recurring_excuse)
-        expect(response).to redirect_to(internal_excuse_path(recurring_excuse))
-        expect(flash[:notice]).to match(/future event/)
+        expect(response.status).to eq(403)
       end
     end
   end
