@@ -15,5 +15,13 @@ FactoryBot.define do
     trait :super_admin do
       role { 'super_admin' }
     end
+
+    trait :pending do
+      approval_status { 'pending' }
+    end
+
+    trait :rejected do
+      approval_status { 'rejected' }
+    end
   end
 end
