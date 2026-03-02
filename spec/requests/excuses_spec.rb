@@ -193,6 +193,37 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(response.status).to eq(403)
       end
     end
+
+    context 'as officer from a different section (AC 3)' do
+      let(:officer_b2) { create(:user, :officer, section: section_b2) }
+      before { sign_in officer_b2 }
+
+      it 'returns 403 Forbidden' do
+        patch internal_excuse_path(excuse), params: { status: 'approved' }
+        expect(response.status).to eq(403)
+      end
+    end
+
+    context 'as officer provisionally denying (AC 2)' do
+      before { sign_in officer_t1 }
+
+      it 'records a provisional denial and moves status to pending' do
+        patch internal_excuse_path(excuse), params: { status: 'denied' }
+        excuse.reload
+        expect(excuse.officer_status).to eq('denied')
+        expect(excuse.status).to eq('pending')
+      end
+    end
+
+    context 'as super admin denying (AC 5)' do
+      before { sign_in admin_user }
+
+      it 'finalizes excuse as denied' do
+        patch internal_excuse_path(excuse), params: { status: 'denied' }
+        excuse.reload
+        expect(excuse.status).to eq('denied')
+      end
+    end
   end
 
   describe 'POST /review' do

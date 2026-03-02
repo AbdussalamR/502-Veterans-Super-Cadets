@@ -58,7 +58,7 @@ RSpec.describe Excuse, type: :model do
       user = create(:user, approval_status: 'approved')
       excuse = Excuse.new(member: user, reason: 'Test', proof_link: 'not-a-url')
       expect(excuse).not_to be_valid
-      expect(excuse.errors[:proof_link]).to include("is invalid")
+      expect(excuse.errors[:proof_link]).to include("must be a valid URL")
     end
 
     context 'when recurring is true' do
@@ -112,13 +112,50 @@ RSpec.describe Excuse, type: :model do
     end
 
     it "allows a director to finalize a decision (AC 5)" do
-      director = create(:user, :director)
+      director = create(:user, :super_admin)
       excuse = create(:excuse, member: member)
-      
+
       excuse.finalize_by_admin(director, 'denied')
       expect(excuse.status).to eq('denied')
       expect(excuse.reviewed_date).to be_present
       expect(excuse.reviewers).to include(director)
+    end
+
+    it "allows an officer to set a provisional denial" do
+      officer = create(:user, :officer)
+      excuse = create(:excuse, member: member)
+
+      excuse.set_officer_decision(officer, 'denied')
+      expect(excuse.officer_status).to eq('denied')
+      expect(excuse.officer_reviewed_at).to be_present
+      expect(excuse.reviewers).to include(officer)
+    end
+
+    it "rejects invalid decisions for officer" do
+      officer = create(:user, :officer)
+      excuse = create(:excuse, member: member)
+
+      result = excuse.set_officer_decision(officer, 'invalid')
+      expect(result).to be false
+      expect(excuse.officer_status).to be_nil
+    end
+
+    it "rejects invalid decisions for director" do
+      director = create(:user, :super_admin)
+      excuse = create(:excuse, member: member)
+
+      result = excuse.finalize_by_admin(director, 'invalid')
+      expect(result).to be false
+    end
+
+    it "prevents duplicate reviewers" do
+      officer = create(:user, :officer)
+      excuse = create(:excuse, member: member)
+
+      excuse.add_reviewer(officer)
+      result = excuse.add_reviewer(officer)
+      expect(result).to be false
+      expect(excuse.reviewers.where(id: officer.id).count).to eq(1)
     end
   end
 
@@ -263,6 +300,74 @@ RSpec.describe Excuse, type: :model do
         expect(Excuse.denied).to include(@denied_excuse)
         expect(Excuse.denied).not_to include(@approved_excuse, @pending_excuse)
       end
+    end
+
+    describe '.pending_admin_approval' do
+      it 'returns excuses with pending status and officer_status present' do
+        @pending_excuse.update_columns(officer_status: 'approved')
+        expect(Excuse.pending_admin_approval).to include(@pending_excuse)
+        expect(Excuse.pending_admin_approval).not_to include(@approved_excuse, @denied_excuse)
+      end
+
+      it 'excludes pending excuses without officer_status' do
+        expect(Excuse.pending_admin_approval).not_to include(@pending_excuse)
+      end
+    end
+
+    describe '.pending_unprocessed' do
+      it 'returns excuses with Pending Section Leader Review status' do
+        user4 = create(:user, approval_status: 'approved')
+        unprocessed = Excuse.create!(member: user4, reason: 'New', proof_link: 'https://example.com/proof4')
+        expect(Excuse.pending_unprocessed).to include(unprocessed)
+        expect(Excuse.pending_unprocessed).not_to include(@approved_excuse, @pending_excuse, @denied_excuse)
+      end
+    end
+  end
+
+  describe 'full 2-step approval flow (officer → director)' do
+    let(:section) { create(:section, name: 'Tenor 1') }
+    let(:member) { create(:user, approval_status: 'approved', section: section) }
+    let(:officer) { create(:user, :officer, section: section) }
+    let(:director) { create(:user, :super_admin) }
+    let(:event) { create(:event) }
+
+    it 'walks through the complete approval pipeline' do
+      # Step 0: Member creates excuse — defaults to "Pending Section Leader Review"
+      excuse = Excuse.create!(member: member, events: [event], reason: 'Sick', proof_link: 'https://example.com/proof')
+      expect(excuse.status).to eq('Pending Section Leader Review')
+
+      # Step 1: Officer makes provisional approval
+      excuse.set_officer_decision(officer, 'approved')
+      excuse.update!(status: 'pending')
+      expect(excuse.officer_status).to eq('approved')
+      expect(excuse.status).to eq('pending')
+      expect(excuse.reviewers).to include(officer)
+
+      # Step 2: Director finalizes
+      excuse.finalize_by_admin(director, 'approved')
+      expect(excuse.status).to eq('approved')
+      expect(excuse.reviewers).to include(director)
+
+      # Attendance should be synced
+      attendance = Attendance.find_by(user_id: member.id, event_id: event.id)
+      expect(attendance).to be_present
+      expect(attendance.status).to eq('excused')
+    end
+
+    it 'allows director to override officer provisional denial' do
+      excuse = Excuse.create!(member: member, events: [event], reason: 'Sick', proof_link: 'https://example.com/proof')
+
+      # Officer denies
+      excuse.set_officer_decision(officer, 'denied')
+      excuse.update!(status: 'pending')
+      expect(excuse.officer_status).to eq('denied')
+
+      # Director overrides with approval
+      excuse.finalize_by_admin(director, 'approved')
+      expect(excuse.status).to eq('approved')
+
+      attendance = Attendance.find_by(user_id: member.id, event_id: event.id)
+      expect(attendance.status).to eq('excused')
     end
   end
 end

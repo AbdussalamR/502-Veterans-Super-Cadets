@@ -155,7 +155,7 @@ class Excuse < ApplicationRecord
       # REVOKED: If status changed from approved to denied/pending, revert to absent
       events.each do |event|
         attn = Attendance.find_by(event_id: event.id, user_id: member_id)
-        attn&.update!(status: 'absent', note: "Excuse ##{id} revoked/changed") if attn&.excused?
+        attn&.update!(status: 'absent', note: "Excuse ##{id} revoked/changed") if attn&.status == 'excused'
       end
     end
   end
