@@ -1,0 +1,46 @@
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <%= link_to internal_events_path, class: "text-decoration-none" do %>
+        <i class="bi bi-house me-1"></i>Dashboard
+      <% end %>
+    </li>
+    <% if @member %>
+      <li class="breadcrumb-item">
+        <%= link_to internal_users_path, class: "text-decoration-none" do %>
+          <i class="bi bi-people me-1"></i>Members
+        <% end %>
+      </li>
+      <li class="breadcrumb-item">
+        <%= link_to internal_user_path(@member), class: "text-decoration-none" do %>
+          <%= truncate(@member.full_name, length: 20) %>
+        <% end %>
+      </li>
+    <% else %>
+      <li class="breadcrumb-item">
+        <%= link_to internal_demerits_path, class: "text-decoration-none" do %>
+          <i class="bi bi-exclamation-triangle me-1"></i>Discipline Points
+        <% end %>
+      </li>
+    <% end %>
+    <li class="breadcrumb-item active" aria-current="page">Add Discipline Points</li>
+  </ol>
+</nav>
+
+<!-- Page Header -->
+<div class="mb-4 text-center">
+  <h1 class="h2 fw-bold text-dark mb-2">
+    <i class="bi bi-plus-circle me-2 text-warning"></i>
+    <% if @member %>
+      Add Discipline Points for <%= @member.full_name %>
+    <% else %>
+      Add Discipline Points
+    <% end %>
+  </h1>
+  <p class="text-muted mb-0">
+    <i class="bi bi-info-circle me-1"></i>Assign discipline points to a member
+  </p>
+</div>
+
+<%= render 'form', demerit: @demerit, heading: "Add Discipline Points", submit_text: "Create Discipline Record" %>

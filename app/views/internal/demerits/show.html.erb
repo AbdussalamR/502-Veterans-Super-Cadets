@@ -1,0 +1,290 @@
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <%= link_to internal_events_path, class: "text-decoration-none" do %>
+        <i class="bi bi-house me-1"></i>Dashboard
+      <% end %>
+    </li>
+    <% if current_user.admin? %>
+      <li class="breadcrumb-item">
+        <%= link_to internal_demerits_path, class: "text-decoration-none" do %>
+          <i class="bi bi-exclamation-triangle me-1"></i>Discipline Points
+        <% end %>
+      </li>
+    <% else %>
+      <li class="breadcrumb-item">
+        <%= link_to internal_user_path(current_user), class: "text-decoration-none" do %>
+          <i class="bi bi-person me-1"></i>My Profile
+        <% end %>
+      </li>
+      <li class="breadcrumb-item">
+        <%= link_to attendance_history_internal_user_path(current_user), class: "text-decoration-none" do %>
+          Attendance History
+        <% end %>
+      </li>
+    <% end %>
+    <li class="breadcrumb-item active" aria-current="page">Discipline Record Details</li>
+  </ol>
+</nav>
+
+<!-- Main Content -->
+<div class="row">
+  <div class="col-lg-8">
+    <!-- Page Header Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-warning text-white border-0 py-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h2 mb-2 text-white">
+              <i class="bi bi-exclamation-triangle me-2"></i>Discipline Record Details
+            </h1>
+            <p class="mb-0 text-white-50">
+              <i class="bi bi-hash me-2"></i>Record ID: <%= @demerit.id %>
+            </p>
+          </div>
+          <div class="text-end">
+            <div class="display-4 text-white">
+              <i class="bi bi-file-text"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discipline Record Details Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-light border-0">
+        <h5 class="mb-0">
+          <i class="bi bi-info-circle text-primary me-2"></i>Discipline Information
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-4">
+          <!-- Member Information -->
+          <div class="col-12">
+            <div class="d-flex align-items-center p-3 bg-light rounded">
+              <div class="me-3">
+                <i class="bi bi-person-circle display-6 text-primary"></i>
+              </div>
+              <div>
+                <label class="text-muted small mb-1">Member</label>
+                <div class="fw-medium fs-5">
+                  <%= link_to internal_user_path(@demerit.member), class: "text-decoration-none" do %>
+                    <i class="bi bi-arrow-right-circle me-2"></i><%= @demerit.member.full_name %>
+                  <% end %>
+                </div>
+                <small class="text-muted">
+                  <i class="bi bi-envelope me-1"></i><%= @demerit.member.email %>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Value & Absence Points -->
+          <div class="col-md-6">
+            <div class="card bg-danger bg-opacity-10 border-0 h-100">
+              <div class="card-body">
+                <label class="text-muted small mb-2">
+                  <i class="bi bi-hash me-1"></i>Discipline Point Value
+                </label>
+                <div class="mb-2">
+                  <span class="badge bg-danger fs-3 px-4 py-2"><%= @demerit.value %></span>
+                </div>
+                <small class="text-muted">
+                  <%= @demerit.value %> <%= 'tardy'.pluralize(@demerit.value) %>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card bg-warning bg-opacity-10 border-0 h-100">
+              <div class="card-body">
+                <label class="text-muted small mb-2">
+                  <i class="bi bi-calculator me-1"></i>Absence Points
+                </label>
+                <div class="mb-2">
+                  <span class="badge bg-warning fs-3 px-4 py-2"><%= format_absence_points(@demerit.absence_points) %></span>
+                </div>
+                <small class="text-muted">
+                  Calculated at 0.33 per tardy (3 tardies = 1 absence point)
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="col-md-6">
+            <label class="text-muted small mb-2">
+              <i class="bi bi-calendar3 me-1"></i>Date & Time
+            </label>
+            <div class="fw-medium">
+              <%= @demerit.date.strftime("%B %d, %Y") %>
+            </div>
+            <small class="text-muted">
+              <i class="bi bi-clock me-1"></i><%= @demerit.date.strftime("%I:%M %p") %>
+            </small>
+          </div>
+
+          <!-- Given By -->
+          <div class="col-md-6">
+            <label class="text-muted small mb-2">
+              <i class="bi bi-person-badge me-1"></i>Given By
+            </label>
+            <div class="fw-medium">
+              <%= @demerit.given_by.full_name %>
+            </div>
+            <small class="text-muted">
+              <span class="badge bg-<%= @demerit.given_by.super_admin? ? 'danger' : 'warning' %> me-1">
+                <%= @demerit.given_by.role_display_name %>
+              </span>
+            </small>
+          </div>
+
+          <!-- Reason -->
+          <div class="col-12">
+            <label class="text-muted small mb-2">
+              <i class="bi bi-chat-square-text me-1"></i>Reason
+            </label>
+            <div class="p-3 bg-light rounded">
+              <p class="mb-0"><%= simple_format(@demerit.reason) %></p>
+            </div>
+          </div>
+
+          <!-- Created At -->
+          <div class="col-12">
+            <div class="alert alert-info border-info border-start border-4 mb-0">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Created:</strong> <%= @demerit.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                <% if @demerit.updated_at != @demerit.created_at %>
+                  <span class="ms-3">
+                    <strong>Last Updated:</strong> <%= @demerit.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
+                  </span>
+                <% end %>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          <%= link_to internal_user_path(@demerit.member), class: "btn btn-outline-primary" do %>
+            <i class="bi bi-person me-2"></i>View Member Profile
+          <% end %>
+          
+          <%= link_to attendance_history_internal_user_path(@demerit.member), class: "btn btn-outline-info" do %>
+            <i class="bi bi-clock-history me-2"></i>Member Attendance History
+          <% end %>
+          
+          <% if current_user.admin? %>
+            <%= link_to edit_internal_demerit_path(@demerit), class: "btn btn-outline-warning ms-auto" do %>
+              <i class="bi bi-pencil me-2"></i>Edit Discipline Record
+            <% end %>
+            <%= button_to internal_demerit_path(@demerit), method: :delete, 
+                data: { turbo_confirm: "Are you sure you want to delete this discipline record? This action cannot be undone." },
+                class: "btn btn-outline-danger" do %>
+              <i class="bi bi-trash me-2"></i>Delete Record
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-lg-4">
+    <!-- Quick Summary Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-light border-0">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-speedometer2 text-primary me-2"></i>Quick Summary
+        </h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <span>
+              <i class="bi bi-hash text-primary me-2"></i>
+              <strong>Value</strong>
+            </span>
+            <span class="badge bg-danger fs-6"><%= @demerit.value %></span>
+          </li>
+          <li class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <span>
+              <i class="bi bi-calculator text-warning me-2"></i>
+              <strong>Absence Points</strong>
+            </span>
+            <span class="badge bg-warning fs-6"><%= format_absence_points(@demerit.absence_points) %></span>
+          </li>
+          <li class="d-flex justify-content-between align-items-center">
+            <span>
+              <i class="bi bi-calendar3 text-info me-2"></i>
+              <strong>Date</strong>
+            </span>
+            <span class="text-muted"><%= @demerit.date.strftime("%b %d, %Y") %></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Navigation Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light border-0">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-list text-primary me-2"></i>Navigation
+        </h5>
+      </div>
+      <div class="card-body d-grid gap-2">
+        <% if current_user.admin? %>
+          <%= link_to internal_demerits_path, class: "btn btn-outline-secondary" do %>
+            <i class="bi bi-arrow-left me-2"></i>Back to All Discipline Points
+          <% end %>
+          
+          <%= link_to internal_users_path, class: "btn btn-outline-primary" do %>
+            <i class="bi bi-people me-2"></i>Member Management
+          <% end %>
+          
+          <%= link_to absence_report_internal_users_path, class: "btn btn-outline-danger" do %>
+            <i class="bi bi-calendar-x me-2"></i>Absence Report
+          <% end %>
+        <% else %>
+          <%= link_to internal_user_path(current_user), class: "btn btn-outline-secondary" do %>
+            <i class="bi bi-arrow-left me-2"></i>Back to My Profile
+          <% end %>
+          
+          <%= link_to attendance_history_internal_user_path(current_user), class: "btn btn-outline-info" do %>
+            <i class="bi bi-clock-history me-2"></i>My Attendance History
+          <% end %>
+        <% end %>
+        
+        <%= link_to internal_events_path, class: "btn btn-outline-secondary" do %>
+          <i class="bi bi-house me-2"></i>Dashboard
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  .card {
+    transition: transform 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .card:hover {
+    transform: translateY(-1px);
+    z-index: 10;
+  }
+  
+  .bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+  }
+</style>

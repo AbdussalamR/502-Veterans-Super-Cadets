@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Admin
-  class RegistrationsController < ApplicationController
+  class RegistrationsController < InternalController
     include Loggable
     
     before_action :authenticate_user!

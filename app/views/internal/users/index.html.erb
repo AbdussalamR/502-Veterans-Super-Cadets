@@ -1,0 +1,272 @@
+<% content_for :title, "Member Management" %>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-dark mb-1">
+      <i class="bi bi-people me-2 text-primary"></i>Member Management
+    </h1>
+    <p class="text-muted mb-0">Manage member roles, permissions, and access</p>
+  </div>
+  <div class="d-flex gap-2">
+    <% if current_user.admin? || current_user.officer? %>
+      <%= link_to "https://sheets.google.com", 
+          class: "btn btn-outline-info",
+          target: "_blank",
+          title: "Access member information spreadsheet" do %>
+        <i class="bi bi-table me-2"></i>View Member Information
+      <% end %>
+    <% end %>
+    <% if current_user.super_admin? %>
+      <%= link_to internal_sections_path, class: "btn btn-outline-primary" do %>
+        <i class="bi bi-music-note-list me-2"></i>Manage Sections
+      <% end %>
+    <% end %>
+    <%= link_to admin_registrations_path, class: "btn btn-outline-warning" do %>
+      <i class="bi bi-person-check me-2"></i>Registration Approval
+    <% end %>
+    <%= link_to internal_events_path, class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+    <% end %>
+  </div>
+</div>
+
+<% if current_user.admin? %>
+  <!-- Statistics Dashboard -->
+  <div class="row mb-5">
+    <% 
+      total_users = @all_filtered_users.count
+      super_admins = @all_filtered_users.select(&:super_admin?)
+      officers = @all_filtered_users.select(&:officer?)
+      regular_users = @all_filtered_users.select(&:user?)
+    %>
+    
+    <div class="col-md-3">
+      <div class="card bg-danger bg-opacity-10 border-danger border-opacity-25 h-100">
+        <div class="card-body text-center">
+          <div class="display-4 text-danger mb-2">
+            <i class="bi bi-shield-fill-exclamation"></i>
+          </div>
+          <h3 class="text-danger mb-1"><%= super_admins.count %></h3>
+          <p class="text-muted mb-0">Directors</p>
+          <small class="text-muted">
+            <%= total_users > 0 ? "#{(super_admins.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25 h-100">
+        <div class="card-body text-center">
+          <div class="display-4 text-warning mb-2">
+            <i class="bi bi-award"></i>
+          </div>
+          <h3 class="text-warning mb-1"><%= officers.count %></h3>
+          <p class="text-muted mb-0">Officers</p>
+          <small class="text-muted">
+            <%= total_users > 0 ? "#{(officers.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card bg-secondary bg-opacity-10 border-secondary border-opacity-25 h-100">
+        <div class="card-body text-center">
+          <div class="display-4 text-secondary mb-2">
+            <i class="bi bi-person"></i>
+          </div>
+          <h3 class="text-secondary mb-1"><%= regular_users.count %></h3>
+          <p class="text-muted mb-0">Regular Members</p>
+          <small class="text-muted">
+            <%= total_users > 0 ? "#{(regular_users.count.to_f / total_users * 100).round(1)}%" : "0%" %>
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25 h-100">
+        <div class="card-body text-center">
+          <div class="display-4 text-primary mb-2">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <h3 class="text-primary mb-1"><%= total_users %></h3>
+          <p class="text-muted mb-0">Total Results</p>
+          <small class="text-muted">Active Members</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Controls -->
+  <%= form_with url: internal_users_path, method: :get, local: true, class: "mb-4" do |form| %>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
+          </span>
+          <%= form.text_field :search, 
+              value: @search_term, 
+              placeholder: "Search users by name or email...", 
+              class: "form-control",
+              id: "userSearch" %>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <%= form.select :role, 
+            options_for_select([
+              ['All Roles', ''],
+              ['Super Admins', 'super_admin'],
+              ['Officers', 'officer'],
+              ['Regular Users', 'user']
+            ], @selected_role), 
+            {}, 
+            { class: "form-select", id: "roleFilter" } %>
+      </div>
+      <div class="col-md-1">
+        <div class="d-flex gap-2">
+          <%= form.submit "Search", class: "btn btn-primary" %>
+          <% if @search_term.present? || @selected_role.present? %>
+            <%= link_to "Clear", internal_users_path, class: "btn btn-outline-secondary" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Hierarchical Users Grid -->
+  <div id="usersGrid">
+    <% if @all_filtered_users.any? %>
+      
+      <!-- 1. DIRECTORS SECTION -->
+      <% if @directors.any? %>
+        <div class="d-flex align-items-center mb-3 mt-5">
+          <h2 class="h4 mb-0 fw-bold text-danger">
+            <i class="bi bi-shield-lock-fill me-2"></i>Directors & Leadership
+          </h2>
+          <hr class="flex-grow-1 ms-3">
+        </div>
+        <div class="row g-4 mb-5">
+          <% @directors.each do |user| %>
+            <%= render partial: 'user_management_card', locals: { user: user } %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- 2. ORGANIZED SECTIONS -->
+      <% @sections.each do |section| %>
+        <%# Find users belonging to this specific section %>
+        <% section_members = @non_directors.select { |u| u.section_id == section.id } %>
+        
+        <% if section_members.any? %>
+          <div class="d-flex align-items-center mb-3 mt-4">
+            <h2 class="h4 mb-0 fw-bold text-primary">
+              <i class="bi bi-music-note-list me-2"></i><%= section.name %>
+            </h2>
+            <hr class="flex-grow-1 ms-3">
+          </div>
+          <div class="row g-4 mb-5">
+            <%# Sort: Section Leaders (Officers) first, then Members alphabetically %>
+            <% section_members.sort_by { |u| [u.officer? ? 0 : 1, u.full_name] }.each do |user| %>
+              <%= render partial: 'user_management_card', locals: { user: user } %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- 3. UNASSIGNED MEMBERS -->
+      <% unassigned = @non_directors.select { |u| u.section_id.nil? } %>
+      <% if unassigned.any? %>
+        <div class="d-flex align-items-center mb-3 mt-4">
+          <h2 class="h4 mb-0 fw-bold text-muted">
+            <i class="bi bi-question-circle me-2"></i>Unassigned / New Members
+          </h2>
+          <hr class="flex-grow-1 ms-3">
+        </div>
+        <div class="row g-4 mb-5">
+          <% unassigned.each do |user| %>
+            <%= render partial: 'user_management_card', locals: { user: user } %>
+          <% end %>
+        </div>
+      <% end %>
+
+    <% else %>
+      <!-- No Results Message -->
+      <div class="col-12">
+        <div class="text-center py-5">
+          <div class="card border-0 bg-light">
+            <div class="card-body py-5">
+              <i class="bi bi-search text-muted display-1 mb-3"></i>
+              <h4 class="text-dark mb-2">No users found</h4>
+              <p class="text-muted">No users match your criteria.</p>
+              <%= link_to internal_users_path, class: "btn btn-outline-primary" do %>
+                <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+<% else %>
+  <!-- Unauthorized Access -->
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-shield-exclamation text-danger display-1 mb-4"></i>
+          <h3 class="text-dark mb-3">Access Restricted</h3>
+          <p class="text-muted mb-4">This section is only available to officers and directors.</p>
+          <%= link_to internal_events_path, class: "btn btn-primary" do %>
+            <i class="bi bi-arrow-left me-2"></i>Return to Dashboard
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Custom Styles -->
+<style>
+  .hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    z-index: 10;
+  }
+  .bg-opacity-5 { --bs-bg-opacity: 0.05; }
+  .border-opacity-25 { --bs-border-opacity: 0.25; }
+
+  @media (max-width: 768px) {
+    .d-flex.justify-content-between.align-items-center.mb-4 { flex-direction: column !important; align-items: flex-start !important; gap: 1rem; }
+    .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child { width: 100%; }
+    .d-flex.gap-2 { width: 100%; flex-direction: column !important; gap: 0.5rem !important; }
+    .d-flex.gap-2 .btn { width: 100%; min-height: 44px; justify-content: center; display: flex; align-items: center; }
+    h1.display-5 { font-size: 1.75rem !important; }
+    .row.mb-5 > div[class*="col-md-3"] { width: 100%; margin-bottom: 0.75rem; }
+    form .row > div[class*="col-md-"] { width: 100%; margin-bottom: 0.5rem; }
+    .card-footer .d-flex .gap-2 { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 0.25rem !important; }
+    .card-footer .btn-sm .btn-text { display: none; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const roleFilter = document.getElementById('roleFilter');
+    if (roleFilter) { roleFilter.addEventListener('change', function() { this.form.submit(); }); }
+    
+    document.querySelectorAll('[data-confirm]').forEach(button => {
+      button.addEventListener('click', function(e) {
+        if (!confirm(this.getAttribute('data-confirm'))) { e.preventDefault(); }
+      });
+    });
+  });
+</script>

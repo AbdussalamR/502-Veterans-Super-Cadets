@@ -37,7 +37,8 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
-  config.fixture_path = Rails.root.join('spec/fixtures').to_s
+  # config.fixture_path = Rails.root.join('spec/fixtures').to_s
+  config.fixture_paths = [Rails.root.join('spec/fixtures')]
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false
@@ -80,6 +81,7 @@ module AuthenticationHelper
   def sign_out
     allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(nil)
     allow_any_instance_of(ApplicationController).to receive(:user_signed_in?).and_return(false)
+    allow_any_instance_of(ApplicationController).to receive(:authenticate_user!).and_call_original
   end
 end
 

@@ -1,0 +1,158 @@
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-dark mb-1">
+      <i class="bi bi-calendar-event me-2 text-primary"></i>Events
+    </h1>
+    <p class="text-muted mb-0">View and manage upcoming events</p>
+  </div>
+  <% if current_user&.admin? %>
+    <%= link_to new_internal_event_path, class: "btn btn-primary btn-lg shadow-sm" do %>
+      <i class="bi bi-plus-circle me-2"></i>New Event
+    <% end %>
+  <% end %>
+</div>
+
+<!-- Clean Subscription Button -->
+<div class="mb-4">
+  <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+    <i class="bi bi-calendar-plus me-2"></i>Subscribe to Events
+  </button>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subscribeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sync with your Personal Calendar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>1. Copy your personal feed link:</h6>
+        <div class="input-group mb-3">
+          <input type="text" value="<%= internal_events_url(format: :ics, token: current_user.calendar_token) %>" 
+                 class="form-control" id="icsLink" readonly>
+          <button class="btn btn-primary" onclick="copyToClipboard('icsLink')">Copy Link</button>
+        </div>
+
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <p><strong>Google Calendar:</strong></p>
+            <ol class="small">
+              <li>Open Google Calendar on a desktop.</li>
+              <li>Beside "Other calendars," click <strong>+</strong> then <strong>From URL</strong>.</li>
+              <li>Paste the link and click <strong>Add calendar</strong>.</li>
+            </ol>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Apple/iPhone:</strong></p>
+            <ol class="small">
+              <li>Open <strong>Settings</strong> > <strong>Calendar</strong>.</li>
+              <li>Tap <strong>Accounts</strong> > <strong>Add Account</strong> > <strong>Other</strong>.</li>
+              <li>Tap <strong>Add Subscribed Calendar</strong> and paste the link.</li>
+            </ol>
+          </div>
+        </div>
+        <hr>
+        <p class="small text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          RSS is also available for news readers:
+        </p>
+
+        <div class="input-group input-group-sm">
+          <input type="text"
+                value="<%= internal_events_url(format: :rss, token: current_user.calendar_token) %>"
+                class="form-control d-none"
+                id="rssLink"
+                readonly>
+          <button class="btn btn-outline-primary"
+                  onclick="copyToClipboard('rssLink')">
+            Copy RSS Link
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(id) {
+  var copyText = document.getElementById(id);
+  copyText.select();
+  navigator.clipboard.writeText(copyText.value);
+  alert("Link copied to clipboard!");
+}
+</script>
+
+<!-- Your existing upcoming/past events sections below -->
+
+<% if @upcoming_events.empty? && @past_events.empty? %>
+  <!-- Empty State -->
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <div class="card border-0 shadow-sm text-center py-5">
+        <div class="card-body">
+          <div class="text-primary mb-4">
+            <i class="bi bi-calendar-x display-1"></i>
+          </div>
+          <h4 class="card-title text-dark mb-3">No Events Yet</h4>
+          <p class="card-text text-muted mb-4">
+            There are no events scheduled at the moment. 
+            <% if current_user&.admin? %>
+              Get started by creating your first event.
+            <% else %>
+              Check back later for new events.
+            <% end %>
+          </p>
+          <% if current_user&.admin? %>
+            <%= link_to new_internal_event_path, class: "btn btn-primary" do %>
+              <i class="bi bi-plus-circle me-2"></i>Create First Event
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <!-- Upcoming Events -->
+  <% unless @upcoming_events.empty? %>
+    <h2 class="fw-bold text-dark mb-3">Upcoming Events</h2>
+    <div class="row g-4 mb-5">
+      <% @upcoming_events.each do |event| %>
+        <%= render partial: "event_card", locals: { event: event, current_user: current_user } %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Past Events -->
+  <% unless @past_events.empty? %>
+    <h2 class="fw-bold text-dark mb-3">Past Events</h2>
+    <div class="row g-4">
+      <% @past_events.each do |event| %>
+        <%= render partial: "event_card", locals: { event: event, current_user: current_user } %>
+      <% end %>
+    </div>
+  <% end %>
+
+<% end %>
+
+<!-- Custom Styles for Hover Effects -->
+<style>
+  .hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    z-index: 10;
+  }
+  
+  .card-header {
+    border-top-left-radius: calc(0.375rem - 1px);
+    border-top-right-radius: calc(0.375rem - 1px);
+  }
+</style>

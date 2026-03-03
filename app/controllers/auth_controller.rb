@@ -23,30 +23,30 @@ class AuthController < ApplicationController
       log_action('user_sign_out', user_info)
       flash[:notice] = 'Signed out successfully.'
     end
-    redirect_to '/users/sign_in'
+    redirect_to '/public/home'
   end
 
   def oauth_redirect
-  # Only use environment variables - do not hardcode IDs
-  client_id = ENV['GOOGLE_CLIENT_ID']
+    # Only use environment variables - do not hardcode IDs
+    client_id = ENV.fetch('GOOGLE_CLIENT_ID', nil)
   
-  if client_id.blank?
-    redirect_to '/users/sign_in', alert: "Google Client ID is missing in the environment variables."
-    return
+    if client_id.blank?
+      redirect_to '/users/sign_in', alert: "Google Client ID is missing in the environment variables."
+      return
+    end
+
+    redirect_uri = oauth_callback_url
+
+    google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' \
+                      "client_id=#{client_id}&" \
+                      "redirect_uri=#{CGI.escape(redirect_uri)}&" \
+                      'response_type=code&' \
+                      'scope=email%20profile&' \
+                      'access_type=offline&' \
+                      'prompt=select_account'
+
+    redirect_to google_auth_url, allow_other_host: true
   end
-
-  redirect_uri = oauth_callback_url
-
-  google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' \
-                    "client_id=#{client_id}&" \
-                    "redirect_uri=#{CGI.escape(redirect_uri)}&" \
-                    'response_type=code&' \
-                    'scope=email%20profile&' \
-                    'access_type=offline&' \
-                    'prompt=select_account'
-
-  redirect_to google_auth_url, allow_other_host: true
-end
 
   
   private

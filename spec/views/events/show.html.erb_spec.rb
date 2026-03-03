@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'events/show', type: :view do
+RSpec.describe 'internal/events/show', type: :view do
   let(:user) { create(:user) }
   let(:event) do
     Event.create!(
