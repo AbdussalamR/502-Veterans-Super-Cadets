@@ -3,11 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe 'Internal::Excuses', type: :request do
-  let(:section_t1) { create(:section, name: "Tenor 1") }
-  let(:section_b2) { create(:section, name: "Bass 2") }
+  let(:section_tenor) { create(:section, name: "Tenor 1") }
+  let(:section_bass) { create(:section, name: "Bass 2") }
   
-  let(:user) { create(:user, approval_status: 'approved', section: section_t1) }
-  let(:officer_t1) { create(:user, :officer, section: section_t1) }
+  let(:user) { create(:user, approval_status: 'approved', section: section_tenor) }
+  let(:officer_tenor) { create(:user, :officer, section: section_tenor) }
   let(:admin_user) { create(:user, :super_admin) }
   let(:event) { create(:event) }
 
@@ -39,12 +39,12 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
     # --- NEW: Story A3 AC 2 (Section Filtering) ---
     context 'as a Section Leader (Officer)' do
-      let(:member_t1) { create(:user, section: section_t1, full_name: "Tenor Member") }
-      let(:member_b2) { create(:user, section: section_b2, full_name: "Bass Member") }
-      let!(:excuse_t1) { create(:excuse, member: member_t1) }
-      let!(:excuse_b2) { create(:excuse, member: member_b2) }
+      let(:member_tenor) { create(:user, section: section_tenor, full_name: "Tenor Member") }
+      let(:member_bass) { create(:user, section: section_bass, full_name: "Bass Member") }
+      let!(:excuse_tenor) { create(:excuse, member: member_tenor) }
+      let!(:excuse_bass) { create(:excuse, member: member_bass) }
 
-      before { sign_in officer_t1 }
+      before { sign_in officer_tenor }
 
       it 'shows excuses only for members in their own section' do
         get internal_excuses_path
@@ -79,13 +79,13 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
     # --- NEW: Story A3 AC 3 (Rainy Day - 403 Forbidden) ---
     context 'as an Officer viewing a different section' do
-      let(:member_b2) { create(:user, section: section_b2) }
-      let(:excuse_b2) { create(:excuse, member: member_b2) }
+      let(:member_bass) { create(:user, section: section_bass) }
+      let(:excuse_bass) { create(:excuse, member: member_bass) }
       
-      before { sign_in officer_t1 }
+      before { sign_in officer_tenor }
 
       it 'returns 403 Forbidden when accessing an excuse ID from another section via URL' do
-        get internal_excuse_path(excuse_b2)
+        get internal_excuse_path(excuse_bass)
         expect(response.status).to eq(403)
         expect(response.body).to include("403 Forbidden")
       end
@@ -146,7 +146,6 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(excuse.recurring?).to be true
         expect(excuse.events.count).to eq(1)
       end
-
     end
   end
 
@@ -174,7 +173,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
     end
 
     context 'as officer (Section Leader Provisional Decision - AC 2)' do
-      before { sign_in officer_t1 }
+      before { sign_in officer_tenor }
 
       it 'records a provisional decision and moves top-level status to pending' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
@@ -195,8 +194,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
     end
 
     context 'as officer from a different section (AC 3)' do
-      let(:officer_b2) { create(:user, :officer, section: section_b2) }
-      before { sign_in officer_b2 }
+      let(:officer_bass) { create(:user, :officer, section: section_bass) }
+      before { sign_in officer_bass }
 
       it 'returns 403 Forbidden' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
@@ -205,7 +204,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
     end
 
     context 'as officer provisionally denying (AC 2)' do
-      before { sign_in officer_t1 }
+      before { sign_in officer_tenor }
 
       it 'records a provisional denial and moves status to pending' do
         patch internal_excuse_path(excuse), params: { status: 'denied' }
@@ -233,7 +232,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
     end
 
     context 'as officer' do
-      before { sign_in officer_t1 }
+      before { sign_in officer_tenor }
 
       it 'adds officer as reviewer' do
         post review_internal_excuse_path(excuse)
@@ -269,8 +268,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
     end
 
     context 'as unauthorized officer (wrong section)' do
-      let(:officer_b2) { create(:user, :officer, section: section_b2) }
-      before { sign_in officer_b2 }
+      let(:officer_bass) { create(:user, :officer, section: section_bass) }
+      before { sign_in officer_bass }
 
       it 'returns 403 Forbidden' do
         post cancel_recurring_internal_excuse_path(recurring_excuse)

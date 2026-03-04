@@ -255,7 +255,7 @@ RSpec.describe Excuse, type: :model do
       end
     end
 
-    describe '#has_future_events?' do
+    describe '#future_events?' do
       it 'returns true when future events exist' do
         future_event = create(:event, date: 1.week.from_now, end_time: 1.week.from_now + 2.hours)
         excuse = Excuse.create!(
@@ -263,7 +263,7 @@ RSpec.describe Excuse, type: :model do
           recurring: true, recurring_days: '1,3', start_date: 1.week.ago, end_date: 2.weeks.from_now
         )
         excuse.events << future_event
-        expect(excuse.has_future_events?).to be true
+        expect(excuse.future_events?).to be true
       end
     end
   end

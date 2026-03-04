@@ -1,6 +1,7 @@
 module Internal
   class ExcusesController < InternalController
     include Loggable
+
     before_action :authenticate_user!
     before_action :set_excuse, only: %i[show update review cancel_recurring]
     
@@ -18,13 +19,13 @@ module Internal
                    end
 
       @excuses = base_query
-                 .includes(:member, :events, :reviewers)
-                 .order(Arel.sql("CASE status 
-                    WHEN 'Pending Section Leader Review' THEN 0 
-                    WHEN 'pending' THEN 1 
-                    WHEN 'denied' THEN 2 
-                    WHEN 'approved' THEN 3 
-                    ELSE 4 END ASC, submission_date DESC"))
+        .includes(:member, :events, :reviewers)
+        .order(Arel.sql("CASE status
+           WHEN 'Pending Section Leader Review' THEN 0
+           WHEN 'pending' THEN 1
+           WHEN 'denied' THEN 2
+           WHEN 'approved' THEN 3
+           ELSE 4 END ASC, submission_date DESC"))
     end
 
     def new

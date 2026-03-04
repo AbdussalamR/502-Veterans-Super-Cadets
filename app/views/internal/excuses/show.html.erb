@@ -154,7 +154,7 @@
             <% end %>
           <% end %>
           <%# AC6: Cancel future recurring excuses %>
-          <% if @excuse.recurring? && @excuse.member_id == current_user.id && @excuse.has_future_events? %>
+          <% if @excuse.recurring? && @excuse.member_id == current_user.id && @excuse.future_events? %>
             <div class="mb-3">
               <%= button_to 'Cancel Future Recurring Excuses',
                     cancel_recurring_internal_excuse_path(@excuse),
