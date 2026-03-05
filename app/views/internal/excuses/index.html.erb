@@ -25,8 +25,7 @@
     <h2 class="h4 fw-semibold mb-3 <%= section[:css] %>"><%= section[:title] %> Excuses</h2>
     <div class="row g-4">
       <% section[:items].each do |excuse| %>
-        <%# Display status visually: prefer officer_status (provisional) over final status %>
-        <% display_status = (excuse.respond_to?(:officer_status) && excuse.officer_status.present?) ? excuse.officer_status : excuse.status %>
+        <% display_status = excuse.status %>
 
         <div class="col-md-6 col-lg-4">
           <div class="card shadow-sm h-100">
@@ -71,7 +70,11 @@
                     when 'approved' then 'bg-success'
                     else 'bg-secondary'
                   end %>">
-                  <%= display_status == 'Pending Section Leader Review' ? 'Pending (SL Review)' : display_status.to_s.capitalize %>
+                  <%= case display_status
+                    when 'Pending Section Leader Review' then 'Pending Officer Review'
+                    when 'pending' then 'Pending Director Approval'
+                    else display_status.to_s.capitalize
+                  end %>
                 </span>
               </p>
 

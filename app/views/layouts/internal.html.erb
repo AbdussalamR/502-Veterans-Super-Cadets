@@ -119,7 +119,7 @@
                 <span class="badge bg-danger ms-2"><%= pending_admin_count %></span>
               <% end %>
             <% elsif current_user.officer? %>
-              <% pending_officer_count = Excuse.pending_unprocessed.count %>
+              <% pending_officer_count = Excuse.pending_unprocessed.joins(:member).where(users: { section_id: current_user.section_id }).count %>
               <% if pending_officer_count > 0 %>
                 <span class="badge bg-danger ms-2"><%= pending_officer_count %></span>
               <% end %>

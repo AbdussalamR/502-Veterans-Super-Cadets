@@ -180,7 +180,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
         excuse.reload
         expect(excuse.officer_status).to eq('approved')
         expect(excuse.status).to eq('pending') # Now awaiting Director
-        expect(flash[:notice]).to include('Section Leader decision recorded')
+        expect(flash[:notice]).to include('Officer decision recorded')
       end
     end
 

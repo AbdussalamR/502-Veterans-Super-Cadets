@@ -37,21 +37,20 @@
             </div>
           <% end %>
 
-          <%# Determine display status: prefer officer_status (provisional) when present %>
-          <% display_status = (@excuse.respond_to?(:officer_status) && @excuse.officer_status.present?) ? @excuse.officer_status : @excuse.status %>
           <div class="mb-3">
             <span class="fw-semibold"><strong>Status:</strong></span>
-            <span class="badge 
-              <%= case display_status
-                when 'pending' then 'bg-warning text-dark'
-                when 'denied' then 'bg-danger'
-                when 'approved' then 'bg-success'
-                else 'bg-secondary'
-              end %>">
-              <%= display_status.to_s.capitalize %>
+            <% status_label = case @excuse.status
+              when 'Pending Section Leader Review' then 'Pending Officer Review'
+              when 'pending' then 'Pending Director Approval'
+              when 'approved' then 'Approved'
+              when 'denied' then 'Denied'
+              else @excuse.status.to_s.capitalize
+            end %>
+            <span class="badge <%= @excuse.status == 'approved' ? 'bg-success' : @excuse.status == 'denied' ? 'bg-danger' : 'bg-warning text-dark' %>">
+              <%= status_label %>
             </span>
-            <% if @excuse.respond_to?(:officer_status) && @excuse.officer_status.present? && @excuse.status == 'pending' %>
-              <small class="text-muted ms-2">(provisional — officer decision)</small>
+            <% if @excuse.officer_status.present? && @excuse.status == 'pending' %>
+              <span class="badge bg-info ms-2">Officer: <%= @excuse.officer_status.capitalize %></span>
             <% end %>
           </div>
 
@@ -67,7 +66,7 @@
                     <small class="text-muted"> — <%= entry.created_at.in_time_zone('Central Time (US & Canada)').strftime("%B %d, %Y at %I:%M %p") %></small>
                     <% if reviewer.role == 'officer' %>
                       <span class="badge bg-warning ms-2">Officer</span>
-                    <% elsif reviewer.role == 'admin' or reviewer.role == 'super_admin' %>
+                    <% elsif reviewer.role == 'super_admin' %>
                       <span class="badge bg-danger ms-2">Admin</span>
                     <% end %>
                   </li>
