@@ -103,7 +103,7 @@ RSpec.describe User, type: :model do
   describe '.from_google' do
     let(:google_params) do
       {
-        email: 'test@example.com',
+        email: 'test@tamu.edu',
         full_name: 'Test User',
         uid: '12345',
         avatar_url: 'http://example.com/avatar.png'
@@ -117,7 +117,7 @@ RSpec.describe User, type: :model do
         }.to change(User, :count).by(1)
 
         user = User.last
-        expect(user.email).to eq('test@example.com')
+        expect(user.email).to eq('test@tamu.edu')
         expect(user.full_name).to eq('Test User')
         expect(user.uid).to eq('12345')
         expect(user.avatar_url).to eq('http://example.com/avatar.png')
@@ -126,7 +126,7 @@ RSpec.describe User, type: :model do
       end
 
       it 'creates a super admin when email is in super admin list' do
-        allow(ENV).to receive(:[]).with('SUPER_ADMIN_EMAILS').and_return('test@example.com')
+        allow(ENV).to receive(:[]).with('SUPER_ADMIN_EMAILS').and_return('test@tamu.edu')
         user = User.from_google(**google_params)
         expect(user.role).to eq('super_admin')
         expect(user.approval_status).to eq('approved')
@@ -134,7 +134,7 @@ RSpec.describe User, type: :model do
     end
 
     context 'when user already exists' do
-      let!(:existing_user) { create(:user, email: 'test@example.com', role: 'officer') }
+      let!(:existing_user) { create(:user, email: 'test@tamu.edu', role: 'officer') }
 
       it 'updates existing user without changing role' do
         expect {

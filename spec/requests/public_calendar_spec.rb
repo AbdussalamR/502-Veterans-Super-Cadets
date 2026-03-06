@@ -17,8 +17,8 @@ RSpec.describe "Public Calendar Endpoints", type: :request do
     let!(:public_event) do
       Event.create!(
         title: "Spring Showcase",
-        date: Time.current + 2.days,
-        end_time: Time.current + 2.days + 2.hours, # Added end_time
+        date: 2.days.from_now,
+        end_time: 2.days.from_now + 2.hours,
         location: "Zach 582",
         description: "A wonderful public performance.",
         is_public: true,
@@ -29,8 +29,8 @@ RSpec.describe "Public Calendar Endpoints", type: :request do
     let!(:private_event) do
       Event.create!(
         title: "Secret Rehearsal",
-        date: Time.current + 3.days,
-        end_time: Time.current + 3.days + 1.hour, # Added end_time
+        date: 3.days.from_now,
+        end_time: 3.days.from_now + 1.hour,
         location: "Choir Room",
         is_public: false
       )
@@ -45,8 +45,8 @@ RSpec.describe "Public Calendar Endpoints", type: :request do
 
     it "includes public event data in the JSON response" do
       get "/public/calendar.json"
-      json_response = JSON.parse(response.body)
-      
+      json_response = response.parsed_body
+
       response_string = json_response.to_s
       expect(response_string).to include("Spring Showcase")
       expect(response_string).to include("Zach 582")

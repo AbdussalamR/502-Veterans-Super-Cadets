@@ -78,8 +78,8 @@ class Excuse < ApplicationRecord
     reviewers_to_excuses.includes(:reviewer).order(created_at: :asc)
   end
 
-  def has_future_events?
-    events.where('date > ?', Time.current).exists?
+  def future_events?
+    events.exists?(['date > ?', Time.current])
   end
 
   # --- Business Logic ---
@@ -91,12 +91,13 @@ class Excuse < ApplicationRecord
       self.events = find_matching_events
     elsif manual_event_ids.present?
       # Link specific events selected in the single-mode multi-select box
-      self.event_ids = Array(manual_event_ids).reject(&:blank?)
+      self.event_ids = Array(manual_event_ids).compact_blank
     end
   end
 
   def find_matching_events
     return Event.none if start_date.blank? || end_date.blank? || recurring_days.blank?
+
     days = recurring_days_array
     Event.where(date: start_date.beginning_of_day..end_date.end_of_day).select do |event|
       days.include?(event.date.wday)
@@ -107,6 +108,7 @@ class Excuse < ApplicationRecord
   # Finalizes the decision and triggers the attendance sync.
   def finalize_by_admin(admin, final_decision)
     return false unless %w[approved denied].include?(final_decision)
+
     self.status = final_decision
     self.reviewed_date = Time.current
     add_reviewer(admin)
@@ -117,6 +119,7 @@ class Excuse < ApplicationRecord
   # Records the Section Leader's recommendation without updating attendance yet.
   def set_officer_decision(officer, decision)
     return false unless %w[approved denied].include?(decision)
+
     self.officer_status = decision
     self.officer_reviewed_at = Time.current
     add_reviewer(officer)
@@ -125,12 +128,14 @@ class Excuse < ApplicationRecord
 
   def add_reviewer(user)
     return false if user.nil? || reviewers.exists?(id: user.id)
+
     reviewers_to_excuses.create(reviewer: user)
   end
 
   # Members can stop future occurrences of a recurring pattern
   def cancel_future_events!
     return unless recurring?
+
     events_to_excuses.joins(:event).where('events.date > ?', Time.current).destroy_all
   end
 

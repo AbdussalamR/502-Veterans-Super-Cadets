@@ -24,7 +24,7 @@ class User < ApplicationRecord
   begin
     has_many :attendances, dependent: :destroy
     has_many :attended_events, through: :attendances, source: :event
-    has_many :excuses, foreign_key: :member_id
+    has_many :excuses, foreign_key: :member_id, dependent: :destroy
     has_many :received_demerits, class_name: 'Demerit', foreign_key: 'member_id', dependent: :destroy
     has_many :given_demerits, class_name: 'Demerit', foreign_key: 'given_by_id', dependent: :nullify
 
@@ -267,6 +267,13 @@ class User < ApplicationRecord
     if user.new_record?
       # Check if this email is in the super admin list
       super_admin_emails = ENV['SUPER_ADMIN_EMAILS']&.split(',')&.map(&:strip) || []
+
+      # Only allow @tamu.edu emails for new accounts (existing accounts are unaffected)
+      unless email.end_with?('@tamu.edu') || super_admin_emails.include?(email)
+        Rails.logger.warn({ action: 'oauth_sign_in_blocked', reason: 'non_tamu_email', email: email, timestamp: Time.current.iso8601 }.to_json)
+        return nil
+      end
+
       initial_role = super_admin_emails.include?(email) ? 'super_admin' : 'user'
       initial_approval = super_admin_emails.include?(email) ? 'approved' : 'pending'
 

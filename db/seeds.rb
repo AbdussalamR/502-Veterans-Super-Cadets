@@ -12,7 +12,7 @@
 # User.where(email: "email to delete").destroy_all
 
 # REPLACE email with your actual Gmail address
-admin = User.find_or_create_by!(email: "deniza.telci@tamu.edu") do |user|
+User.find_or_create_by!(email: "deniza.telci@tamu.edu") do |user|
   user.full_name = "Your Name" # You can put your real name here
   user.uid = "12345" # This is a placeholder; Google will update it when you log in
   user.provider = "google_oauth2"
@@ -23,7 +23,7 @@ end
 # --- Test data for recurring excuses ---
 
 # Officer user
-officer = User.find_or_create_by!(email: "officer@tamu.edu") do |user|
+User.find_or_create_by!(email: "officer@tamu.edu") do |user|
   user.full_name = "Officer Jones"
   user.uid = "officer1"
   user.provider = "google_oauth2"

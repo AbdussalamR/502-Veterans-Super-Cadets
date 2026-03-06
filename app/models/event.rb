@@ -22,12 +22,18 @@ class Event < ApplicationRecord
   # Virtual attributes for repeating events (not saved to the database)
   attr_accessor :repeat_weekly
   
-  def repeat_until
-    @repeat_until
-  end
+  attr_reader :repeat_until
 
   def repeat_until=(value)
-    @repeat_until = value.is_a?(String) ? (Date.parse(value) rescue nil) : value
+    @repeat_until = if value.is_a?(String)
+                      begin
+                        Date.parse(value)
+                      rescue ArgumentError
+                        nil
+                      end
+                    else
+                      value
+                    end
   end
 
   # Callbacks

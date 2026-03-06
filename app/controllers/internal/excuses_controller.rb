@@ -1,6 +1,7 @@
 module Internal
   class ExcusesController < InternalController
     include Loggable
+
     before_action :authenticate_user!
     before_action :set_excuse, only: %i[show update review cancel_recurring]
     
@@ -18,13 +19,13 @@ module Internal
                    end
 
       @excuses = base_query
-                 .includes(:member, :events, :reviewers)
-                 .order(Arel.sql("CASE status 
-                    WHEN 'Pending Section Leader Review' THEN 0 
-                    WHEN 'pending' THEN 1 
-                    WHEN 'denied' THEN 2 
-                    WHEN 'approved' THEN 3 
-                    ELSE 4 END ASC, submission_date DESC"))
+        .includes(:member, :events, :reviewers)
+        .order(Arel.sql("CASE status
+           WHEN 'Pending Section Leader Review' THEN 0
+           WHEN 'pending' THEN 1
+           WHEN 'denied' THEN 2
+           WHEN 'approved' THEN 3
+           ELSE 4 END ASC, submission_date DESC"))
     end
 
     def new
@@ -38,7 +39,7 @@ module Internal
 
       if @excuse.save
         log_create_success(@excuse, { recurring: @excuse.recurring? })
-        redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Section Leader review."
+        redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Officer review."
       else
         log_create_failure(@excuse)
         render :new, status: :unprocessable_entity
@@ -54,10 +55,20 @@ module Internal
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
       elsif current_user.officer?
-        if @excuse.set_officer_decision(current_user, params[:status])
-          @excuse.update(status: 'pending')
+        unless @excuse.status == 'Pending Section Leader Review'
+          return redirect_to internal_excuse_path(@excuse), alert: "This excuse has already been processed and cannot be updated."
+        end
+
+        success = ActiveRecord::Base.transaction do
+          @excuse.set_officer_decision(current_user, params[:status]) &&
+            @excuse.update(status: 'pending')
+        end
+
+        if success
           log_action('excuse_provisionally_processed', { excuse_id: @excuse.id })
-          redirect_to internal_excuse_path(@excuse), notice: "Section Leader decision recorded."
+          redirect_to internal_excuse_path(@excuse), notice: "Officer decision recorded."
+        else
+          redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
       else
         render plain: "403 Forbidden", status: :forbidden
@@ -89,8 +100,8 @@ module Internal
       return if current_user.super_admin?
 
       if current_user.officer?
-        unless current_user.section_id == @excuse.member.section_id
-          render plain: "403 Forbidden - You are not the Section Leader for this member's section.", status: :forbidden and return
+        if current_user.section_id.nil? || current_user.section_id != @excuse.member.section_id
+          render plain: "403 Forbidden - You are not the Officer for this member's section.", status: :forbidden and return
         end
       elsif @excuse.member != current_user
         render plain: "403 Forbidden", status: :forbidden and return

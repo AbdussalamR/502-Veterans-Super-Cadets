@@ -28,7 +28,7 @@
       <div class="col-12">
         <%= form.label :section_id, "Assign to Voice Section", class: "form-label fw-bold" %>
         <%= form.collection_select :section_id, Section.all, :id, :name, { include_blank: "No Section / Unassigned" }, class: "form-select" %>
-        <div class="form-text">Officers (Section Leaders) can only review excuses for members in their assigned section.</div>
+        <div class="form-text">Officers can only review excuses for members in their assigned section.</div>
       </div>
 
       <div class="col-12">
