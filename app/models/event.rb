@@ -190,6 +190,7 @@ class Event < ApplicationRecord
           .where('start_date <= ? AND end_date >= ?', date.to_date, date.to_date)
           .find_each do |excuse|
       next unless excuse.recurring_days_array.include?(date.wday)
+      next unless matches_recurring_time_window?(excuse)
       next if excuse.events.exists?(id: id)
 
       excuse.events << self
@@ -202,6 +203,16 @@ class Event < ApplicationRecord
         a.save
       end
     end
+  end
+
+  def matches_recurring_time_window?(excuse)
+    return true if excuse.recurring_start_time.blank? || excuse.recurring_end_time.blank?
+
+    start_mins = excuse.recurring_start_time.hour * 60 + excuse.recurring_start_time.min
+    end_mins = excuse.recurring_end_time.hour * 60 + excuse.recurring_end_time.min
+    event_mins = date.hour * 60 + date.min
+
+    event_mins >= start_mins && event_mins <= end_mins
   end
 
   def rss_description

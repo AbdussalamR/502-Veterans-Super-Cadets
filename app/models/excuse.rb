@@ -21,7 +21,7 @@ class Excuse < ApplicationRecord
   # STORY U3: Recurring validations (only required if recurring toggle is on)
   validates :start_date, :end_date, presence: true, if: :recurring?
   validates :recurring_days, presence: { message: "must have at least one day selected" }, if: :recurring?
-  validates :recurring_start_time, :recurring_end_time, presence: { message: "must be set for a time-range recurring excuse" }, if: :recurring?
+  validates :recurring_start_time, :recurring_end_time, presence: { message: "must be set for a time-range recurring excuse" }, if: :recurring_time_fields_required?
   validate :recurring_end_time_after_start_time, if: -> { recurring? && recurring_start_time.present? && recurring_end_time.present? }
 
   # Scopes
@@ -159,6 +159,18 @@ class Excuse < ApplicationRecord
   end
 
   private
+
+  def recurring_time_fields_required?
+    return false unless recurring?
+    return true if new_record?
+
+    will_save_change_to_recurring? ||
+      will_save_change_to_start_date? ||
+      will_save_change_to_end_date? ||
+      will_save_change_to_recurring_days? ||
+      recurring_start_time.present? ||
+      recurring_end_time.present?
+  end
 
   def set_default_status
     # STORY A3 AC 1: Specific requirement for default status string
