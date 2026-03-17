@@ -107,6 +107,8 @@ recurring_excuse = Excuse.find_or_create_by!(
   e.start_date = Date.new(2026, 3, 2)
   e.end_date = Date.new(2026, 3, 27)
   e.recurring_days = "1" # Monday
+  e.recurring_start_time = Time.zone.parse('08:00')
+  e.recurring_end_time = Time.zone.parse('23:59')
   e.frequency = "weekly"
 end
 if recurring_excuse.events.empty?
@@ -127,6 +129,8 @@ approved_recurring = Excuse.find_or_create_by!(
   e.start_date = Date.new(2026, 3, 2)
   e.end_date = Date.new(2026, 3, 13)
   e.recurring_days = "3,5" # Wed, Fri
+  e.recurring_start_time = Time.zone.parse('08:00')
+  e.recurring_end_time = Time.zone.parse('23:59')
   e.frequency = "weekly"
 end
 if approved_recurring.events.empty?

@@ -200,6 +200,43 @@ RSpec.describe Excuse, type: :model do
     end
   end
 
+  describe 'legacy recurring excuses without time fields' do
+    let(:member) { create(:user, approval_status: 'approved') }
+
+    let!(:legacy_recurring_excuse) do
+      excuse = create(:excuse, member: member, recurring: false)
+      excuse.update_columns(
+        recurring: true,
+        recurring_days: '1,3',
+        start_date: 2.weeks.ago,
+        end_date: 2.weeks.from_now,
+        recurring_start_time: nil,
+        recurring_end_time: nil,
+        status: 'Pending Section Leader Review'
+      )
+      excuse.reload
+    end
+
+    it 'still allows an officer to record a provisional decision' do
+      officer = create(:user, :officer)
+
+      result = legacy_recurring_excuse.set_officer_decision(officer, 'approved')
+
+      expect(result).to be(true)
+      expect(legacy_recurring_excuse.reload.officer_status).to eq('approved')
+    end
+
+    it 'still allows a director to finalize the decision' do
+      director = create(:user, :super_admin)
+
+      legacy_recurring_excuse.update_columns(status: 'pending')
+      result = legacy_recurring_excuse.finalize_by_admin(director, 'approved')
+
+      expect(result).to be(true)
+      expect(legacy_recurring_excuse.reload.status).to eq('approved')
+    end
+  end
+
   describe 'Attendance Synchronization' do
     let(:event) { create(:event) }
     let(:member) { create(:user, approval_status: 'approved') }

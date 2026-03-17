@@ -186,6 +186,26 @@ RSpec.describe Event, type: :model do
       expect(recurring_excuse.events.reload).not_to include(event)
     end
 
+    it 'does not auto-link events outside a recurring time window' do
+      narrow_window_excuse = Excuse.create!(
+        member: member,
+        recurring: true,
+        recurring_days: '1',
+        start_date: Date.parse('2026-03-02'),
+        end_date: Date.parse('2026-03-30'),
+        status: 'pending',
+        reason: 'Morning-only recurring absence',
+        proof_link: 'https://example.com/morning-proof',
+        recurring_start_time: Time.zone.parse('10:30'),
+        recurring_end_time: Time.zone.parse('12:00')
+      )
+
+      afternoon_monday = Time.zone.local(2026, 3, 9, 14, 0)
+      event = Event.create!(title: 'Afternoon Monday Practice', date: afternoon_monday, end_time: afternoon_monday + 1.hour)
+
+      expect(narrow_window_excuse.events.reload).not_to include(event)
+    end
+
     it 'marks attendance as excused when excuse is already approved' do
       recurring_excuse.update!(status: 'approved')
       event = Event.create!(title: 'Monday Practice', date: monday_in_range, end_time: monday_in_range + 2.hours)
