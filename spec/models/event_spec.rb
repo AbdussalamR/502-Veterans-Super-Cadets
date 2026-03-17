@@ -163,7 +163,9 @@ RSpec.describe Event, type: :model do
         end_date: Date.parse('2026-03-30'),
         status: 'pending',
         reason: 'Recurring absence',
-        proof_link: 'https://example.com/proof'
+        proof_link: 'https://example.com/proof',
+        recurring_start_time: Time.zone.parse('08:00'),
+        recurring_end_time: Time.zone.parse('23:59')
       )
     end
 

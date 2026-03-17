@@ -100,7 +100,7 @@ module Internal
       return if current_user.super_admin?
 
       if current_user.officer?
-        if current_user.section_id.nil? || current_user.section_id != @excuse.member.section_id
+        if current_user.section_id != @excuse.member.section_id
           render plain: "403 Forbidden - You are not the Officer for this member's section.", status: :forbidden and return
         end
       elsif @excuse.member != current_user
@@ -109,7 +109,8 @@ module Internal
     end
 
     def excuse_params
-      params.require(:excuse).permit(:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days, { event_ids: [] })
+      params.require(:excuse).permit(:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days,
+                                     :recurring_start_time, :recurring_end_time, { event_ids: [] })
     end
   end
 end

@@ -154,6 +154,28 @@
     <%= yield %>
   </div>
 
+  <!-- Footer -->
+  <footer class="mt-5 py-4" style="background-color: #500000; color: #fff;">
+    <div class="container text-center">
+      <p class="mb-2 fw-bold">The Singing Cadets &mdash; The Voice of Aggieland</p>
+      <div class="d-flex justify-content-center gap-4 mb-2">
+        <a href="https://www.facebook.com/SingingCadets" target="_blank" rel="noopener" class="text-white" aria-label="Singing Cadets on Facebook">
+          <i class="bi bi-facebook fs-5" aria-hidden="true"></i>
+        </a>
+        <a href="https://www.instagram.com/singingcadets" target="_blank" rel="noopener" class="text-white" aria-label="Singing Cadets on Instagram">
+          <i class="bi bi-instagram fs-5" aria-hidden="true"></i>
+        </a>
+        <a href="https://www.youtube.com/@SingingCadets" target="_blank" rel="noopener" class="text-white" aria-label="Singing Cadets on YouTube">
+          <i class="bi bi-youtube fs-5" aria-hidden="true"></i>
+        </a>
+        <a href="https://twitter.com/SingingCadets" target="_blank" rel="noopener" class="text-white" aria-label="Singing Cadets on X (Twitter)">
+          <i class="bi bi-twitter-x fs-5" aria-hidden="true"></i>
+        </a>
+      </div>
+      <p class="mb-0 small text-white-50">&copy; <%= Time.current.year %> Texas A&amp;M University Singing Cadets</p>
+    </div>
+  </footer>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

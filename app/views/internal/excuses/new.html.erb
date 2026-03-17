@@ -54,6 +54,19 @@
                   <%= f.date_field :end_date, class: "form-control" %>
                 </div>
               </div>
+
+              <label class="form-label text-muted small fw-bold">Time Range (events must fall within this window)</label>
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <%= f.label :recurring_start_time, "From", class: "form-label text-muted small" %>
+                  <%= f.time_field :recurring_start_time, class: "form-control" %>
+                </div>
+                <div class="col-6 mb-3">
+                  <%= f.label :recurring_end_time, "To", class: "form-label text-muted small" %>
+                  <%= f.time_field :recurring_end_time, class: "form-control" %>
+                </div>
+              </div>
+              <div class="form-text small mb-3">Only events starting within this time window on the selected days will be linked.</div>
             </div>
 
             <!-- COMMON FIELDS -->
