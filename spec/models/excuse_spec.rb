@@ -63,24 +63,65 @@ RSpec.describe Excuse, type: :model do
 
     context 'when recurring is true' do
       let(:user) { create(:user, approval_status: 'approved') }
+      let(:valid_times) { { recurring_start_time: Time.zone.parse('09:00'), recurring_end_time: Time.zone.parse('10:00') } }
       let(:base_attrs) { { member: user, reason: 'Recurring absence', proof_link: 'https://example.com/proof', recurring: true } }
 
       it 'requires start_date' do
-        excuse = Excuse.new(base_attrs.merge(end_date: 2.weeks.from_now, recurring_days: '1,3'))
+        excuse = Excuse.new(base_attrs.merge(valid_times).merge(end_date: 2.weeks.from_now, recurring_days: '1,3'))
         expect(excuse).not_to be_valid
         expect(excuse.errors[:start_date]).to include("can't be blank")
       end
 
       it 'requires end_date' do
-        excuse = Excuse.new(base_attrs.merge(start_date: 1.week.from_now, recurring_days: '1,3'))
+        excuse = Excuse.new(base_attrs.merge(valid_times).merge(start_date: 1.week.from_now, recurring_days: '1,3'))
         expect(excuse).not_to be_valid
         expect(excuse.errors[:end_date]).to include("can't be blank")
       end
 
       it 'requires recurring_days' do
-        excuse = Excuse.new(base_attrs.merge(start_date: 1.week.from_now, end_date: 2.weeks.from_now))
+        excuse = Excuse.new(base_attrs.merge(valid_times).merge(start_date: 1.week.from_now, end_date: 2.weeks.from_now))
         expect(excuse).not_to be_valid
         expect(excuse.errors[:recurring_days]).to include("must have at least one day selected")
+      end
+
+      it 'requires recurring_start_time' do
+        excuse = Excuse.new(base_attrs.merge(
+          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+          recurring_days: '1', recurring_end_time: Time.zone.parse('10:00')
+        ))
+        expect(excuse).not_to be_valid
+        expect(excuse.errors[:recurring_start_time]).to be_present
+      end
+
+      it 'requires recurring_end_time' do
+        excuse = Excuse.new(base_attrs.merge(
+          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+          recurring_days: '1', recurring_start_time: Time.zone.parse('09:00')
+        ))
+        expect(excuse).not_to be_valid
+        expect(excuse.errors[:recurring_end_time]).to be_present
+      end
+
+      it 'is invalid when recurring_end_time is before recurring_start_time' do
+        excuse = Excuse.new(base_attrs.merge(
+          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+          recurring_days: '1',
+          recurring_start_time: Time.zone.parse('11:00'),
+          recurring_end_time: Time.zone.parse('09:00')
+        ))
+        expect(excuse).not_to be_valid
+        expect(excuse.errors[:recurring_end_time]).to include("must be after the start time")
+      end
+
+      it 'is invalid when recurring_end_time equals recurring_start_time' do
+        excuse = Excuse.new(base_attrs.merge(
+          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+          recurring_days: '1',
+          recurring_start_time: Time.zone.parse('10:00'),
+          recurring_end_time: Time.zone.parse('10:00')
+        ))
+        expect(excuse).not_to be_valid
+        expect(excuse.errors[:recurring_end_time]).to include("must be after the start time")
       end
     end
 
@@ -159,6 +200,43 @@ RSpec.describe Excuse, type: :model do
     end
   end
 
+  describe 'legacy recurring excuses without time fields' do
+    let(:member) { create(:user, approval_status: 'approved') }
+
+    let!(:legacy_recurring_excuse) do
+      excuse = create(:excuse, member: member, recurring: false)
+      excuse.update_columns(
+        recurring: true,
+        recurring_days: '1,3',
+        start_date: 2.weeks.ago,
+        end_date: 2.weeks.from_now,
+        recurring_start_time: nil,
+        recurring_end_time: nil,
+        status: 'Pending Section Leader Review'
+      )
+      excuse.reload
+    end
+
+    it 'still allows an officer to record a provisional decision' do
+      officer = create(:user, :officer)
+
+      result = legacy_recurring_excuse.set_officer_decision(officer, 'approved')
+
+      expect(result).to be(true)
+      expect(legacy_recurring_excuse.reload.officer_status).to eq('approved')
+    end
+
+    it 'still allows a director to finalize the decision' do
+      director = create(:user, :super_admin)
+
+      legacy_recurring_excuse.update_columns(status: 'pending')
+      result = legacy_recurring_excuse.finalize_by_admin(director, 'approved')
+
+      expect(result).to be(true)
+      expect(legacy_recurring_excuse.reload.status).to eq('approved')
+    end
+  end
+
   describe 'Attendance Synchronization' do
     let(:event) { create(:event) }
     let(:member) { create(:user, approval_status: 'approved') }
@@ -214,12 +292,14 @@ RSpec.describe Excuse, type: :model do
     end
 
     describe '#find_matching_events' do
+      let(:next_monday) do
+        t = Time.current.beginning_of_day
+        t += 1.day until t.wday == 1
+        t
+      end
+
       it 'returns events matching day-of-week within date range' do
-        # Find the next Monday from today
-        next_monday = Time.current.beginning_of_day
-        next_monday += 1.day until next_monday.wday == 1
         event_match = create(:event, date: next_monday, end_time: next_monday + 2.hours)
-        # Create a Tuesday event (should not match)
         tuesday = next_monday + 1.day
         event_no_match = create(:event, date: tuesday, end_time: tuesday + 2.hours)
 
@@ -233,6 +313,73 @@ RSpec.describe Excuse, type: :model do
         expect(matching).to include(event_match)
         expect(matching).not_to include(event_no_match)
       end
+
+      it 'includes events whose start time falls within the time window' do
+        # Event at 11:00 AM on Monday — inside 10:30 AM–12:00 PM window
+        event_inside = create(:event,
+          date: next_monday.change(hour: 11, min: 0),
+          end_time: next_monday.change(hour: 12, min: 0))
+
+        excuse = Excuse.new(
+          member: user, recurring: true, recurring_days: '1',
+          start_date: next_monday - 1.day, end_date: next_monday + 1.day,
+          recurring_start_time: Time.zone.parse('10:30'),
+          recurring_end_time: Time.zone.parse('12:00'),
+          reason: 'Test', proof_link: 'https://example.com/proof'
+        )
+
+        expect(excuse.find_matching_events).to include(event_inside)
+      end
+
+      it 'excludes events whose start time falls outside the time window' do
+        # Event at 2:00 PM on Monday — outside 10:30 AM–12:00 PM window
+        event_outside = create(:event,
+          date: next_monday.change(hour: 14, min: 0),
+          end_time: next_monday.change(hour: 15, min: 0))
+
+        excuse = Excuse.new(
+          member: user, recurring: true, recurring_days: '1',
+          start_date: next_monday - 1.day, end_date: next_monday + 1.day,
+          recurring_start_time: Time.zone.parse('10:30'),
+          recurring_end_time: Time.zone.parse('12:00'),
+          reason: 'Test', proof_link: 'https://example.com/proof'
+        )
+
+        expect(excuse.find_matching_events).not_to include(event_outside)
+      end
+
+      it 'matches all day-matching events when no time range is given' do
+        event_am = create(:event,
+          date: next_monday.change(hour: 9, min: 0),
+          end_time: next_monday.change(hour: 10, min: 0))
+        event_pm = create(:event,
+          date: next_monday.change(hour: 14, min: 0),
+          end_time: next_monday.change(hour: 15, min: 0))
+
+        excuse = Excuse.new(
+          member: user, recurring: true, recurring_days: '1',
+          start_date: next_monday - 1.day, end_date: next_monday + 1.day,
+          reason: 'Test', proof_link: 'https://example.com/proof'
+        )
+
+        result = excuse.find_matching_events
+        expect(result).to include(event_am, event_pm)
+      end
+    end
+
+    describe '#recurring_time_range_label' do
+      it 'returns a formatted time range string' do
+        excuse = Excuse.new(
+          recurring_start_time: Time.zone.parse('11:00'),
+          recurring_end_time: Time.zone.parse('12:00')
+        )
+        expect(excuse.recurring_time_range_label).to eq('11:00 AM – 12:00 PM')
+      end
+
+      it 'returns nil when either time is blank' do
+        excuse = Excuse.new(recurring_start_time: nil, recurring_end_time: nil)
+        expect(excuse.recurring_time_range_label).to be_nil
+      end
     end
 
     describe '#cancel_future_events!' do
@@ -242,7 +389,8 @@ RSpec.describe Excuse, type: :model do
 
         excuse = Excuse.create!(
           member: user, reason: 'Recurring', proof_link: 'https://example.com/proof',
-          recurring: true, recurring_days: '1,3', start_date: 2.weeks.ago, end_date: 2.weeks.from_now
+          recurring: true, recurring_days: '1,3', start_date: 2.weeks.ago, end_date: 2.weeks.from_now,
+          recurring_start_time: Time.zone.parse('08:00'), recurring_end_time: Time.zone.parse('23:59')
         )
         excuse.events << past_event
         excuse.events << future_event
@@ -260,7 +408,8 @@ RSpec.describe Excuse, type: :model do
         future_event = create(:event, date: 1.week.from_now, end_time: 1.week.from_now + 2.hours)
         excuse = Excuse.create!(
           member: user, reason: 'Recurring', proof_link: 'https://example.com/proof',
-          recurring: true, recurring_days: '1,3', start_date: 1.week.ago, end_date: 2.weeks.from_now
+          recurring: true, recurring_days: '1,3', start_date: 1.week.ago, end_date: 2.weeks.from_now,
+          recurring_start_time: Time.zone.parse('08:00'), recurring_end_time: Time.zone.parse('23:59')
         )
         excuse.events << future_event
         expect(excuse.future_events?).to be true

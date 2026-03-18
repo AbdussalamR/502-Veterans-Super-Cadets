@@ -21,6 +21,8 @@ class Excuse < ApplicationRecord
   # STORY U3: Recurring validations (only required if recurring toggle is on)
   validates :start_date, :end_date, presence: true, if: :recurring?
   validates :recurring_days, presence: { message: "must have at least one day selected" }, if: :recurring?
+  validates :recurring_start_time, :recurring_end_time, presence: { message: "must be set for a time-range recurring excuse" }, if: :recurring_time_fields_required?
+  validate :recurring_end_time_after_start_time, if: -> { recurring? && recurring_start_time.present? && recurring_end_time.present? }
 
   # Scopes
   scope :approved, -> { where(status: 'approved') }
@@ -74,6 +76,13 @@ class Excuse < ApplicationRecord
     recurring_days_array.map { |d| DAY_NAMES[d] }.compact.join(', ')
   end
 
+  # Returns "11:00 AM – 12:00 PM" for UI display
+  def recurring_time_range_label
+    return nil if recurring_start_time.blank? || recurring_end_time.blank?
+
+    "#{recurring_start_time.strftime('%I:%M %p')} – #{recurring_end_time.strftime('%I:%M %p')}"
+  end
+
   def reviewer_entries
     reviewers_to_excuses.includes(:reviewer).order(created_at: :asc)
   end
@@ -99,8 +108,18 @@ class Excuse < ApplicationRecord
     return Event.none if start_date.blank? || end_date.blank? || recurring_days.blank?
 
     days = recurring_days_array
-    Event.where(date: start_date.beginning_of_day..end_date.end_of_day).select do |event|
+    candidates = Event.where(date: start_date.beginning_of_day..end_date.end_of_day).select do |event|
       days.include?(event.date.wday)
+    end
+
+    return candidates if recurring_start_time.blank? || recurring_end_time.blank?
+
+    start_mins = recurring_start_time.hour * 60 + recurring_start_time.min
+    end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
+
+    candidates.select do |event|
+      event_mins = event.date.hour * 60 + event.date.min
+      event_mins >= start_mins && event_mins <= end_mins
     end
   end
 
@@ -141,9 +160,27 @@ class Excuse < ApplicationRecord
 
   private
 
+  def recurring_time_fields_required?
+    return false unless recurring?
+    return true if new_record?
+
+    will_save_change_to_recurring? ||
+      will_save_change_to_start_date? ||
+      will_save_change_to_end_date? ||
+      will_save_change_to_recurring_days? ||
+      recurring_start_time.present? ||
+      recurring_end_time.present?
+  end
+
   def set_default_status
     # STORY A3 AC 1: Specific requirement for default status string
     self.status ||= 'Pending Section Leader Review'
+  end
+
+  def recurring_end_time_after_start_time
+    start_mins = recurring_start_time.hour * 60 + recurring_start_time.min
+    end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
+    errors.add(:recurring_end_time, "must be after the start time") if end_mins <= start_mins
   end
 
   # Automatically updates Attendance table when status changes

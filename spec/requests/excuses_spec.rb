@@ -129,22 +129,52 @@ RSpec.describe 'Internal::Excuses', type: :request do
     context 'recurring excuse' do
       before { sign_in user }
 
+      let(:next_monday) do
+        t = Time.current.beginning_of_day
+        t += 1.day until t.wday == 1
+        t
+      end
+
       it 'creates a recurring excuse with matching events auto-attached' do
-        next_monday = Time.current.beginning_of_day
-        next_monday += 1.day until next_monday.wday == 1
-        create(:event, date: next_monday, end_time: next_monday + 2.hours)
+        create(:event, date: next_monday.change(hour: 11), end_time: next_monday.change(hour: 12))
 
         expect {
           post internal_excuses_path, params: { excuse: {
             reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
             recurring: true, recurring_days: '1',
-            start_date: next_monday - 1.day, end_date: next_monday + 1.day
+            start_date: next_monday - 1.day, end_date: next_monday + 1.day,
+            recurring_start_time: '10:30', recurring_end_time: '12:00'
           } }
         }.to change(Excuse, :count).by(1)
 
         excuse = Excuse.last
         expect(excuse.recurring?).to be true
         expect(excuse.events.count).to eq(1)
+      end
+
+      it 'does not attach events outside the specified time window' do
+        create(:event, date: next_monday.change(hour: 14), end_time: next_monday.change(hour: 15))
+
+        post internal_excuses_path, params: { excuse: {
+          reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
+          recurring: true, recurring_days: '1',
+          start_date: next_monday - 1.day, end_date: next_monday + 1.day,
+          recurring_start_time: '10:30', recurring_end_time: '12:00'
+        } }
+
+        expect(Excuse.last.events.count).to eq(0)
+      end
+
+      it 'fails validation without time fields' do
+        expect {
+          post internal_excuses_path, params: { excuse: {
+            reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
+            recurring: true, recurring_days: '1',
+            start_date: next_monday - 1.day, end_date: next_monday + 1.day
+          } }
+        }.not_to change(Excuse, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
@@ -249,7 +279,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
       excuse = Excuse.create!(
         member: user, reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
         status: 'pending', submission_date: Time.current,
-        recurring: true, recurring_days: '1,3', start_date: 2.weeks.ago, end_date: 2.weeks.from_now
+        recurring: true, recurring_days: '1,3', start_date: 2.weeks.ago, end_date: 2.weeks.from_now,
+        recurring_start_time: Time.zone.parse('08:00'), recurring_end_time: Time.zone.parse('23:59')
       )
       excuse.events << past_event
       excuse.events << future_event
@@ -273,6 +304,57 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
       it 'returns 403 Forbidden' do
         post cancel_recurring_internal_excuse_path(recurring_excuse)
+        expect(response.status).to eq(403)
+      end
+    end
+  end
+
+  describe 'section access for officers without a section assigned' do
+    let(:unassigned_member) { create(:user, approval_status: 'approved', section: nil) }
+    let(:unassigned_officer) { create(:user, :officer, section: nil) }
+    let(:excuse_from_unassigned) do
+      Excuse.create!(
+        member: unassigned_member, reason: 'Sick', proof_link: 'https://example.com/proof',
+        status: 'Pending Section Leader Review', submission_date: Time.current
+      )
+    end
+
+    context 'as an officer with no section viewing an unassigned member excuse' do
+      before { sign_in unassigned_officer }
+
+      it 'allows access (nil == nil)' do
+        get internal_excuse_path(excuse_from_unassigned)
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'shows the unassigned member excuse in the index' do
+        excuse_from_unassigned
+        get internal_excuses_path
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(unassigned_member.full_name)
+      end
+    end
+
+    context 'as an officer with no section viewing a section member excuse' do
+      let(:excuse_from_section_member) do
+        Excuse.create!(
+          member: user, reason: 'Sick', proof_link: 'https://example.com/proof',
+          status: 'Pending Section Leader Review', submission_date: Time.current
+        )
+      end
+      before { sign_in unassigned_officer }
+
+      it 'returns 403 Forbidden' do
+        get internal_excuse_path(excuse_from_section_member)
+        expect(response.status).to eq(403)
+      end
+    end
+
+    context 'as a section officer viewing an unassigned member excuse' do
+      before { sign_in officer_tenor }
+
+      it 'returns 403 Forbidden' do
+        get internal_excuse_path(excuse_from_unassigned)
         expect(response.status).to eq(403)
       end
     end

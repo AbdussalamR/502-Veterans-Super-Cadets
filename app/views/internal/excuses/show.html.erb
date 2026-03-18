@@ -30,6 +30,9 @@
               <span class="badge bg-info">Recurring</span>
               <span class="text-muted ms-2">
                 Every <%= @excuse.recurring_day_names %>
+                <% if @excuse.recurring_time_range_label.present? %>
+                  <%= @excuse.recurring_time_range_label %>
+                <% end %>
                 <% if @excuse.start_date.present? && @excuse.end_date.present? %>
                   from <%= @excuse.start_date.strftime("%B %d, %Y") %> to <%= @excuse.end_date.strftime("%B %d, %Y") %>
                 <% end %>
