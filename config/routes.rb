@@ -94,5 +94,9 @@ Rails.application.routes.draw do
         delete :destroy_rejected
       end
     end
+
+    resources :audition_sessions 
   end
+
+  
 end

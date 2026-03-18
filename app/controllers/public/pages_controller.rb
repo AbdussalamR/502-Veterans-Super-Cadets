@@ -8,7 +8,9 @@ module Public
 
     def media_gallery; end
 
-    def audition_information; end
+    def audition_information
+      @audition_sessions = AuditionSession.all
+    end
 
     def calendar
       @events = Event.where(is_public: true)
