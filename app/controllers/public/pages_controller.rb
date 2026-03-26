@@ -10,9 +10,9 @@ module Public
 
     def audition_information
       # @audition_sessions = AuditionSession.all
-      @future_auditions = AuditionSession.where('start_datetime > ?', Time.current)
-      @past_auditions = AuditionSession.where('end_datetime < ?', Time.current)
-      @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', Time.current, Time.current)
+      @future_auditions = AuditionSession.where('start_datetime > ?', Time.current).chronological
+      @past_auditions = AuditionSession.where('end_datetime < ?', Time.current).chronological
+      @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', Time.current, Time.current).chronological
     end
 
     def calendar

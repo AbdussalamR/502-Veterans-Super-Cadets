@@ -2,8 +2,9 @@ class AuditionSession < ApplicationRecord
   validates :label, :start_datetime, :end_datetime, :location, presence: true
   validate :end_after_start
 
-  default_scope { order(start_datetime: :asc) }
-
+  # default_scope { order(start_datetime: :asc) }
+  scope :chronological, -> { order(start_datetime: :asc) }
+  
   private
 
   def end_after_start

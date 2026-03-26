@@ -4,7 +4,7 @@ class Admin::AuditionSessionsController < InternalController
   before_action :set_audition_session, only: %i[edit update destroy]
 
   def index
-    @audition_sessions = AuditionSession.all
+    @audition_sessions = AuditionSession.chronological
   end
 
   def new
