@@ -9,7 +9,10 @@ module Public
     def media_gallery; end
 
     def audition_information
-      @audition_sessions = AuditionSession.all
+      # @audition_sessions = AuditionSession.all
+      @future_auditions = AuditionSession.where('start_datetime > ?', Time.current)
+      @past_auditions = AuditionSession.where('end_datetime < ?', Time.current)
+      @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', Time.current, Time.current)
     end
 
     def calendar
