@@ -137,6 +137,7 @@
                 <span class="badge bg-danger ms-2"><%= pending_registrations %></span>
               <% end %>
             <% end %>
+            <%= link_to "Audition Sessions", admin_audition_sessions_path, class: "nav-link" %>
           <% elsif current_user.user? %>
             <%= link_to internal_my_demerits_path, class: "nav-link" do %>
               Discipline Points
