@@ -149,6 +149,50 @@
           <p>Tools and features for managing the organization</p>
         </div>
 
+        <!-- NAVIGATION - full width, above the grid -->
+          <div class="help-card w-100 mb-4">
+            <div class="card-header">
+              <h3>🧭 Quick Navigation</h3>
+            </div>
+            <div class="card-content">
+              <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <%= link_to internal_events_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">📅</div>
+                  <div class="small fw-semibold text-dark">Events</div>
+                <% end %>
+                <%= link_to internal_excuses_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">📝</div>
+                  <div class="small fw-semibold text-dark">Excuses</div>
+                <% end %>
+                <%= link_to "https://drive.google.com/drive/u/3/folders/0ACAwK4ezZTfMUk9PVA", target: "_blank", rel: "noopener", class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">🎵</div>
+                  <div class="small fw-semibold text-dark">Music Drive</div>
+                <% end %>
+                <%= link_to internal_users_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">👥</div>
+                  <div class="small fw-semibold text-dark">Members</div>
+                <% end %>
+                <%= link_to internal_demerits_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">⚠️</div>
+                  <div class="small fw-semibold text-dark">Discipline</div>
+                <% end %>
+                <%= link_to admin_registrations_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">⚙️</div>
+                  <div class="small fw-semibold text-dark">Registrations</div>
+                <% end %>
+                <%= link_to admin_audition_sessions_path, class: "text-center text-decoration-none" do %>
+                  <div style="font-size: 2rem;">🎙️</div>
+                  <div class="small fw-semibold text-dark">Auditions</div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <!-- remaining cards in the grid -->
+          <div class="help-grid">
+            <!-- all other cards except navigation -->
+          </div>
+
         <div class="help-grid">
           <!-- EVENTS MANAGEMENT -->
           <div class="help-card">
@@ -298,6 +342,7 @@
             </div>
           </div>
 
+          <!-- REGISTRATION MANAGEMENT -->
           <div class="help-card">
             <div class="card-header">
               <h3>⚙️ Registration Management</h3>
@@ -305,7 +350,7 @@
             <div class="card-content">
               <details>
                 <summary class="card-summary"><strong>Manage Sign-ups</strong></summary>
-                <p>Go to <%= link_to "Registrations", admin_registrations_path %> to handle new member registrations.</p>
+                <p>Go to <%= link_to "Registration Approval", admin_registrations_path %> to handle new member registrations.</p>
                 <ul>
                   <li><strong>Pending Members:</strong> View member information awaiting approval</li>
                   <li><strong>Pending Registrations:</strong> Accept or reject new signups</li>
@@ -314,20 +359,21 @@
             </div>
           </div>
 
-          <!-- NAVIGATION -->
+          <!-- AUDITIONS -->
           <div class="help-card">
             <div class="card-header">
-              <h3>🧭 Quick Navigation</h3>
+              <h3>🎙️ Audition Management</h3>
             </div>
             <div class="card-content">
-              <ul class="nav-list">
-                <li>🗓️ <%= link_to "Events", internal_events_path %></li>
-                <li>📋 <%= link_to "Excuses", internal_excuses_path %></li>
-                <li>🎵 <%= link_to "Music Drive", "https://drive.google.com/drive/u/3/folders/0ACAwK4ezZTfMUk9PVA", target: "_blank", rel: "noopener" %></li>
-                <li>👥 <%= link_to "Member Management", internal_users_path %></li>
-                <li>⚠️ <%= link_to "Discipline Points", internal_demerits_path %></li>
-                <li>⚙️ <%= link_to "Registration Approval", admin_registrations_path %></li>
-              </ul>
+              <details>
+                <summary class="card-summary"><strong>Create and Manage Auditions</strong></summary>
+                <p>Go to <%= link_to "Auditions", admin_audition_sessions_path %> to handle auditions.</p>
+                <ul>
+                  <li>Select <strong>Add Session</strong> to create an audition session.</li>
+                  <li>Select <strong>Edit</strong> to modify an audition session.</li>
+                  <li>Select <strong>Delete</strong> to delete an audition session.</li>
+                </ul>
+              </details>
             </div>
           </div>
         </div>
