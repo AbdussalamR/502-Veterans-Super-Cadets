@@ -179,9 +179,9 @@ class Event < ApplicationRecord
   before_destroy :destroy_related_excuses
 
   def destroy_related_excuses
-    # Only destroy excuses that are exclusively linked to this event
+    # Destroy only non-recurring excuses exclusively linked to this event
     excuses.each do |excuse|
-      excuse.destroy if excuse.events.count == 1 # only linked to this event
+      excuse.destroy if excuse.events.count == 1 && !excuse.recurring?
     end
   end
 

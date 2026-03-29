@@ -187,7 +187,8 @@ class Excuse < ApplicationRecord
   def sync_attendance_records
     if status == 'approved'
       # DIRECTOR APPROVED: Mark all linked events as Excused
-      events.each do |event|
+      # Reload association to ensure we have the latest linked events from the DB
+      events.reload.each do |event|
         Attendance.find_or_initialize_by(event_id: event.id, user_id: member_id).update!(
           status: 'excused',
           note: "Excused - Approved excuse ##{id}"
@@ -195,7 +196,7 @@ class Excuse < ApplicationRecord
       end
     elsif status_before_last_save == 'approved' && status != 'approved'
       # REVOKED: If status changed from approved to denied/pending, revert to absent
-      events.each do |event|
+      events.reload.each do |event|
         attn = Attendance.find_by(event_id: event.id, user_id: member_id)
         attn&.update!(status: 'absent', note: "Excuse ##{id} revoked/changed") if attn&.status == 'excused'
       end

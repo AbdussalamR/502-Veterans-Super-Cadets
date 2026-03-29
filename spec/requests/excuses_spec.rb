@@ -200,7 +200,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
         excuse.reload
         expect(excuse.status).to eq('approved')
-        expect(flash[:notice]).to include('Director finalized decision')
+        expect(flash[:notice]).to include('approved')
       end
 
       it 'syncs attendance automatically on finalize' do

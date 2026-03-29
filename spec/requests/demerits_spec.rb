@@ -3,10 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe 'Internal::Demerits', type: :request do
+  let(:shared_section) { create(:section) }
   let(:super_admin) { create(:user, :super_admin) }
-  let(:officer) { create(:user, :officer) }
+  let(:officer) { create(:user, :officer, section: shared_section) }
   let(:regular_user) { create(:user) }
-  let(:member) { create(:user) }
+  let(:member) { create(:user, section: shared_section) }
 
   let(:valid_demerit_attributes) do
     {
