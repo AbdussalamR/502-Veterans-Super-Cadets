@@ -32,6 +32,12 @@ module Admin
 
       begin
         @user.approve!(approved_by: current_user)
+        Notifications::Dispatcher.publish(
+          event_key: 'registration_approved',
+          recipients: [@user],
+          actor: current_user,
+          context: Notifications::Payloads.user(@user)
+        )
         log_action('user_registration_approved', { 
           target_user_id: @user.id, 
           target_user_email: @user.email 
@@ -53,6 +59,12 @@ module Admin
 
       begin
         @user.reject!(rejected_by: current_user)
+        Notifications::Dispatcher.publish(
+          event_key: 'registration_rejected',
+          recipients: [@user],
+          actor: current_user,
+          context: Notifications::Payloads.user(@user)
+        )
         log_action('user_registration_rejected', { 
           target_user_id: @user.id, 
           target_user_email: @user.email 

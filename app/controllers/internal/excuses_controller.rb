@@ -38,6 +38,12 @@ module Internal
       @excuse.submission_date = Time.current
 
       if @excuse.save
+        Notifications::Dispatcher.publish(
+          event_key: 'excuse_submitted_for_review',
+          recipients: Notifications::Audience.officers_for_member(@excuse.member),
+          actor: current_user,
+          context: Notifications::Payloads.excuse(@excuse)
+        )
         log_create_success(@excuse, { recurring: @excuse.recurring? })
         redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Officer review."
       else
@@ -49,6 +55,12 @@ module Internal
     def update
       if current_user.super_admin?
         if @excuse.finalize_by_admin(current_user, params[:status])
+          Notifications::Dispatcher.publish(
+            event_key: @excuse.status == 'approved' ? 'excuse_approved' : 'excuse_denied',
+            recipients: [@excuse.member],
+            actor: current_user,
+            context: Notifications::Payloads.excuse(@excuse)
+          )
           log_action('excuse_finalized', { excuse_id: @excuse.id, status: @excuse.status })
           redirect_to internal_excuse_path(@excuse), notice: "Director finalized decision as #{@excuse.status}."
         else
@@ -65,6 +77,12 @@ module Internal
         end
 
         if success
+          Notifications::Dispatcher.publish(
+            event_key: 'excuse_pending_admin_review',
+            recipients: Notifications::Audience.approved_super_admins,
+            actor: current_user,
+            context: Notifications::Payloads.excuse(@excuse)
+          )
           log_action('excuse_provisionally_processed', { excuse_id: @excuse.id })
           redirect_to internal_excuse_path(@excuse), notice: "Officer decision recorded."
         else

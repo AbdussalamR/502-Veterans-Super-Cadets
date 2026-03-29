@@ -163,6 +163,12 @@ RSpec.describe 'Internal::Demerits', type: :request do
         post internal_demerits_path, params: { demerit: valid_demerit_attributes }
         expect(flash[:success]).to include(member.full_name)
       end
+
+      it 'enqueues a member notification' do
+        expect do
+          post internal_demerits_path, params: { demerit: valid_demerit_attributes }
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+      end
     end
 
     context 'as officer with invalid data (rainy day)' do
@@ -257,6 +263,12 @@ RSpec.describe 'Internal::Demerits', type: :request do
         patch internal_demerit_path(demerit), params: { demerit: { reason: 'Updated' } }
         expect(response).to redirect_to(internal_user_path(member))
       end
+
+      it 'enqueues a notification when updating a demerit' do
+        expect do
+          patch internal_demerit_path(demerit), params: { demerit: { reason: 'Updated' } }
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+      end
     end
 
     context 'as officer with invalid data (rainy day)' do
@@ -301,6 +313,12 @@ RSpec.describe 'Internal::Demerits', type: :request do
       it 'redirects to demerits index when source is demerits_index' do
         delete internal_demerit_path(demerit), params: { source: 'demerits_index' }
         expect(response).to redirect_to(internal_demerits_path)
+      end
+
+      it 'enqueues a notification when deleting a demerit' do
+        expect do
+          delete internal_demerit_path(demerit)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 

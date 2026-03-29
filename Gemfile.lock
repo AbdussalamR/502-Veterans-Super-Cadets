@@ -78,6 +78,8 @@ GEM
     base64 (0.3.0)
     bcrypt (3.1.20)
     bcrypt_pbkdf (1.1.2)
+    bcrypt_pbkdf (1.1.2-arm64-darwin)
+    bcrypt_pbkdf (1.1.2-x86_64-darwin)
     benchmark (0.5.0)
     bigdecimal (3.3.1)
     bindex (0.8.1)
@@ -188,7 +190,6 @@ GEM
     marcel (1.1.0)
     matrix (0.4.3)
     mini_mime (1.1.5)
-    mini_portile2 (2.8.9)
     minitest (6.0.2)
       drb (~> 2.0)
       prism (~> 1.5)
@@ -213,8 +214,17 @@ GEM
       net-protocol
     net-ssh (7.3.0)
     nio4r (2.7.5)
-    nokogiri (1.16.8)
-      mini_portile2 (~> 2.8.2)
+    nokogiri (1.16.8-aarch64-linux)
+      racc (~> 1.4)
+    nokogiri (1.16.8-arm-linux)
+      racc (~> 1.4)
+    nokogiri (1.16.8-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.16.8-x86-linux)
+      racc (~> 1.4)
+    nokogiri (1.16.8-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.16.8-x86_64-linux)
       racc (~> 1.4)
     oauth2 (2.0.17)
       faraday (>= 0.17.3, < 4.0)
@@ -367,6 +377,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby_http_client (3.6.0)
     rubyzip (2.4.1)
     securerandom (0.4.1)
     selenium-webdriver (4.32.0)
@@ -375,6 +386,8 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
+    sendgrid-ruby (6.7.0)
+      ruby_http_client (~> 3.4)
     simplecov (0.21.2)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -477,6 +490,7 @@ DEPENDENCIES
   rspec-rails
   rubocop-rails-omakase
   selenium-webdriver
+  sendgrid-ruby
   simplecov
   solid_cable
   solid_cache

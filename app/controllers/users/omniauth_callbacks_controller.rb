@@ -19,6 +19,15 @@ module Users
              end
 
       if user.present?
+        if user.just_registered_via_google && user.pending?
+          Notifications::Dispatcher.publish(
+            event_key: 'registration_pending_admin',
+            recipients: Notifications::Audience.approved_admins,
+            actor: user,
+            context: Notifications::Payloads.user(user)
+          )
+        end
+
         # Check approval status - only allow approved users to sign in
         if user.rejected?
           # User has been rejected

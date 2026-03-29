@@ -1,0 +1,21 @@
+<p>Hello <%= @recipient.full_name %>,</p>
+
+<p><strong><%= @message.heading %></strong></p>
+
+<p><%= @message.intro %></p>
+
+<% if @message.bullets.any? %>
+  <ul>
+    <% @message.bullets.each do |bullet| %>
+      <li><%= bullet %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<% if @message.cta_url.present? %>
+  <p>
+    <a href="<%= @message.cta_url %>"><%= @message.cta_label %></a>
+  </p>
+<% end %>
+
+<p>Singing Cadets</p>

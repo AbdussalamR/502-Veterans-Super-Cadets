@@ -4,6 +4,7 @@ class User < ApplicationRecord
   include LoggableModel
   
   devise :omniauthable, omniauth_providers: [:google_oauth2]
+  attr_accessor :just_registered_via_google
 
   # Role constants
   ROLES = %w[user officer super_admin].freeze
@@ -89,36 +90,6 @@ class User < ApplicationRecord
 
   def can_perform_admin_actions?
     admin?
-  end
-
-  # OAuth methods
-  def self.from_google(email:, full_name:, uid:, avatar_url:)
-    user = find_or_initialize_by(email: email)
-
-    if user.new_record?
-      # Check if this email is in the super admin list
-      super_admin_emails = ENV['SUPER_ADMIN_EMAILS']&.split(',')&.map(&:strip) || []
-      initial_role = super_admin_emails.include?(email) ? 'super_admin' : 'user'
-
-      user.assign_attributes(
-        uid: uid,
-        full_name: full_name,
-        avatar_url: avatar_url,
-        provider: 'google_oauth2',
-        role: initial_role
-      )
-      user.save!
-    else
-      # Update existing user's info but preserve their role
-      user.update!(
-        uid: uid,
-        full_name: full_name,
-        avatar_url: avatar_url,
-        provider: 'google_oauth2'
-      )
-    end
-
-    user
   end
 
   # Calculate total absences for a user following the 0.33, 0.66, 1, 1.33, 1.66, 2... pattern
@@ -286,6 +257,7 @@ class User < ApplicationRecord
         approval_status: initial_approval
       )
       user.save!
+      user.just_registered_via_google = true
       
       # Log new user creation
       Rails.logger.info({
@@ -317,5 +289,8 @@ class User < ApplicationRecord
   def section_leader?
     officer? && section.present?
   end
-  
+
+  def email_deliverable?
+    email_notifications_enabled? && email.present?
+  end
 end

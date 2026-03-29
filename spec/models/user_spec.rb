@@ -38,6 +38,7 @@ RSpec.describe User, type: :model do
       expect(user).not_to be_valid
       expect(user.errors[:approval_status]).to include('is not included in the list')
     end
+
   end
 
   describe 'role methods' do
@@ -112,17 +113,19 @@ RSpec.describe User, type: :model do
 
     context 'when user does not exist' do
       it 'creates a new user with regular role' do
+        user = nil
+
         expect {
-          User.from_google(**google_params)
+          user = User.from_google(**google_params)
         }.to change(User, :count).by(1)
 
-        user = User.last
         expect(user.email).to eq('test@tamu.edu')
         expect(user.full_name).to eq('Test User')
         expect(user.uid).to eq('12345')
         expect(user.avatar_url).to eq('http://example.com/avatar.png')
         expect(user.role).to eq('user')
         expect(user.approval_status).to eq('pending')
+        expect(user.just_registered_via_google).to be true
       end
 
       it 'creates a super admin when email is in super admin list' do
