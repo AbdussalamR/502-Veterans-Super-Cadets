@@ -9,7 +9,7 @@ class Event < ApplicationRecord
   has_many :events_to_excuses,
            class_name: 'EventsToExcuse',
            dependent: :destroy
-  has_many :excuses, through: :events_to_excuses, dependent: :destroy
+  has_many :excuses, through: :events_to_excuses
 
   # Validations
   validates :title, presence: true
@@ -176,13 +176,15 @@ class Event < ApplicationRecord
     self.checkin_passcode = rand(1000..9999).to_s
   end
 
-  before_destroy :destroy_related_excuses
+  after_destroy :destroy_orphaned_single_event_excuses
 
-  def destroy_related_excuses
-    # Destroy only non-recurring excuses exclusively linked to this event
-    excuses.each do |excuse|
-      excuse.destroy if excuse.events.count == 1 && !excuse.recurring?
-    end
+  def destroy_orphaned_single_event_excuses
+    # After this event (and its join records) are deleted, destroy any non-recurring
+    # excuses that are now completely unlinked from all events.
+    Excuse.where(recurring: false)
+          .left_joins(:events_to_excuses)
+          .where(events_to_excuses: { id: nil })
+          .destroy_all
   end
 
   def link_to_matching_recurring_excuses
