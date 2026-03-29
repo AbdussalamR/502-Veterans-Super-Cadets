@@ -8,7 +8,13 @@ module Public
 
     def media_gallery; end
 
-    def audition_information; end
+    def audition_information
+      # @audition_sessions = AuditionSession.all
+      now = Time.current
+      @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', now, now).chronological
+      @future_auditions = AuditionSession.where('start_datetime > ?', now).chronological
+      @past_auditions = AuditionSession.where('end_datetime < ?', now).chronological
+    end
 
     def calendar
       @events = Event.where(is_public: true)

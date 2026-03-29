@@ -140,6 +140,7 @@
             <% if current_user.super_admin? %>
               <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
             <% end %>
+            <%= link_to "Audition Sessions", admin_audition_sessions_path, class: "nav-link" %>
           <% elsif current_user.user? %>
             <%= link_to internal_my_demerits_path, class: "nav-link" do %>
               Discipline Points
