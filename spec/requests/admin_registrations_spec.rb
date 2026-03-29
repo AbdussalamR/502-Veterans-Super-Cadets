@@ -140,4 +140,24 @@ RSpec.describe 'Admin::Registrations', type: :request do
       end
     end
   end
+
+  describe 'PATCH notification delivery' do
+    before { sign_in admin }
+
+    it 'enqueues a notification when approving a user' do
+      pending_user = create(:user, :pending)
+
+      expect do
+        patch approve_admin_registration_path(pending_user)
+      end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+    end
+
+    it 'enqueues a notification when rejecting a user' do
+      pending_user = create(:user, :pending)
+
+      expect do
+        patch reject_admin_registration_path(pending_user)
+      end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+    end
+  end
 end

@@ -34,6 +34,12 @@ module Internal
       @demerit.given_by = current_user
       
       if @demerit.save
+        Notifications::Dispatcher.publish(
+          event_key: 'demerit_created',
+          recipients: [@demerit.member],
+          actor: current_user,
+          context: Notifications::Payloads.demerit(@demerit)
+        )
         log_create_success(@demerit, { 
                              member_id: @demerit.member_id, 
                              member_name: @demerit.member.full_name,
@@ -52,6 +58,12 @@ module Internal
     def update
       member = @demerit.member
       if @demerit.update(demerit_params)
+        Notifications::Dispatcher.publish(
+          event_key: 'demerit_updated',
+          recipients: [member],
+          actor: current_user,
+          context: Notifications::Payloads.demerit(@demerit)
+        )
         log_update_success(@demerit, { 
                              member_id: member.id, 
                              member_name: member.full_name 
@@ -69,7 +81,14 @@ module Internal
     def destroy
       member = @demerit.member
       demerit_value = @demerit.value
+      notification_context = Notifications::Payloads.demerit(@demerit)
       @demerit.destroy
+      Notifications::Dispatcher.publish(
+        event_key: 'demerit_deleted',
+        recipients: [member],
+        actor: current_user,
+        context: notification_context
+      )
       log_destroy_success(@demerit, { 
                             member_id: member.id, 
                             member_name: member.full_name,

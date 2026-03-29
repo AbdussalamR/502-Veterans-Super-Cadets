@@ -114,6 +114,14 @@ RSpec.describe 'Internal::Events', type: :request do
           end.to change(Event, :count).by(1)
         end
 
+        it 'enqueues notifications for approved members' do
+          create(:user)
+
+          expect do
+            post internal_events_url, params: { event: valid_attributes }
+          end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
+        end
+
         it 'redirects to the created event' do
           post internal_events_url, params: { event: valid_attributes }
           expect(response).to redirect_to(internal_event_url(Event.last))
@@ -189,6 +197,15 @@ RSpec.describe 'Internal::Events', type: :request do
           event.reload
           expect(response).to redirect_to(internal_event_url(event))
         end
+
+        it 'enqueues notifications when updating an event' do
+          create(:user)
+          event = Event.create! valid_attributes
+
+          expect do
+            patch internal_event_url(event), params: { event: new_attributes }
+          end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
+        end
       end
 
       context 'with invalid parameters' do
@@ -224,6 +241,15 @@ RSpec.describe 'Internal::Events', type: :request do
         event = Event.create! valid_attributes
         delete internal_event_url(event)
         expect(response).to redirect_to(internal_events_url)
+      end
+
+      it 'enqueues notifications when canceling an event' do
+        create(:user)
+        event = Event.create! valid_attributes
+
+        expect do
+          delete internal_event_url(event)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
       end
     end
 

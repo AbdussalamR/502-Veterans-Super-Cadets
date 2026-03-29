@@ -117,6 +117,12 @@ SUPER_ADMIN_EMAILS=admin1@tamu.edu,admin2@tamu.edu
 # Application Host (Optional - used for OAuth callback URLs)
 APP_HOST=your-app.herokuapp.com
 
+# Notification Delivery (Optional locally, required in production for outbound notifications)
+SENDGRID_API_KEY=your_sendgrid_api_key
+NOTIFICATION_FROM_EMAIL=no-reply@your-domain.com
+NOTIFICATION_FROM_NAME=Singing Cadets
+NOTIFICATION_REPLY_TO=leadership@your-domain.com
+
 # Rails Environment
 RAILS_ENV=development  # or production
 
@@ -129,6 +135,7 @@ RAILS_LOG_TO_STDOUT=true
 **Configuration Files:**
 
 - `config/database.yml` - Database connection settings
+- `config/solid_queue.yml` - Background job worker/dispatcher settings for notification delivery
 - `config/credentials.yml.enc` - Encrypted credentials (use `rails credentials:edit`)
 - `config/master.key` - Master key for credentials (DO NOT commit to version control)
 - `.env` (optional) - Environment variables for local development (managed by dotenv-rails)

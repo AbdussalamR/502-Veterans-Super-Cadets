@@ -6,6 +6,7 @@ FactoryBot.define do
     provider { 'google_oauth2' }
     role { 'user' }
     approval_status { 'approved' }
+    email_notifications_enabled { true }
     association :section
 
     trait :officer do

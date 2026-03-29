@@ -1,0 +1,5 @@
+production:
+  event_reminder:
+    class: Notifications::EventReminderJob
+    schedule: every hour
+    queue: default
