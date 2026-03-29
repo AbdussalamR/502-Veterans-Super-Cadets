@@ -13,7 +13,7 @@ module Internal
       base_query = if current_user.super_admin?
                      Excuse
                    elsif current_user.officer?
-                     Excuse.joins(:member).where(users: { section_id: current_user.section_id })
+                     Excuse.joins(:member).where(users: { section_id: current_user.section_id }).where(is_personal: [false, nil])
                    else
                      current_user.excuses
                    end
@@ -21,7 +21,7 @@ module Internal
       @excuses = base_query
         .includes(:member, :events, :reviewers)
         .order(Arel.sql("CASE status
-           WHEN 'Pending Section Leader Review' THEN 0
+           WHEN 'Pending Officer Review' THEN 0
            WHEN 'pending' THEN 1
            WHEN 'denied' THEN 2
            WHEN 'approved' THEN 3
@@ -62,7 +62,7 @@ module Internal
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
       elsif current_user.officer? && params[:status].present?
-        unless @excuse.status == 'Pending Section Leader Review'
+        unless @excuse.status == 'Pending Officer Review'
           return redirect_to internal_excuse_path(@excuse), alert: "This excuse has already been processed and cannot be updated."
         end
 
@@ -128,8 +128,8 @@ module Internal
       return if current_user.super_admin?
 
       if current_user.officer?
-        if current_user.section_id != @excuse.member.section_id
-          render plain: "403 Forbidden - You are not the Officer for this member's section.", status: :forbidden and return
+        if @excuse.is_personal? || current_user.section_id != @excuse.member.section_id
+          render plain: "403 Forbidden - You are not authorized to view this excuse.", status: :forbidden and return
         end
       elsif @excuse.member != current_user
         render plain: "403 Forbidden", status: :forbidden and return
@@ -138,7 +138,7 @@ module Internal
 
     def excuse_params
       params.require(:excuse).permit(:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days,
-                                     :recurring_start_time, :recurring_end_time, { event_ids: [] })
+                                     :recurring_start_time, :recurring_end_time, :is_personal, { event_ids: [] })
     end
   end
 end

@@ -31,6 +31,16 @@ User.find_or_create_by!(email: "officer@tamu.edu") do |user|
   user.approval_status = "approved"
 end
 
+
+# Regular member
+member = User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
+  user.full_name = "Cadet Smith"
+  user.uid = "officer2"
+  user.provider = "google_oauth2"
+  user.role = "officer"
+  user.approval_status = "approved"
+end
+
 # Regular member
 member = User.find_or_create_by!(email: "member@tamu.edu") do |user|
   user.full_name = "Cadet Smith"
@@ -67,7 +77,7 @@ end
   ) do |e|
     e.end_time = tue_date.to_datetime.change(hour: 13, min: 0)
     e.location = "MSC"
-    e.description = "Section leader meeting"
+    e.description = "Officer meeting"
   end
 end
 

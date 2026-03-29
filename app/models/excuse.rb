@@ -34,12 +34,15 @@ class Excuse < ApplicationRecord
   scope :pending_admin_approval, -> { where(status: 'pending').where.not(officer_status: [nil, '']) }
 
   # Required by layouts/internal.html.erb for the Officer's notification badge
-  # Finds excuses that haven't been touched yet by any Section Leader
-  scope :pending_unprocessed, -> { where(status: 'Pending Section Leader Review') }
+  # Finds excuses that haven't been touched yet by any Officer
+  scope :pending_unprocessed, -> { where(status: 'Pending Officer Review') }
 
   # STORY A3 AC 1: Default status on creation
-  # This ensures every excuse starts in the Section Leader's queue.
+  # This ensures every excuse starts in the Officer's queue unless it's a Personal Excuse.
   before_validation :set_default_status, on: :create
+
+  # SCRUM-72: Validates that an event is selected
+  validate :must_have_events, on: :create
   
   # Logic Hooks
   after_create :process_event_links
@@ -130,7 +133,7 @@ class Excuse < ApplicationRecord
     end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
 
     candidates.select do |event|
-      event_mins = event.date.hour * 60 + event.date.min
+      event_mins = (event.date.hour * 60) + event.date.min
       event_mins >= start_mins && event_mins <= end_mins
     end
   end
@@ -147,7 +150,7 @@ class Excuse < ApplicationRecord
   end
 
   # STORY A3: Officer Provisional Decision (Step 1)
-  # Records the Section Leader's recommendation without updating attendance yet.
+  # Records the Officer's recommendation without updating attendance yet.
   def set_officer_decision(officer, decision)
     return false unless %w[approved denied].include?(decision)
 
@@ -185,8 +188,20 @@ class Excuse < ApplicationRecord
   end
 
   def set_default_status
-    # STORY A3 AC 1: Specific requirement for default status string
-    self.status ||= 'Pending Section Leader Review'
+    if is_personal?
+      self.status ||= 'pending'
+    else
+      # STORY A3 AC 1: Specific requirement for default status string
+      self.status ||= 'Pending Officer Review'
+    end
+  end
+
+  def must_have_events
+    if recurring?
+      errors.add(:base, "No event found for this date") if find_matching_events.empty?
+    else
+      errors.add(:base, "No event found for this date") if manual_event_ids.blank?
+    end
   end
 
   def recurring_end_time_after_start_time

@@ -169,7 +169,7 @@
             <hr class="flex-grow-1 ms-3">
           </div>
           <div class="row g-4 mb-5">
-            <%# Sort: Section Leaders (Officers) first, then Members alphabetically %>
+            <%# Sort: Officers first, then Members alphabetically %>
             <% section_members.sort_by { |u| [u.officer? ? 0 : 1, u.full_name] }.each do |user| %>
               <%= render partial: 'user_management_card', locals: { user: user } %>
             <% end %>

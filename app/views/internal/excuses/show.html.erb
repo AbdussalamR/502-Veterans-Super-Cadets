@@ -40,10 +40,20 @@
             </div>
           <% end %>
 
+          <%# SCRUM-9: Personal Badge %>
+          <% if @excuse.is_personal? %>
+            <div class="mb-3">
+              <span class="badge bg-dark">
+                <i class="bi bi-shield-lock me-1"></i>Personal / Confidential
+              </span>
+              <span class="text-muted ms-2 small">This excuse is completely hidden from Officers.</span>
+            </div>
+          <% end %>
+
           <div class="mb-3">
             <span class="fw-semibold"><strong>Status:</strong></span>
             <% status_label = case @excuse.status
-              when 'Pending Section Leader Review' then 'Pending Officer Review'
+              when 'Pending Officer Review' then 'Pending Officer Review'
               when 'pending' then 'Pending Director Approval'
               when 'approved' then 'Approved'
               when 'denied' then 'Denied'
@@ -124,7 +134,7 @@
           </div>
 
           <%# Officers make provisional decisions (do NOT change final status) %>
-          <% if current_user.officer? && @excuse.status == 'Pending Section Leader Review' %>
+          <% if current_user.officer? && @excuse.status == 'Pending Officer Review' %>
             <div class="d-flex gap-2 mb-3">
               <%= button_to 'Provisional Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-outline-success' %>
               <%= button_to 'Provisional Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-outline-danger' %>

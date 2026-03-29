@@ -6,9 +6,9 @@
 </div>
 <p class="text-muted mb-0">View and submit excuse requests</p>
 
-<%# Buckets updated to include the new 'Pending Section Leader Review' status %>
+<%# Buckets updated to include the new 'Pending Officer Review' status %>
 <% pending_admin = @excuses.select { |e| e.status == 'pending' && e.officer_status.present? } %>
-<% pending = @excuses.select { |e| (e.status == 'pending' || e.status == 'Pending Section Leader Review') && e.officer_status.blank? } %>
+<% pending = @excuses.select { |e| (e.status == 'pending' || e.status == 'Pending Officer Review') && e.officer_status.blank? } %>
 <% approved = @excuses.select { |e| e.status == 'approved' } %>
 <% denied = @excuses.select { |e| e.status == 'denied' } %>
 
@@ -65,13 +65,13 @@
               <p class="mb-1"><strong>Status:</strong>
                 <span class="badge 
                   <%= case display_status
-                    when 'pending', 'Pending Section Leader Review' then 'bg-warning text-dark'
+                    when 'pending', 'Pending Officer Review' then 'bg-warning text-dark'
                     when 'denied' then 'bg-danger'
                     when 'approved' then 'bg-success'
                     else 'bg-secondary'
                   end %>">
                   <%= case display_status
-                    when 'Pending Section Leader Review' then 'Pending Officer Review'
+                    when 'Pending Officer Review' then 'Pending Officer Review'
                     when 'pending' then 'Pending Director Approval'
                     else display_status.to_s.capitalize
                   end %>

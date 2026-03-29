@@ -78,6 +78,17 @@
     <%= f.text_area :reason, class: "form-control", rows: 3 %>
   </div>
 
+  <!-- SCRUM-7: Personal Excuse Checkbox -->
+  <div class="mb-4 form-check">
+    <%= f.check_box :is_personal, class: "form-check-input", id: "personal-excuse-toggle" %>
+    <label class="form-check-label fw-bold" for="personal-excuse-toggle">
+      Personal Reason (Direct to Director)
+    </label>
+    <div class="form-text text-muted">
+      Check this if your reason is highly sensitive. This excuse will bypass Officer review and be sent directly to the Director. Officers will not be able to see this excuse.
+    </div>
+  </div>
+
   <div class="mb-4">
     <%= f.label :proof_link, "Proof link", class: "form-label text-muted small fw-bold" %>
     <%= f.text_field :proof_link, class: "form-control", placeholder: "https://example.com/proof" %>
