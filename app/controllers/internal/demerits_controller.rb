@@ -120,15 +120,14 @@ module Internal
       return if @demerit.member == current_user || current_user.admin? || current_user.officer?
 
       log_authorization_failure('view_demerit', { demerit_id: @demerit.id })
-      redirect_to root_path, alert: "You are not authorized to view this demerit."
-      
+      redirect_unauthorized('You are not authorized to view this demerit.')
     end
 
     def ensure_admin_or_officer
       return if current_user.admin? || current_user.officer?
 
       log_authorization_failure('admin_or_officer_required', { action: action_name })
-      redirect_to root_path, alert: 'You must be an admin or officer to access this page.'
+      redirect_unauthorized('You must be an admin or officer to access this page.')
     end
 
     def ensure_officer_section_access
@@ -139,7 +138,7 @@ module Internal
 
       unless current_user.section_id.present? && current_user.section_id == member.section_id
         log_authorization_failure('officer_section_mismatch', { action: action_name, member_id: member.id })
-        redirect_to root_path, alert: 'You can only manage discipline points for members in your section.'
+        redirect_unauthorized('You can only manage discipline points for members in your section.')
       end
     end
 

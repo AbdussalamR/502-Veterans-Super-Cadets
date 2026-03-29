@@ -12,7 +12,6 @@ class InternalController < ApplicationController
   def require_admin
     return if current_user&.admin?
 
-    flash[:alert] = 'You are not authorized to view this page.'
-    redirect_to root_path
+    redirect_unauthorized('You are not authorized to view this page.')
   end
 end

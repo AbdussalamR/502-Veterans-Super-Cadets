@@ -53,7 +53,7 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
         expect {
           post admin_media_photos_path, params: { page_name: 'media', image: test_image }
         }.not_to change(MediaPhoto, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -76,7 +76,7 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
       sign_in regular_user
       patch publish_admin_media_photo_path(photo)
       expect(photo.reload.published).to be false
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(internal_events_path)
     end
   end
 

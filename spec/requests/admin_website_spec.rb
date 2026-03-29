@@ -21,7 +21,7 @@ RSpec.describe 'Admin::Website', type: :request do
 
       it 'redirects away' do
         get admin_website_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -74,7 +74,7 @@ RSpec.describe 'Admin::Website', type: :request do
     it 'redirects non-admin away' do
       sign_in regular_user
       patch admin_update_website_home_path, params: { home: { hero_title: 'X' } }
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(internal_events_path)
     end
   end
 
@@ -233,7 +233,7 @@ RSpec.describe 'Admin::Website', type: :request do
       sign_in regular_user
       msg = create(:contact_message)
       post admin_mark_website_message_read_path(msg)
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(internal_events_path)
     end
   end
 end

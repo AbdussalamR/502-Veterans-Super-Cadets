@@ -63,7 +63,11 @@
       <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex gap-2">
           <%= link_to internal_user_path(user), class: "btn btn-outline-primary btn-sm", title: "Profile" do %><i class="bi bi-eye"></i><span class="btn-text ms-1">Profile</span><% end %>
-          <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit" do %><i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span><% end %>
+          <% can_edit = current_user.super_admin? || current_user == user ||
+                        (current_user.officer? && current_user.section_id.present? && current_user.section_id == user.section_id) %>
+          <% if can_edit %>
+            <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit" do %><i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span><% end %>
+          <% end %>
           <%= link_to attendance_history_internal_user_path(user), class: "btn btn-outline-info btn-sm", title: "History" do %><i class="bi bi-clock-history"></i><span class="btn-text ms-1">History</span><% end %>
         </div>
         

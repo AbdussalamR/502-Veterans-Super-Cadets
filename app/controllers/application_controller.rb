@@ -62,7 +62,7 @@ class ApplicationController < ActionController::Base
     return if performed?
     return if current_user&.admin?
 
-    redirect_to root_path, alert: 'You must be an admin to access this page.'
+    redirect_unauthorized('You must be an admin to access this page.')
   end
 
   def ensure_super_admin
@@ -70,7 +70,13 @@ class ApplicationController < ActionController::Base
     return if performed?
     return if current_user&.super_admin?
 
-    redirect_to root_path, alert: 'You must be a super admin to access this page.'
+    redirect_unauthorized('You must be a super admin to access this page.')
+  end
+
+  # Redirect back to the referring page, or fall back to the internal dashboard.
+  # Used for authorization failures so the user stays logged in and in-app.
+  def redirect_unauthorized(message)
+    redirect_back fallback_location: internal_events_path, alert: message
   end
 
   def skip_authentication?

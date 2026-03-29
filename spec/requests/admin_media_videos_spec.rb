@@ -45,7 +45,7 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
         expect {
           post admin_media_videos_path, params: { youtube_url: valid_url }
         }.not_to change(MediaVideo, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
