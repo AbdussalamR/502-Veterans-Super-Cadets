@@ -133,19 +133,19 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>
-                    <i class="bi bi-calendar3 me-1"></i>Date
+                  <th scope="col">
+                    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Date
                   </th>
-                  <th>
-                    <i class="bi bi-hash me-1"></i>Value
+                  <th scope="col">
+                    <i class="bi bi-hash me-1" aria-hidden="true"></i>Value
                   </th>
-                  <th>
-                    <i class="bi bi-chat-square-text me-1"></i>Reason
+                  <th scope="col">
+                    <i class="bi bi-chat-square-text me-1" aria-hidden="true"></i>Reason
                   </th>
-                  <th>
-                    <i class="bi bi-person-badge me-1"></i>Given By
+                  <th scope="col">
+                    <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Given By
                   </th>
-                  <th class="text-center">Actions</th>
+                  <th scope="col" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,7 +166,7 @@
                       <span class="text-muted"><%= truncate(demerit.reason, length: 40) %></span>
                     </td>
                     <td class="text-muted">
-                      <i class="bi bi-person-circle me-1"></i><%= demerit.given_by.full_name %>
+                      <i class="bi bi-person-circle me-1" aria-hidden="true"></i><%= demerit.given_by.full_name %>
                     </td>
                     <td class="text-center">
                       <%= link_to internal_demerit_path(demerit), class: "btn btn-sm btn-outline-primary" do %>

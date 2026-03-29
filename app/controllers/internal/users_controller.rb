@@ -56,7 +56,7 @@ module Internal
         @total_tardies_and_demerits = @total_tardies + @user.received_demerits.sum(:value)
       else
         log_authorization_failure('view_user_profile', { target_user_id: @user.id })
-        redirect_to root_path, alert: 'You are not authorized to view this profile.'
+        redirect_unauthorized('You are not authorized to view this profile.')
         nil
       end
     end
@@ -174,7 +174,7 @@ module Internal
     def attendance_history
       # Users can view their own attendance history, admins can view any user's history
       unless @user == current_user || current_user.admin?
-        redirect_to root_path, alert: 'You are not authorized to view this attendance history.'
+        redirect_unauthorized('You are not authorized to view this attendance history.')
         return
       end
 
@@ -250,7 +250,7 @@ module Internal
 
     def user_params
       permitted_fields = [:full_name, :email_notifications_enabled]
-      permitted_fields << :section_id if current_user.admin?
+      permitted_fields << :section_id if current_user.super_admin?
 
       params.require(:user).permit(*permitted_fields)
     end
@@ -258,19 +258,21 @@ module Internal
     def ensure_admin
       return if current_user.admin?
 
-      redirect_to root_path, alert: 'You must be an admin to access this page.'
+      redirect_unauthorized('You must be an admin to access this page.')
     end
 
     def ensure_can_edit_user!
-      return if current_user.admin? || current_user == @user
+      return if current_user.super_admin?
+      return if current_user == @user
+      return if current_user.officer? && current_user.section_id.present? && current_user.section_id == @user.section_id
 
-      redirect_to root_path, alert: 'You are not authorized to edit this member.'
+      redirect_unauthorized('You are not authorized to edit this member.')
     end
 
     def ensure_super_admin
       return if current_user.super_admin?
 
-      redirect_to root_path, alert: 'You must be a super admin to perform this action.'
+      redirect_unauthorized('You must be a super admin to perform this action.')
     end
   end
 end

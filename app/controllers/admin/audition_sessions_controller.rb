@@ -16,7 +16,7 @@ class Admin::AuditionSessionsController < InternalController
   def create
     @audition_session = AuditionSession.new(audition_session_params)
     if @audition_session.save
-      redirect_to admin_audition_sessions_path, notice: "Audition session added."
+      redirect_to admin_website_path(tab: 'auditions'), notice: "Audition session added."
     else
       render :new, status: :unprocessable_entity
     end
@@ -24,7 +24,7 @@ class Admin::AuditionSessionsController < InternalController
 
   def update
     if @audition_session.update(audition_session_params)
-      redirect_to admin_audition_sessions_path, notice: "Audition session updated."
+      redirect_to admin_website_path(tab: 'auditions'), notice: "Audition session updated."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class Admin::AuditionSessionsController < InternalController
 
   def destroy
     @audition_session.destroy
-    redirect_to admin_audition_sessions_path, notice: "Audition session removed."
+    redirect_to admin_website_path(tab: 'auditions'), notice: "Audition session removed."
   end
 
   private

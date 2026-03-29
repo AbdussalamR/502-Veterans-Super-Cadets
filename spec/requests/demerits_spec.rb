@@ -3,10 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe 'Internal::Demerits', type: :request do
+  let(:shared_section) { create(:section) }
   let(:super_admin) { create(:user, :super_admin) }
-  let(:officer) { create(:user, :officer) }
+  let(:officer) { create(:user, :officer, section: shared_section) }
   let(:regular_user) { create(:user) }
-  let(:member) { create(:user) }
+  let(:member) { create(:user, section: shared_section) }
 
   let(:valid_demerit_attributes) do
     {
@@ -59,7 +60,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access' do
         get internal_demerits_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('admin or officer')
       end
     end
@@ -101,7 +102,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access to demerit belonging to someone else' do
         get internal_demerit_path(demerit)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('not authorized')
       end
     end
@@ -131,7 +132,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access' do
         get internal_new_member_demerit_path(member_id: member.id)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('admin or officer')
       end
     end
@@ -203,7 +204,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access' do
         post internal_demerits_path, params: { demerit: valid_demerit_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -234,7 +235,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access' do
         get edit_internal_demerit_path(demerit)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -286,7 +287,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
 
       it 'denies access' do
         patch internal_demerit_path(demerit), params: { demerit: { reason: 'Hacked' } }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -329,7 +330,7 @@ RSpec.describe 'Internal::Demerits', type: :request do
         expect do
           delete internal_demerit_path(demerit)
         end.not_to change(Demerit, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 

@@ -62,7 +62,11 @@ module Internal
             context: Notifications::Payloads.excuse(@excuse)
           )
           log_action('excuse_finalized', { excuse_id: @excuse.id, status: @excuse.status })
-          redirect_to internal_excuse_path(@excuse), notice: "Director finalized decision as #{@excuse.status}."
+          if @excuse.status == 'approved'
+            redirect_to internal_excuse_path(@excuse), notice: "Excuse approved."
+          else
+            redirect_to internal_excuse_path(@excuse), alert: "Excuse denied."
+          end
         else
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end

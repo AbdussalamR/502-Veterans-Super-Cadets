@@ -1,0 +1,556 @@
+<div class="container-fluid my-4">
+  <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="h3 mb-0" style="color:#500000;">Website Content Management</h1>
+    <a href="<%= public_home_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-box-arrow-up-right me-1"></i>View Live Site
+    </a>
+  </div>
+
+  <!-- Page Tabs -->
+  <ul class="nav nav-tabs mb-4" id="websiteTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'home' %>" id="tab-home-btn" data-bs-toggle="tab" data-bs-target="#tab-home" type="button" role="tab" aria-controls="tab-home" aria-selected="<%= @active_tab == 'home' ? 'true' : 'false' %>">
+        <i class="bi bi-house me-1" aria-hidden="true"></i>Home
+        <% if @home_has_draft %><span class="badge bg-warning text-dark ms-1">Draft</span><% end %>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'book_us' %>" id="tab-book-us-btn" data-bs-toggle="tab" data-bs-target="#tab-book-us" type="button" role="tab" aria-controls="tab-book-us" aria-selected="<%= @active_tab == 'book_us' ? 'true' : 'false' %>">
+        <i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Book Us
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'media' %>" id="tab-media-btn" data-bs-toggle="tab" data-bs-target="#tab-media" type="button" role="tab" aria-controls="tab-media" aria-selected="<%= @active_tab == 'media' ? 'true' : 'false' %>">
+        <i class="bi bi-images me-1" aria-hidden="true"></i>Media
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'auditions' %>" id="tab-auditions-btn" data-bs-toggle="tab" data-bs-target="#tab-auditions" type="button" role="tab" aria-controls="tab-auditions" aria-selected="<%= @active_tab == 'auditions' ? 'true' : 'false' %>">
+        <i class="bi bi-music-note-list me-1" aria-hidden="true"></i>Auditions
+        <% if @auditions_has_draft %><span class="badge bg-warning text-dark ms-1">Draft</span><% end %>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'contact' %>" id="tab-contact-btn" data-bs-toggle="tab" data-bs-target="#tab-contact" type="button" role="tab" aria-controls="tab-contact" aria-selected="<%= @active_tab == 'contact' ? 'true' : 'false' %>">
+        <i class="bi bi-envelope me-1" aria-hidden="true"></i>Contact
+        <% if @contact_has_draft %><span class="badge bg-warning text-dark ms-1">Draft</span><% end %>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'messages' %>" id="tab-messages-btn" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="<%= @active_tab == 'messages' ? 'true' : 'false' %>">
+        <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>Messages
+        <% if @unread_messages_count > 0 %>
+          <span class="badge bg-danger ms-1" aria-label="<%= @unread_messages_count %> unread messages"><%= @unread_messages_count %></span>
+        <% end %>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="websiteTabsContent">
+
+    <!-- ===================== HOME TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'home' %>" id="tab-home" role="tabpanel" aria-labelledby="tab-home-btn">
+      <div class="row">
+        <div class="col-lg-8">
+
+          <% if @home_has_draft %>
+            <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+              <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+              <div class="flex-grow-1"><strong>Unpublished draft exists.</strong> Preview or publish to go live.</div>
+              <div class="d-flex gap-2 flex-shrink-0">
+                <%= link_to admin_preview_website_page_path(page: 'home'), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+                  <i class="bi bi-eye me-1"></i>Preview
+                <% end %>
+                <%= button_to 'Publish', admin_publish_website_home_path, method: :post, class: 'btn btn-sm btn-success', data: { turbo_confirm: 'Publish home page draft to live site?' } %>
+                <%= button_to 'Discard', admin_discard_website_home_draft_path, method: :delete, class: 'btn btn-sm btn-outline-danger', data: { turbo_confirm: 'Discard the home page draft?' } %>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white fw-semibold">Edit Home Page Text</div>
+            <div class="card-body">
+              <%= form_with url: admin_update_website_home_path, method: :patch, local: true do |f| %>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Hero Title</label>
+                  <%= f.text_field :hero_title, name: 'home[hero_title]',
+                        value: @home_form_vals['hero_title'] || 'The Singing Cadets',
+                        class: 'form-control' %>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Hero Subtitle</label>
+                  <%= f.text_field :hero_subtitle, name: 'home[hero_subtitle]',
+                        value: @home_form_vals['hero_subtitle'] || 'The Voice of Aggieland',
+                        class: 'form-control' %>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">About Us Text</label>
+                  <textarea name="home[about_text]" class="form-control" rows="5"><%= @home_form_vals['about_text'] || "Internationally known as the \"Voice of Aggieland\", the Singing Cadets is Texas A&M University's premier men's chorus. We are one of the oldest student organizations on campus, representing the university through music and performance across the state, nation, and world." %></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background-color:#500000;border-color:#500000;">
+                  <i class="bi bi-floppy me-1"></i>Save Draft
+                </button>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Home Photo -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">Home Page Photo</div>
+            <div class="card-body">
+              <% if @home_photos.any? %>
+                <div class="row g-3 mb-3">
+                  <% @home_photos.each do |photo| %>
+                    <div class="col-md-4 col-sm-6">
+                      <div class="card border">
+                        <%= image_tag photo.image, class: 'card-img-top', style: 'height:160px;object-fit:cover;', alt: photo.caption.presence || 'Home page photo' %>
+                        <div class="card-body p-2">
+                          <% if photo.caption.present? %>
+                            <p class="small text-muted mb-1"><%= photo.caption %></p>
+                          <% end %>
+                          <div class="d-flex gap-1">
+                            <% unless photo.published? %>
+                              <%= button_to publish_admin_media_photo_path(photo), method: :patch, class: 'btn btn-sm btn-success flex-grow-1' do %>
+                                <i class="bi bi-check-lg me-1"></i>Publish
+                              <% end %>
+                            <% else %>
+                              <span class="btn btn-sm btn-outline-success flex-grow-1 disabled">
+                                <i class="bi bi-check-circle me-1"></i>Live
+                              </span>
+                            <% end %>
+                            <%= button_to admin_media_photo_path(photo), method: :delete,
+                                  data: { turbo_confirm: 'Remove this photo?' },
+                                  class: 'btn btn-sm btn-outline-danger',
+                                  "aria-label" => "Remove photo" do %>
+                              <i class="bi bi-trash" aria-hidden="true"></i>
+                            <% end %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-muted small mb-3">No photo uploaded yet. The home page will show a placeholder.</p>
+              <% end %>
+
+              <%= form_with url: admin_media_photos_path, method: :post, multipart: true, local: true do |f| %>
+                <%= hidden_field_tag :page_name, 'home' %>
+                <div class="row g-2 align-items-end">
+                  <div class="col-sm-5">
+                    <label class="form-label fw-semibold">Upload New Photo</label>
+                    <%= f.file_field :image, accept: 'image/*', class: 'form-control form-control-sm' %>
+                  </div>
+                  <div class="col-sm-4">
+                    <label class="form-label fw-semibold">Caption <span class="text-muted fw-normal">(optional)</span></label>
+                    <%= f.text_field :caption, name: 'caption', class: 'form-control form-control-sm', placeholder: 'e.g. Spring Concert 2025' %>
+                  </div>
+                  <div class="col-sm-3">
+                    <button type="submit" class="btn btn-sm btn-primary w-100" style="background-color:#500000;border-color:#500000;">
+                      <i class="bi bi-upload me-1"></i>Upload
+                    </button>
+                  </div>
+                </div>
+                <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>The home page shows <strong>one photo</strong>. Uploading a new one replaces the existing photo. Click <strong>Publish</strong> to make it visible on the live site.</p>
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /home -->
+
+    <!-- ===================== BOOK US TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'book_us' %>" id="tab-book-us" role="tabpanel" aria-labelledby="tab-book-us-btn">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-calendar-check fs-1 text-muted mb-3 d-block"></i>
+          <h5>Book Us Editor</h5>
+          <p class="text-muted">Zaahir this is where your implementation is — make sure its editable.</p>
+          <a href="<%= public_performance_request_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-up-right me-1"></i>View Current Page
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MEDIA TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'media' %>" id="tab-media" role="tabpanel" aria-labelledby="tab-media-btn">
+
+      <!-- Photos -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-images me-1"></i>Gallery Photos</span>
+          <a href="<%= public_media_gallery_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-up-right me-1"></i>View Live Gallery
+          </a>
+        </div>
+        <div class="card-body">
+          <% if @media_photos.any? %>
+            <div class="row g-3 mb-4">
+              <% @media_photos.each do |photo| %>
+                <div class="col-md-3 col-sm-4 col-6">
+                  <div class="card border">
+                    <%= image_tag photo.image, class: 'card-img-top', style: 'height:150px;object-fit:cover;', alt: photo.caption.presence || 'Gallery photo' %>
+                    <div class="card-body p-2">
+                      <% if photo.caption.present? %>
+                        <p class="small text-muted mb-1 text-truncate"><%= photo.caption %></p>
+                      <% end %>
+                      <div class="d-flex gap-1">
+                        <% if photo.published? %>
+                          <span class="btn btn-sm btn-outline-success flex-grow-1 disabled">
+                            <i class="bi bi-check-circle me-1"></i>Live
+                          </span>
+                        <% else %>
+                          <%= button_to publish_admin_media_photo_path(photo), method: :patch, class: 'btn btn-sm btn-success flex-grow-1' do %>
+                            <i class="bi bi-check-lg me-1"></i>Publish
+                          <% end %>
+                        <% end %>
+                        <%= button_to admin_media_photo_path(photo), method: :delete,
+                              data: { turbo_confirm: 'Remove this photo from the gallery?' },
+                              class: 'btn btn-sm btn-outline-danger',
+                              "aria-label" => "Remove photo#{photo.caption.present? ? ': ' + photo.caption : ''}" do %>
+                          <i class="bi bi-trash" aria-hidden="true"></i>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted small mb-3">No photos uploaded yet.</p>
+          <% end %>
+
+          <%= form_with url: admin_media_photos_path, method: :post, multipart: true, local: true do |f| %>
+            <%= hidden_field_tag :page_name, 'media' %>
+            <div class="row g-2 align-items-end">
+              <div class="col-sm-5">
+                <label class="form-label fw-semibold">Upload Photo</label>
+                <%= f.file_field :image, accept: 'image/*', class: 'form-control form-control-sm' %>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold">Caption <span class="text-muted fw-normal">(optional)</span></label>
+                <%= f.text_field :caption, name: 'caption', class: 'form-control form-control-sm', placeholder: 'e.g. Spring Concert 2025' %>
+              </div>
+              <div class="col-sm-3">
+                <button type="submit" class="btn btn-sm btn-primary w-100" style="background-color:#500000;border-color:#500000;">
+                  <i class="bi bi-upload me-1"></i>Upload
+                </button>
+              </div>
+            </div>
+            <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>After uploading, click <strong>Publish</strong> on the photo to make it visible on the live site.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Videos -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-youtube me-1"></i>YouTube Videos
+        </div>
+        <div class="card-body">
+          <% if @media_videos.any? %>
+            <div class="row g-4 mb-4">
+              <% @media_videos.each do |video| %>
+                <div class="col-md-6 col-lg-4">
+                  <div class="card border">
+                    <div class="ratio ratio-16x9">
+                      <iframe src="<%= video.embed_url %>" title="<%= video.title.presence || 'Video' %>"
+                              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowfullscreen></iframe>
+                    </div>
+                    <div class="card-body p-2">
+                      <% if video.title.present? %>
+                        <p class="small fw-semibold mb-1 text-truncate"><%= video.title %></p>
+                      <% end %>
+                      <p class="small text-muted mb-2 text-truncate"><%= video.youtube_url %></p>
+                      <div class="d-flex gap-1">
+                        <% if video.published? %>
+                          <span class="btn btn-sm btn-outline-success flex-grow-1 disabled">
+                            <i class="bi bi-check-circle me-1"></i>Live
+                          </span>
+                        <% else %>
+                          <%= button_to publish_admin_media_video_path(video), method: :patch, class: 'btn btn-sm btn-success flex-grow-1' do %>
+                            <i class="bi bi-check-lg me-1"></i>Publish
+                          <% end %>
+                        <% end %>
+                        <%= button_to admin_media_video_path(video), method: :delete,
+                              data: { turbo_confirm: 'Remove this video?' },
+                              class: 'btn btn-sm btn-outline-danger',
+                              "aria-label" => "Remove video#{video.title.present? ? ': ' + video.title : ''}" do %>
+                          <i class="bi bi-trash" aria-hidden="true"></i>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted small mb-3">No videos added yet.</p>
+          <% end %>
+
+          <div class="border rounded p-3 bg-light">
+            <h6 class="fw-semibold mb-3">Add YouTube Video</h6>
+            <%= form_with url: admin_media_videos_path, method: :post, local: true do |f| %>
+              <div class="row g-2 align-items-end">
+                <div class="col-sm-5">
+                  <label class="form-label small fw-semibold">YouTube URL <span class="text-danger">*</span></label>
+                  <%= f.text_field :youtube_url, name: 'youtube_url', class: 'form-control form-control-sm',
+                        placeholder: 'https://www.youtube.com/watch?v=...' %>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label small fw-semibold">Title <span class="text-muted fw-normal">(optional)</span></label>
+                  <%= f.text_field :title, name: 'title', class: 'form-control form-control-sm', placeholder: 'e.g. Spring Concert 2025' %>
+                </div>
+                <div class="col-sm-3">
+                  <button type="submit" class="btn btn-sm btn-primary w-100" style="background-color:#500000;border-color:#500000;">
+                    <i class="bi bi-plus-lg me-1"></i>Add Video
+                  </button>
+                </div>
+              </div>
+              <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>After adding, click <strong>Publish</strong> on the video to make it visible on the live site.</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /media -->
+
+    <!-- ===================== AUDITIONS TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'auditions' %>" id="tab-auditions" role="tabpanel" aria-labelledby="tab-auditions-btn">
+
+      <!-- Editable content (signup link + what to expect) -->
+      <% if @auditions_has_draft %>
+        <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+          <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+          <div class="flex-grow-1"><strong>Unpublished draft exists.</strong> Preview or publish to go live.</div>
+          <div class="d-flex gap-2 flex-shrink-0">
+            <%= link_to admin_preview_website_page_path(page: 'auditions'), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+              <i class="bi bi-eye me-1"></i>Preview
+            <% end %>
+            <%= button_to 'Publish', admin_publish_website_auditions_path, method: :post, class: 'btn btn-sm btn-success', data: { turbo_confirm: 'Publish auditions content to live site?' } %>
+            <%= button_to 'Discard', admin_discard_website_auditions_draft_path, method: :delete, class: 'btn btn-sm btn-outline-danger', data: { turbo_confirm: 'Discard the auditions draft?' } %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+          <span>Auditions Page Content</span>
+          <a href="<%= public_audition_information_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-up-right me-1"></i>View Live Page
+          </a>
+        </div>
+        <div class="card-body">
+          <%= form_with url: admin_update_website_auditions_path, method: :patch, local: true do |f| %>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Audition Sign-Up Link <span class="text-muted fw-normal">(optional)</span></label>
+              <%= f.url_field :signup_link, name: 'auditions[signup_link]',
+                    value: @auditions_form_vals['signup_link'] || '',
+                    class: 'form-control',
+                    placeholder: 'https://forms.gle/...' %>
+              <div class="form-text">If provided, a "Sign Up for Auditions" button will appear on the public page.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">What to Expect</label>
+              <textarea name="auditions[what_to_expect]" class="form-control" rows="4"><%= @auditions_form_vals['what_to_expect'] || "The audition process is straightforward. No prepared piece is necessary. The director will guide you through simple vocal exercises to determine your range and pitch matching ability." %></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="background-color:#500000;border-color:#500000;">
+              <i class="bi bi-floppy me-1"></i>Save Draft
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Audition Sessions Management -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">Add New Audition Session</div>
+        <div class="card-body">
+          <%= form_with model: [:admin, @new_audition_session], local: true do |f| %>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Label <span class="text-danger">*</span></label>
+                <%= f.text_field :label, class: 'form-control', placeholder: 'e.g. Spring 2026 Auditions' %>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                <%= f.text_field :location, class: 'form-control', placeholder: 'e.g. Rudder Theatre' %>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Start Date & Time <span class="text-danger">*</span></label>
+                <%= f.datetime_local_field :start_datetime, class: 'form-control' %>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">End Date & Time <span class="text-danger">*</span></label>
+                <%= f.datetime_local_field :end_datetime, class: 'form-control' %>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary" style="background-color:#500000;border-color:#500000;">
+                  <i class="bi bi-plus-lg me-1"></i>Add Session
+                </button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">Existing Audition Sessions</div>
+        <div class="card-body p-0">
+          <% if @audition_sessions.empty? %>
+            <p class="text-muted p-3 mb-0">No audition sessions added yet.</p>
+          <% else %>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr><th scope="col">Label</th><th scope="col">Start</th><th scope="col">End</th><th scope="col">Location</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+                </thead>
+                <tbody>
+                  <% @audition_sessions.each do |session| %>
+                    <tr>
+                      <td><%= session.label %></td>
+                      <td><%= session.start_datetime.strftime("%b %-d, %Y %-I:%M %p") %></td>
+                      <td><%= session.end_datetime.strftime("%b %-d, %Y %-I:%M %p") %></td>
+                      <td><%= session.location %></td>
+                      <td class="text-end">
+                        <%= link_to "Edit", edit_admin_audition_session_path(session), class: "btn btn-sm btn-outline-secondary me-1" %>
+                        <%= button_to "Delete", admin_audition_session_path(session), method: :delete,
+                              data: { turbo_confirm: "Delete this audition session?" },
+                              class: "btn btn-sm btn-outline-danger" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div><!-- /auditions -->
+
+    <!-- ===================== CONTACT TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'contact' %>" id="tab-contact" role="tabpanel" aria-labelledby="tab-contact-btn">
+      <div class="row">
+        <div class="col-lg-6">
+
+          <% if @contact_has_draft %>
+            <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+              <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+              <div class="flex-grow-1"><strong>Unpublished draft exists.</strong> Preview or publish to go live.</div>
+              <div class="d-flex gap-2 flex-shrink-0">
+                <%= link_to admin_preview_website_page_path(page: 'contact'), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+                  <i class="bi bi-eye me-1"></i>Preview
+                <% end %>
+                <%= button_to 'Publish', admin_publish_website_contact_path, method: :post, class: 'btn btn-sm btn-success', data: { turbo_confirm: 'Publish contact page to live site?' } %>
+                <%= button_to 'Discard', admin_discard_website_contact_draft_path, method: :delete, class: 'btn btn-sm btn-outline-danger', data: { turbo_confirm: 'Discard the contact page draft?' } %>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">Edit Contact Information</div>
+            <div class="card-body">
+              <%= form_with url: admin_update_website_contact_path, method: :patch, local: true do |f| %>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Address</label>
+                  <textarea name="contact[address]" class="form-control" rows="2" placeholder="1224 TAMU&#10;College Station, TX 77843"><%= @contact_form_vals['address'] || "1224 TAMU\nCollege Station, TX 77843" %></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Email</label>
+                  <%= f.email_field :email, name: 'contact[email]',
+                        value: @contact_form_vals['email'] || 'choir@tamu.edu',
+                        class: 'form-control' %>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Phone</label>
+                  <%= f.text_field :phone, name: 'contact[phone]',
+                        value: @contact_form_vals['phone'] || '(979) 845-5974',
+                        class: 'form-control' %>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background-color:#500000;border-color:#500000;">
+                  <i class="bi bi-floppy me-1"></i>Save Draft
+                </button>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <a href="<%= public_contact_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-box-arrow-up-right me-1"></i>View Live Contact Page
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /contact -->
+
+    <!-- ===================== MESSAGES TAB ===================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'messages' %>" id="tab-messages" role="tabpanel" aria-labelledby="tab-messages-btn">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+          Contact Form Submissions
+          <% if @unread_messages_count > 0 %>
+            <span class="badge bg-danger ms-2"><%= @unread_messages_count %> unread</span>
+          <% end %>
+        </h5>
+      </div>
+
+      <% if @contact_messages.any? %>
+        <div class="list-group">
+          <% @contact_messages.each do |msg| %>
+            <div class="list-group-item list-group-item-action <%= 'bg-light fw-semibold border-start border-danger border-3' if msg.unread? %>">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <% if msg.unread? %>
+                      <span class="badge bg-danger">New</span>
+                    <% end %>
+                    <span class="fw-semibold"><%= msg.name %></span>
+                    <span class="text-muted small">&lt;<%= msg.email %>&gt;</span>
+                    <span class="text-muted small ms-auto"><%= msg.created_at.strftime("%b %-d, %Y %-I:%M %p") %></span>
+                  </div>
+                  <p class="mb-1 text-break"><%= msg.message %></p>
+                </div>
+                <% if msg.unread? %>
+                  <div class="ms-3 flex-shrink-0">
+                    <%= button_to 'Mark Read', admin_mark_website_message_read_path(msg), method: :post,
+                          class: 'btn btn-sm btn-outline-secondary' %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+          No contact messages yet.
+        </div>
+      <% end %>
+
+    </div><!-- /messages -->
+
+  </div><!-- /tab-content -->
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabMap = {
+      'home':      '#tab-home',
+      'book_us':   '#tab-book-us',
+      'media':     '#tab-media',
+      'auditions': '#tab-auditions',
+      'contact':   '#tab-contact',
+      'messages':  '#tab-messages'
+    };
+    const target = tabMap['<%= @active_tab %>'];
+    if (target) {
+      const triggerEl = document.querySelector(`[data-bs-target="${target}"]`);
+      if (triggerEl) { new bootstrap.Tab(triggerEl).show(); }
+    }
+  });
+</script>

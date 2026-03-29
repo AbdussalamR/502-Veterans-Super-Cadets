@@ -78,7 +78,7 @@ RSpec.describe 'Internal::Events', type: :request do
     context 'as regular user' do
       it 'denies access' do
         get new_internal_event_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -98,7 +98,7 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'denies access' do
         event = Event.create! valid_attributes
         get edit_internal_event_url(event)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -157,7 +157,7 @@ RSpec.describe 'Internal::Events', type: :request do
     context 'as regular user' do
       it 'denies access' do
         post internal_events_url, params: { event: valid_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -221,7 +221,7 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'denies access' do
         event = Event.create! valid_attributes
         patch internal_event_url(event), params: { event: { title: 'Updated Title' } }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -257,7 +257,7 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'denies access' do
         event = Event.create! valid_attributes
         delete internal_event_url(event)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end

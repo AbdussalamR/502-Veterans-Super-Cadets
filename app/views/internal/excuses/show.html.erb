@@ -131,10 +131,10 @@
             </div>
           <% end %>
 
-          <%# Admins finalize the decision (set actual status) only when the excuse is pending %>
-          <% if current_user.super_admin? && @excuse.status == 'pending' %>
+          <%# Admins finalize the decision (can do so at any pending stage, bypassing officer review) %>
+          <% if current_user.super_admin? && ['pending', 'Pending Section Leader Review'].include?(@excuse.status) %>
           <% if @excuse.officer_status.present? %>
-            <div class="mb-2"><small class="text-muted">This item has an officer provisional decision below. Admins may finalize it or choose differently.</small></div>
+            <div class="mb-2"><small class="text-muted">This item has an officer provisional decision. Admins may finalize it or choose differently.</small></div>
           <% end %>
           <div class="d-flex gap-2 mb-3">
             <%= button_to 'Finalize Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-success' %>

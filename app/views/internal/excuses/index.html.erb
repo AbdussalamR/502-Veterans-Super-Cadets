@@ -31,7 +31,12 @@
           <div class="card shadow-sm h-100">
             <div class="card-header bg-primary text-white">
               <strong>
-                <% if excuse.events.any? %>
+                <% if excuse.recurring? %>
+                  Recurring Excuse
+                  <% if excuse.events.any? %>
+                    <span class="text-light ms-2 small">(<%= excuse.events.size %> event<%= 's' if excuse.events.size != 1 %>)</span>
+                  <% end %>
+                <% elsif excuse.events.any? %>
                   <% primary_event = excuse.events.order(date: :asc).first %>
                   <%= primary_event.title %>
                   <% if excuse.events.size > 1 %>
@@ -48,7 +53,17 @@
             <div class="card-body d-flex flex-column">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-calendar3 text-primary me-2"></i>
-                <% if excuse.events.one? %>
+                <% if excuse.recurring? %>
+                  <span class="fw-medium">
+                    Every <%= excuse.recurring_day_names.presence || '—' %>
+                    <% if excuse.recurring_time_range_label.present? %>
+                      &middot; <%= excuse.recurring_time_range_label %>
+                    <% end %>
+                    <% if excuse.start_date.present? && excuse.end_date.present? %>
+                      <br><small class="text-muted"><%= excuse.start_date.strftime("%b %d") %> &ndash; <%= excuse.end_date.strftime("%b %d, %Y") %></small>
+                    <% end %>
+                  </span>
+                <% elsif excuse.events.one? %>
                   <% e = excuse.events.order(date: :asc).first %>
                   <span class="fw-medium"><%= e.date.strftime("%A, %B %d, %Y at %I:%M %p") rescue '—' %></span>
                 <% elsif excuse.events.any? %>

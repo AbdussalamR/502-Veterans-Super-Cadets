@@ -15,12 +15,11 @@ module Internal
     def index
       @upcoming_events = Event.upcoming.order(date: :asc)
       @past_events     = Event.past.order(date: :desc)
-      @events = @upcoming_events # For feeds, use upcoming events
 
       respond_to do |format|
-        format.html  # Your existing HTML view
-        format.ics { render_calendar }
-        format.rss   # Renders index.rss.builder
+        format.html
+        format.ics  { @events = Event.order(date: :asc); render_calendar }
+        format.rss  { @events = @upcoming_events }
       end
     end
 
@@ -107,6 +106,11 @@ module Internal
       calendar = Icalendar::Calendar.new
       calendar.prodid = '-//Cadets Events//EN'
       calendar.x_wr_calname = 'Cadets Events Calendar'
+      calendar.x_wr_caldesc = 'Texas A&M Singing Cadets Events'
+      calendar.x_wr_timezone = 'America/Chicago'
+      # Tell calendar apps to re-fetch every hour so new events appear promptly
+      calendar.append_custom_property('X-PUBLISHED-TTL', 'PT1H')
+      calendar.append_custom_property('REFRESH-INTERVAL;VALUE=DURATION', 'PT1H')
 
       @events.each do |event|
         calendar.add_event(event.to_ical_event)

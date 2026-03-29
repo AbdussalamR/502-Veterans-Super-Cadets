@@ -25,7 +25,7 @@
         </div>
       </div>
 
-      <% if current_user.admin? %>
+      <% if current_user.super_admin? %>
         <div class="col-12">
           <%= form.label :section_id, "Assign to Voice Section", class: "form-label fw-bold" %>
           <%= form.collection_select :section_id, Section.all, :id, :name, { include_blank: "No Section / Unassigned" }, class: "form-select" %>
