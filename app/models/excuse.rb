@@ -15,8 +15,8 @@ class Excuse < ApplicationRecord
   has_many :reviewers, through: :reviewers_to_excuses, source: :reviewer
 
   # Validations
-  validates :reason, :proof_link, presence: true
-  validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: false
+  validates :reason, presence: true
+  validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: true
   
   # STORY U3: Recurring validations (only required if recurring toggle is on)
   validates :start_date, :end_date, presence: true, if: :recurring?
@@ -89,6 +89,18 @@ class Excuse < ApplicationRecord
 
   def future_events?
     events.exists?(['date > ?', Time.current])
+  end
+
+  # Returns true if the given user is the creator and it is within 24 hours of the latest event's end time.
+  def editable_and_deletable_by_member?(user)
+    return false unless user == member
+
+    latest_event = events.order(date: :desc).first
+    return true unless latest_event # If no events linked, allow edit/delete loosely? Wait, the 24 hour rule applies to events
+
+    # Calculate end time. If `end_time` isn't set, use the end of the day.
+    deadline = (latest_event.end_time || latest_event.date.end_of_day) + 24.hours
+    Time.current <= deadline
   end
 
   # --- Business Logic ---

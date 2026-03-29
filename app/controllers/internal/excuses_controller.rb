@@ -3,10 +3,10 @@ module Internal
     include Loggable
 
     before_action :authenticate_user!
-    before_action :set_excuse, only: %i[show update review cancel_recurring]
+    before_action :set_excuse, only: %i[show edit update destroy review cancel_recurring]
     
     # AC 3: Block unauthorized URL access with 403 Forbidden
-    before_action :ensure_section_access, only: %i[show update review cancel_recurring]
+    before_action :ensure_section_access, only: %i[show edit update destroy review cancel_recurring]
 
     def index
       # AC 2: Section-based filtering
@@ -42,19 +42,26 @@ module Internal
         redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Officer review."
       else
         log_create_failure(@excuse)
+        flash.now[:alert] = "Failed to submit excuse. Please correct the errors below."
         render :new, status: :unprocessable_entity
       end
     end
 
+    def edit
+      unless @excuse.editable_and_deletable_by_member?(current_user)
+        redirect_to internal_excuse_path(@excuse), alert: "This excuse can no longer be edited."
+      end
+    end
+
     def update
-      if current_user.super_admin?
+      if current_user.super_admin? && params[:status].present?
         if @excuse.finalize_by_admin(current_user, params[:status])
           log_action('excuse_finalized', { excuse_id: @excuse.id, status: @excuse.status })
           redirect_to internal_excuse_path(@excuse), notice: "Director finalized decision as #{@excuse.status}."
         else
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
-      elsif current_user.officer?
+      elsif current_user.officer? && params[:status].present?
         unless @excuse.status == 'Pending Section Leader Review'
           return redirect_to internal_excuse_path(@excuse), alert: "This excuse has already been processed and cannot be updated."
         end
@@ -70,8 +77,29 @@ module Internal
         else
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
+      elsif @excuse.editable_and_deletable_by_member?(current_user)
+        # Member editing their own excuse
+        if @excuse.update(excuse_params)
+          # Process event links again if recurring or new manual_event_ids provided
+          @excuse.manual_event_ids = params[:excuse][:event_ids] if params[:excuse][:event_ids].present?
+          @excuse.process_event_links
+          
+          redirect_to internal_excuse_path(@excuse), notice: "Excuse updated successfully."
+        else
+          flash.now[:alert] = "Failed to update excuse. Please correct the errors below."
+          render :edit, status: :unprocessable_entity
+        end
       else
         render plain: "403 Forbidden", status: :forbidden
+      end
+    end
+
+    def destroy
+      if @excuse.editable_and_deletable_by_member?(current_user)
+        @excuse.destroy
+        redirect_to internal_excuses_path, notice: "Excuse deleted successfully."
+      else
+        redirect_to internal_excuse_path(@excuse), alert: "You do not have permission to delete this excuse."
       end
     end
 

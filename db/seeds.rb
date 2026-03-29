@@ -12,11 +12,11 @@
 # User.where(email: "email to delete").destroy_all
 
 # REPLACE email with your actual Gmail address
-User.find_or_create_by!(email: "deniza.telci@tamu.edu") do |user|
+User.find_or_create_by!(email: "zaahirsharma10@gmail.com") do |user|
   user.full_name = "Your Name" # You can put your real name here
   user.uid = "12345" # This is a placeholder; Google will update it when you log in
   user.provider = "google_oauth2"
-  user.role = "super_admin"
+  user.role = "user"
   user.approval_status = "approved"
 end
 

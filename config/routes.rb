@@ -65,7 +65,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :excuses, only: [:index, :show, :new, :create, :update] do
+    resources :excuses do
       member do
         post :review
         post :cancel_recurring
