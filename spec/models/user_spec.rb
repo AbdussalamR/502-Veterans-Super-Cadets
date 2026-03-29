@@ -39,6 +39,57 @@ RSpec.describe User, type: :model do
       expect(user.errors[:approval_status]).to include('is not included in the list')
     end
 
+    it 'is invalid with a malformed email address' do
+      user = build(:user, email: 'not-an-email')
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include('is not a valid email address')
+    end
+
+    it 'is invalid when email is missing the domain' do
+      user = build(:user, email: 'user@')
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include('is not a valid email address')
+    end
+
+    it 'is valid with a well-formed email address' do
+      user = build(:user, email: 'valid.user@example.com')
+      expect(user).to be_valid
+    end
+  end
+
+  describe '#email_deliverable?' do
+    it 'returns true when email is present and notifications are enabled' do
+      user = build(:user, email: 'test@example.com', email_notifications_enabled: true)
+      expect(user.email_deliverable?).to be true
+    end
+
+    it 'returns false when email notifications are disabled' do
+      user = build(:user, email: 'test@example.com', email_notifications_enabled: false)
+      expect(user.email_deliverable?).to be false
+    end
+
+    it 'returns false when email is blank' do
+      user = build(:user, email_notifications_enabled: true)
+      user.email = nil
+      # bypass validation to simulate edge case
+      allow(user).to receive(:valid?).and_return(true)
+      expect(user.email_deliverable?).to be false
+    end
+  end
+
+  describe 'admin_alerts association' do
+    let(:director) { create(:user, :super_admin) }
+
+    it 'has many admin_alerts' do
+      AdminAlert.create!(user: director, message: 'Alert 1')
+      AdminAlert.create!(user: director, message: 'Alert 2')
+      expect(director.admin_alerts.count).to eq(2)
+    end
+
+    it 'destroys admin_alerts when user is destroyed' do
+      AdminAlert.create!(user: director, message: 'Alert')
+      expect { director.destroy }.to change(AdminAlert, :count).by(-1)
+    end
   end
 
   describe 'role methods' do

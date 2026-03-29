@@ -12,7 +12,8 @@ class User < ApplicationRecord
 
   # Validations (wrapped in begin/rescue to handle missing table during migrations)
   begin
-    validates :email, presence: true, uniqueness: true
+    validates :email, presence: true, uniqueness: true,
+                      format: { with: URI::MailTo::EMAIL_REGEXP, message: 'is not a valid email address' }
     validates :full_name, presence: true
     validates :uid, presence: true
     validates :role, inclusion: { in: ROLES }
@@ -28,6 +29,7 @@ class User < ApplicationRecord
     has_many :excuses, foreign_key: :member_id, dependent: :destroy
     has_many :received_demerits, class_name: 'Demerit', foreign_key: 'member_id', dependent: :destroy
     has_many :given_demerits, class_name: 'Demerit', foreign_key: 'given_by_id', dependent: :nullify
+    has_many :admin_alerts, dependent: :destroy
 
     # Scopes
     scope :officers, -> { where(role: 'officer') }

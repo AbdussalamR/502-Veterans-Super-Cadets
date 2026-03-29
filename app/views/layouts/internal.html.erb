@@ -137,6 +137,9 @@
                 <span class="badge bg-danger ms-2"><%= pending_registrations %></span>
               <% end %>
             <% end %>
+            <% if current_user.super_admin? %>
+              <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
+            <% end %>
           <% elsif current_user.user? %>
             <%= link_to internal_my_demerits_path, class: "nav-link" do %>
               Discipline Points
@@ -171,9 +174,22 @@
     </nav>
 
   <div class="container mt-4">
+    <% if current_user.super_admin? %>
+      <% current_user.admin_alerts.unread.each do |alert| %>
+        <div class="alert alert-danger alert-dismissible fade show d-flex justify-content-between align-items-start" role="alert">
+          <div>
+            <strong>Email delivery failure:</strong> <%= alert.message %>
+          </div>
+          <%= button_to dismiss_internal_admin_alert_path(alert), method: :patch,
+                class: "btn-close ms-3", style: "flex-shrink: 0;",
+                "aria-label" => "Dismiss" do %><% end %>
+        </div>
+      <% end %>
+    <% end %>
+
     <% if flash.any? %>
       <% flash.each do |key, value| %>
-        <div class="alert alert-<%= key == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
+        <div class="alert alert-<%= %w[notice success].include?(key) ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
           <%= value.html_safe %>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>

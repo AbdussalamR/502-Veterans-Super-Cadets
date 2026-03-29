@@ -9,6 +9,14 @@ module Users
     # Removed passthru method - Omniauth middleware handles the initial redirect
 
     def google_oauth2
+      # Validate the email from OAuth before touching the database
+      raw_email = request.env['omniauth.auth']&.info&.email
+      if raw_email.present? && !raw_email.match?(URI::MailTo::EMAIL_REGEXP)
+        flash[:alert] = "The email returned by Google (#{raw_email}) is not a valid email address. " \
+                        "Please use a Google account with a valid email."
+        redirect_to '/users/sign_in' and return
+      end
+
       # Handle both Omniauth and manual OAuth flows
       user = if request.env['omniauth.auth']
                # Standard Omniauth flow
@@ -59,8 +67,14 @@ module Users
           redirect_to '/users/sign_in'
         end
       else
-        log_authentication_failure({ reason: 'user_not_found' })
-        flash[:alert] = 'User not authorized to access this application.'
+        attempted_email = request.env['omniauth.auth']&.info&.email
+        log_authentication_failure({ reason: 'user_not_found', email: attempted_email })
+        if attempted_email.present? && !attempted_email.end_with?('@tamu.edu')
+          flash[:alert] = "Only @tamu.edu Google accounts are allowed. " \
+                          "You signed in with #{attempted_email}."
+        else
+          flash[:alert] = 'Authentication failed. Please try again or contact an administrator.'
+        end
         redirect_to '/users/sign_in'
       end
     rescue StandardError => e

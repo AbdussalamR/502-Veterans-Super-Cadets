@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_27_180000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_28_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_27_180000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "admin_alerts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "message", null: false
+    t.string "alert_type", default: "email_failure", null: false
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "read_at"], name: "index_admin_alerts_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_admin_alerts_on_user_id"
+  end
+
+  create_table "application_settings", force: :cascade do |t|
+    t.integer "reminder_hours_before", default: 24, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "attendances", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "event_id", null: false
@@ -52,15 +69,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_27_180000) do
     t.index ["event_id"], name: "index_attendances_on_event_id"
     t.index ["user_id", "event_id"], name: "index_attendances_on_user_id_and_event_id", unique: true
     t.index ["user_id"], name: "index_attendances_on_user_id"
-  end
-
-  create_table "audition_sessions", force: :cascade do |t|
-    t.string "label", null: false
-    t.datetime "start_datetime", null: false
-    t.datetime "end_datetime", null: false
-    t.string "location", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "demerits", force: :cascade do |t|
@@ -87,7 +95,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_27_180000) do
     t.string "checkin_passcode"
     t.boolean "is_public"
     t.string "ticket_url"
-    t.integer "reminder_offset_hours"
     t.datetime "reminder_sent_at"
   end
 
@@ -242,21 +249,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_27_180000) do
     t.string "calendar_token"
     t.bigint "section_id"
     t.string "phone_number"
-    t.boolean "phone_confirmed", default: false, null: false
-    t.boolean "email_confirmed", default: true, null: false
-    t.boolean "receive_sms", default: false, null: false
-    t.boolean "receive_email", default: true, null: false
     t.boolean "email_notifications_enabled", default: true, null: false
     t.index ["approval_status"], name: "index_users_on_approval_status"
     t.index ["calendar_token"], name: "index_users_on_calendar_token"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["phone_number"], name: "index_users_on_phone_number"
     t.index ["role"], name: "index_users_on_role"
     t.index ["section_id"], name: "index_users_on_section_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "admin_alerts", "users"
   add_foreign_key "attendances", "events"
   add_foreign_key "attendances", "users"
   add_foreign_key "demerits", "users", column: "given_by_id"

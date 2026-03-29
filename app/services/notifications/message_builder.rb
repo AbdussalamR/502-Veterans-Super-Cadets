@@ -79,6 +79,15 @@ module Notifications
           cta_label: 'View event',
           cta_url: context['event_url']
         )
+      when 'event_reminder'
+        message(
+          subject: "Reminder: #{context['title']} is coming up",
+          heading: 'Upcoming event reminder',
+          intro: "This is a reminder about an upcoming event.",
+          bullets: event_bullets,
+          cta_label: 'View event',
+          cta_url: context['event_url']
+        )
       when 'event_cancelled'
         message(
           subject: "#{context['title']} was canceled",

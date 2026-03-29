@@ -83,6 +83,16 @@ Rails.application.routes.draw do
     # Member-specific routes
     get '/my-demerits', to: 'members#my_demerits', as: 'my_demerits'
     get '/help', to: 'help#show', as: 'help'
+
+    # Notification settings (directors only)
+    resource :settings, only: [:edit, :update], controller: 'settings'
+
+    # Dismiss in-app alert banners (directors only)
+    resources :admin_alerts, only: [] do
+      member do
+        patch :dismiss
+      end
+    end
   end
 
   # Admin routes
