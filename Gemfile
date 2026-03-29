@@ -93,3 +93,4 @@ end
 gem 'icalendar'
 gem 'yaml_db'
 gem 'sendgrid-ruby'
+gem 'cloudinary', '~> 1.28'
