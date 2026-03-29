@@ -104,11 +104,11 @@
               </li>
               <li><hr class="dropdown-divider"></li>
               <li>
-                <%= link_to internal_event_path(event), method: :delete, 
-                    data: { confirm: "Are you sure you want to delete this event?" }, 
-                    class: "dropdown-item text-danger" do %>
-                  <i class="bi bi-trash me-2"></i>Delete Event
-                <% end %>
+                  <%= button_to internal_event_path(event), method: :delete,
+                    form: { data: { turbo_confirm: "Are you sure you want to delete this event?" } },
+                    class: "dropdown-item text-danger border-0 bg-transparent w-100 text-start" do %>
+                    <i class="bi bi-trash me-2"></i>Delete Event
+                  <% end %>
               </li>
             <% end %>
           </ul>
