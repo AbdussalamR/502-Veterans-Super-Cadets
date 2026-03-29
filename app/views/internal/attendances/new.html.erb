@@ -11,12 +11,12 @@
 <%= form_tag internal_event_attendances_path(@event), method: :post do %>
   <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <tr>
-      <th>Name</th>
-      <th>Present</th>
-      <th>Tardy</th>
-      <th>Excused</th>
-      <th>Absent</th>
-      <th>Note</th>
+      <th scope="col">Name</th>
+      <th scope="col">Present</th>
+      <th scope="col">Tardy</th>
+      <th scope="col">Excused</th>
+      <th scope="col">Absent</th>
+      <th scope="col">Note</th>
     </tr>
     
     <% @users.each do |user| %>

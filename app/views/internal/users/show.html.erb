@@ -247,11 +247,11 @@
                   <table class="table table-hover mb-0">
                     <thead class="table-light">
                       <tr>
-                        <th>Date</th>
-                        <th>Value</th>
-                        <th>Reason</th>
-                        <th>Given By</th>
-                        <th>Actions</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Given By</th>
+                        <th scope="col">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -265,19 +265,20 @@
                           <td><%= truncate(demerit.reason, length: 40) %></td>
                           <td><%= demerit.given_by.full_name %></td>
                           <td>
-                            <div class="btn-group btn-group-sm">
-                              <%= link_to internal_demerit_path(demerit), class: "btn btn-outline-secondary" do %>
-                                <i class="bi bi-eye"></i>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Actions">
+                              <%= link_to internal_demerit_path(demerit), class: "btn btn-outline-secondary", aria: { label: "View discipline point details" } do %>
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                               <% end %>
                               <% if current_user.admin? %>
-                                <%= link_to edit_internal_demerit_path(demerit), class: "btn btn-outline-warning" do %>
-                                  <i class="bi bi-pencil"></i>
+                                <%= link_to edit_internal_demerit_path(demerit), class: "btn btn-outline-warning", aria: { label: "Edit discipline point" } do %>
+                                  <i class="bi bi-pencil" aria-hidden="true"></i>
                                 <% end %>
                                 <%= button_to internal_demerit_path(demerit, source: 'user_profile'), method: :delete,
                                     form: { style: 'display: inline-block;' },
                                     data: { turbo_confirm: "Are you sure you want to delete this discipline point record?" },
-                                    class: "btn btn-outline-danger" do %>
-                                  <i class="bi bi-trash"></i>
+                                    class: "btn btn-outline-danger",
+                                    "aria-label" => "Delete discipline point" do %>
+                                  <i class="bi bi-trash" aria-hidden="true"></i>
                                 <% end %>
                               <% end %>
                             </div>

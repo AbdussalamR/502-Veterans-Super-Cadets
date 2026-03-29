@@ -106,23 +106,23 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>
-                <i class="bi bi-person me-1"></i>Member
+              <th scope="col">
+                <i class="bi bi-person me-1" aria-hidden="true"></i>Member
               </th>
-              <th>
-                <i class="bi bi-hash me-1"></i>Value
+              <th scope="col">
+                <i class="bi bi-hash me-1" aria-hidden="true"></i>Value
               </th>
-              <th>
-                <i class="bi bi-chat-square-text me-1"></i>Reason
+              <th scope="col">
+                <i class="bi bi-chat-square-text me-1" aria-hidden="true"></i>Reason
               </th>
-              <th>
-                <i class="bi bi-calendar3 me-1"></i>Date
+              <th scope="col">
+                <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Date
               </th>
-              <th>
-                <i class="bi bi-person-badge me-1"></i>Given By
+              <th scope="col">
+                <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Given By
               </th>
-              <th class="text-center">
-                <i class="bi bi-gear me-1"></i>Actions
+              <th scope="col" class="text-center">
+                <i class="bi bi-gear me-1" aria-hidden="true"></i>Actions
               </th>
             </tr>
           </thead>
@@ -157,20 +157,20 @@
                   <i class="bi bi-person-circle me-1"></i><%= demerit.given_by.full_name %>
                 </td>
                 <td>
-                  <div class="btn-group" role="group">
-                    <%= link_to internal_demerit_path(demerit), class: "btn btn-sm btn-outline-primary", title: "View Details" do %>
-                      <i class="bi bi-eye"></i>
+                  <div class="btn-group" role="group" aria-label="Actions for <%= demerit.member.full_name %>">
+                    <%= link_to internal_demerit_path(demerit), class: "btn btn-sm btn-outline-primary", aria: { label: "View details for #{demerit.member.full_name}" } do %>
+                      <i class="bi bi-eye" aria-hidden="true"></i>
                     <% end %>
-                    <%= link_to edit_internal_demerit_path(demerit), class: "btn btn-sm btn-outline-warning", title: "Edit" do %>
-                      <i class="bi bi-pencil"></i>
+                    <%= link_to edit_internal_demerit_path(demerit), class: "btn btn-sm btn-outline-warning", aria: { label: "Edit discipline point for #{demerit.member.full_name}" } do %>
+                      <i class="bi bi-pencil" aria-hidden="true"></i>
                     <% end %>
-                    <%= button_to internal_demerit_path(demerit, source: 'demerits_index'), 
+                    <%= button_to internal_demerit_path(demerit, source: 'demerits_index'),
                           method: :delete,
                           form: { style: 'display: inline-block;' },
                           data: { turbo_confirm: "Are you sure you want to delete this discipline point record?" },
                           class: "btn btn-sm btn-outline-danger",
-                          title: "Delete" do %>
-                      <i class="bi bi-trash"></i>
+                          "aria-label" => "Delete discipline point for #{demerit.member.full_name}" do %>
+                      <i class="bi bi-trash" aria-hidden="true"></i>
                     <% end %>
                   </div>
                 </td>

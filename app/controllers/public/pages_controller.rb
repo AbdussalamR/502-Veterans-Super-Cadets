@@ -2,14 +2,18 @@
 
 module Public
   class PagesController < PublicController
-    def home; end
+    def home
+      @home_photos = MediaPhoto.for_page('home').published_only.ordered
+    end
 
     def performance_request; end
 
-    def media_gallery; end
+    def media_gallery
+      @media_photos = MediaPhoto.for_page('media').published_only.ordered
+      @media_videos = MediaVideo.published_only.ordered
+    end
 
     def audition_information
-      # @audition_sessions = AuditionSession.all
       now = Time.current
       @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', now, now).chronological
       @future_auditions = AuditionSession.where('start_datetime > ?', now).chronological
@@ -18,10 +22,10 @@ module Public
 
     def calendar
       @events = Event.where(is_public: true)
-      
+
       respond_to do |format|
-        format.html # Renders the page
-        format.json do # Sends the data to the calendar
+        format.html
+        format.json do
           render json: @events.map { |e|
             {
               id: e.id,
@@ -40,5 +44,20 @@ module Public
     end
 
     def contact; end
+
+    def submit_contact
+      @msg = ContactMessage.new(
+        name:    params[:name].to_s.strip,
+        email:   params[:email].to_s.strip,
+        message: params[:message].to_s.strip
+      )
+
+      if @msg.save
+        redirect_to public_contact_path, notice: "Thank you, #{@msg.name}! Your message has been sent."
+      else
+        redirect_to public_contact_path,
+                    alert: "Could not send message: #{@msg.errors.full_messages.to_sentence}"
+      end
+    end
   end
 end

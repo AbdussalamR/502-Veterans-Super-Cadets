@@ -5,12 +5,13 @@ Rails.application.routes.draw do
   
   # Public Pages Namespace
   namespace :public, path: 'public' do
-    get 'home', to: 'pages#home'
-    get 'performance_request', to: 'pages#performance_request'
-    get 'media_gallery', to: 'pages#media_gallery'
-    get 'audition_information', to: 'pages#audition_information'
-    get 'calendar', to: 'pages#calendar'
-    get 'contact', to: 'pages#contact'
+    get  'home', to: 'pages#home'
+    get  'performance_request', to: 'pages#performance_request'
+    get  'media_gallery', to: 'pages#media_gallery'
+    get  'audition_information', to: 'pages#audition_information'
+    get  'calendar', to: 'pages#calendar'
+    get  'contact', to: 'pages#contact'
+    post 'contact', to: 'pages#submit_contact', as: 'submit_contact'
   end
 
   # Manual authentication routes (using custom controller to avoid Devise mapping issues)
@@ -105,7 +106,33 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :audition_sessions 
+    resources :audition_sessions
+
+    # Website content management dashboard
+    get  'website',                  to: 'website#index',              as: 'website'
+
+    patch 'website/home',            to: 'website#update_home',        as: 'update_website_home'
+    post  'website/home/publish',    to: 'website#publish_home',       as: 'publish_website_home'
+    delete 'website/home/draft',     to: 'website#discard_home_draft', as: 'discard_website_home_draft'
+
+    patch 'website/contact',         to: 'website#update_contact',        as: 'update_website_contact'
+    post  'website/contact/publish', to: 'website#publish_contact',       as: 'publish_website_contact'
+    delete 'website/contact/draft',  to: 'website#discard_contact_draft', as: 'discard_website_contact_draft'
+
+    get   'website/preview/:page',   to: 'website#preview',            as: 'preview_website_page'
+
+    patch 'website/auditions',         to: 'website#update_auditions',        as: 'update_website_auditions'
+    post  'website/auditions/publish', to: 'website#publish_auditions',       as: 'publish_website_auditions'
+    delete 'website/auditions/draft',  to: 'website#discard_auditions_draft', as: 'discard_website_auditions_draft'
+
+    post  'website/messages/:id/read', to: 'website#mark_message_read',       as: 'mark_website_message_read'
+
+    resources :media_photos, only: [:create, :destroy] do
+      member { patch :publish }
+    end
+    resources :media_videos, only: [:create, :destroy] do
+      member { patch :publish }
+    end
   end
 
   

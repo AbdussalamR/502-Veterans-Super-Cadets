@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_28_000003) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_29_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,6 +80,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_28_000003) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "contact_messages", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "email", null: false
+    t.text "message", null: false
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["read_at"], name: "index_contact_messages_on_read_at"
+  end
+
   create_table "demerits", force: :cascade do |t|
     t.bigint "member_id", null: false
     t.bigint "given_by_id", null: false
@@ -135,6 +145,36 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_28_000003) do
     t.time "recurring_start_time"
     t.time "recurring_end_time"
     t.index ["member_id"], name: "index_excuses_on_member_id"
+  end
+
+  create_table "media_photos", force: :cascade do |t|
+    t.string "page_name", default: "media", null: false
+    t.string "caption"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "published", default: false, null: false
+    t.index ["page_name", "position"], name: "index_media_photos_on_page_name_and_position"
+  end
+
+  create_table "media_videos", force: :cascade do |t|
+    t.string "title"
+    t.string "youtube_url", null: false
+    t.string "youtube_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "published", default: false, null: false
+  end
+
+  create_table "page_contents", force: :cascade do |t|
+    t.string "page_name", null: false
+    t.string "content_key", null: false
+    t.text "content_value"
+    t.boolean "is_draft", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_name", "content_key", "is_draft"], name: "index_page_contents_on_page_name_and_content_key_and_is_draft", unique: true
   end
 
   create_table "reviewers_to_excuse", force: :cascade do |t|

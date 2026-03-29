@@ -78,7 +78,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           post admin_audition_sessions_path, params: valid_params
         end.to change(AuditionSession, :count).by(1)
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
 
       it 'does not create when end is before start' do
@@ -145,7 +145,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
           audition_session: { label: "Updated Label" }
         }
         expect(audition_session.reload.label).to eq("Updated Label")
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
     end
 
@@ -170,7 +170,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           delete admin_audition_session_path(audition_session)
         end.to change(AuditionSession, :count).by(-1)
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
     end
 
