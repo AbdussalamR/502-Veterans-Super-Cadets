@@ -102,7 +102,7 @@
   <a class="visually-hidden-focusable" href="#main-content">Skip to main content</a>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-        <%= link_to "Singing Cadets", internal_events_path, class: "navbar-brand" %>
+        <%= link_to "HOME", internal_events_path, class: "navbar-brand" %>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -143,7 +143,7 @@
             <% end %>
             <% unread_msgs = ContactMessage.unread.count %>
             <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>
-              Website
+              Website Management
               <% if unread_msgs > 0 %>
                 <span class="badge bg-danger ms-2" aria-label="<%= unread_msgs %> unread messages"><%= unread_msgs %></span>
               <% end %>
