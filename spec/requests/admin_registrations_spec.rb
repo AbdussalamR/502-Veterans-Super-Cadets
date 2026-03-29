@@ -84,7 +84,7 @@ RSpec.describe 'Admin::Registrations', type: :request do
 
       it 'denies access' do
         get admin_registrations_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You are not authorized')
       end
     end
@@ -128,7 +128,7 @@ RSpec.describe 'Admin::Registrations', type: :request do
 
       it 'denies access' do
         delete destroy_rejected_admin_registration_path(rejected_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You are not authorized')
       end
     end
@@ -138,6 +138,26 @@ RSpec.describe 'Admin::Registrations', type: :request do
         delete destroy_rejected_admin_registration_path(rejected_user)
         expect(response).to redirect_to('/users/sign_in')
       end
+    end
+  end
+
+  describe 'PATCH notification delivery' do
+    before { sign_in admin }
+
+    it 'enqueues a notification when approving a user' do
+      pending_user = create(:user, :pending)
+
+      expect do
+        patch approve_admin_registration_path(pending_user)
+      end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+    end
+
+    it 'enqueues a notification when rejecting a user' do
+      pending_user = create(:user, :pending)
+
+      expect do
+        patch reject_admin_registration_path(pending_user)
+      end.to have_enqueued_job(Notifications::DeliverNotificationJob)
     end
   end
 end

@@ -1,9 +1,13 @@
 <div class="public-page-wrapper">
-  
+
   <!-- Hero Section -->
   <div class="hero-section text-center text-white d-flex align-items-center justify-content-center flex-column" style="min-height: 50vh; background-color: #500000;">
-    <h1 class="display-3 fw-bold mb-4">The Singing Cadets</h1>
-    <p class="lead mb-4">The Voice of Aggieland</p>
+    <h1 class="display-3 fw-bold mb-4">
+      <%= PageContent.get('home', 'hero_title') || 'The Singing Cadets' %>
+    </h1>
+    <p class="lead mb-4">
+      <%= PageContent.get('home', 'hero_subtitle') || 'The Voice of Aggieland' %>
+    </p>
     <%= link_to "Book a Performance", public_performance_request_path, class: "btn btn-outline-light btn-lg" %>
   </div>
 
@@ -13,17 +17,55 @@
       <div class="col-md-6">
         <h2 class="text-maroon fw-bold mb-3">About Us</h2>
         <p>
-          Internationally known as the "Voice of Aggieland", the Singing Cadets is Texas A&M University's premier men's chorus. 
-          We are one of the oldest student organizations on campus, representing the university through music and performance across the state, nation, and world.
+          <%= PageContent.get('home', 'about_text') ||
+              "Internationally known as the \"Voice of Aggieland\", the Singing Cadets is Texas A&M University's premier men's chorus. We are one of the oldest student organizations on campus, representing the university through music and performance across the state, nation, and world." %>
         </p>
       </div>
       <div class="col-md-6 text-center">
-        <!-- Placeholder for a group photo -->
-        <div class="bg-light p-5 border rounded" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
-          <span class="text-muted"><i class="bi bi-camera me-2"></i>Choir Photo Placeholder</span>
-        </div>
+        <% photo = @home_photos.first %>
+        <% if photo %>
+          <a href="#" class="d-block"
+             data-bs-toggle="modal" data-bs-target="#homePhotoModal"
+             style="cursor:pointer;"
+             aria-label="View full size photo">
+            <%= image_tag photo.image,
+                  class: 'img-fluid rounded shadow-sm',
+                  style: 'max-height: 300px; object-fit: cover; width: 100%;',
+                  alt: photo.caption.presence || 'Singing Cadets group photo' %>
+            <div class="mt-1 small text-muted"><i class="bi bi-zoom-in me-1" aria-hidden="true"></i>Click to expand</div>
+          </a>
+        <% else %>
+          <div class="bg-light p-5 border rounded" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
+            <span class="text-muted"><i class="bi bi-camera me-2"></i>Choir Photo Placeholder</span>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
 
 </div>
+
+<% if @home_photos.first %>
+  <!-- Home Photo Lightbox Modal -->
+  <div class="modal fade" id="homePhotoModal" tabindex="-1" aria-labelledby="homePhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content bg-dark border-0">
+        <div class="modal-header border-0 py-2">
+          <h2 id="homePhotoModalLabel" class="visually-hidden">Photo enlarged view</h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-0 p-md-2">
+          <%= image_tag @home_photos.first.image,
+                class: 'img-fluid rounded',
+                style: 'max-height: 85vh; object-fit: contain;',
+                alt: @home_photos.first.caption.presence || 'Singing Cadets group photo' %>
+        </div>
+        <% if @home_photos.first.caption.present? %>
+          <div class="modal-footer border-0 justify-content-center py-2">
+            <p class="text-white-50 mb-0 small"><%= @home_photos.first.caption %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

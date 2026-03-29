@@ -1,0 +1,21 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2>Notification Settings</h2>
+
+    <%= form_with model: @setting, url: internal_settings_path, method: :patch, local: true do |f| %>
+      <div class="mb-3">
+        <%= f.label :reminder_hours_before, "Send event reminders this many hours before each event", class: "form-label" %>
+        <div class="input-group" style="max-width: 200px;">
+          <%= f.number_field :reminder_hours_before, min: 1, class: "form-control", required: true %>
+          <span class="input-group-text">hours</span>
+        </div>
+        <div class="form-text">
+          e.g. 24 means members get an email 24 hours before each event.
+          The reminder job runs hourly, so delivery may be up to one hour late.
+        </div>
+      </div>
+
+      <%= f.submit "Save settings", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>

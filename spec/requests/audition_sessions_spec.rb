@@ -37,7 +37,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
 
       it 'redirects away' do
         get admin_audition_sessions_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You are not authorized')
       end
     end
@@ -65,7 +65,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
 
       it 'redirects away' do
         get new_admin_audition_session_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -78,7 +78,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           post admin_audition_sessions_path, params: valid_params
         end.to change(AuditionSession, :count).by(1)
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
 
       it 'does not create when end is before start' do
@@ -102,7 +102,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           post admin_audition_sessions_path, params: valid_params
         end.not_to change(AuditionSession, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -131,7 +131,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
 
       it 'redirects away' do
         get edit_admin_audition_session_path(audition_session)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -145,7 +145,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
           audition_session: { label: "Updated Label" }
         }
         expect(audition_session.reload.label).to eq("Updated Label")
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
     end
 
@@ -157,7 +157,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
           audition_session: { label: "Updated Label" }
         }
         expect(audition_session.reload.label).not_to eq("Updated Label")
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -170,7 +170,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           delete admin_audition_session_path(audition_session)
         end.to change(AuditionSession, :count).by(-1)
-        expect(response).to redirect_to(admin_audition_sessions_path)
+        expect(response).to redirect_to(admin_website_path(tab: 'auditions'))
       end
     end
 
@@ -181,7 +181,7 @@ RSpec.describe 'Admin::AuditionSessions', type: :request do
         expect do
           delete admin_audition_session_path(audition_session)
         end.not_to change(AuditionSession, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 

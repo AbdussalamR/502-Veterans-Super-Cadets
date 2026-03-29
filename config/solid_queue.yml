@@ -1,0 +1,10 @@
+production:
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+      recurring_tasks_file: <%= Rails.root.join("config/recurring.yml") %>
+  workers:
+    - queues: "*"
+      threads: 3
+      processes: 1
+      polling_interval: 0.1

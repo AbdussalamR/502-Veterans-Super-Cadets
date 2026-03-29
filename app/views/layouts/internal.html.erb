@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Singing Cadets</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -98,7 +98,8 @@
   
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
+  <a class="visually-hidden-focusable" href="#main-content">Skip to main content</a>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
         <%= link_to "Singing Cadets", internal_events_path, class: "navbar-brand" %>
@@ -116,12 +117,12 @@
             <% if current_user.super_admin? %>
               <% pending_admin_count = Excuse.pending_admin_approval.count %>
               <% if pending_admin_count > 0 %>
-                <span class="badge bg-danger ms-2"><%= pending_admin_count %></span>
+                <span class="badge bg-danger ms-2" aria-label="<%= pending_admin_count %> pending admin approvals"><%= pending_admin_count %></span>
               <% end %>
             <% elsif current_user.officer? %>
               <% pending_officer_count = Excuse.pending_unprocessed.joins(:member).where(users: { section_id: current_user.section_id }).count %>
               <% if pending_officer_count > 0 %>
-                <span class="badge bg-danger ms-2"><%= pending_officer_count %></span>
+                <span class="badge bg-danger ms-2" aria-label="<%= pending_officer_count %> pending excuses"><%= pending_officer_count %></span>
               <% end %>
             <% end %>
           <% end %>
@@ -134,10 +135,19 @@
             <%= link_to admin_registrations_path, class: "nav-link d-flex align-items-center" do %>
               Registration Approval
               <% if pending_registrations > 0 %>
-                <span class="badge bg-danger ms-2"><%= pending_registrations %></span>
+                <span class="badge bg-danger ms-2" aria-label="<%= pending_registrations %> pending registrations"><%= pending_registrations %></span>
               <% end %>
             <% end %>
-            <%= link_to "Audition Sessions", admin_audition_sessions_path, class: "nav-link" %>
+            <% if current_user.super_admin? %>
+              <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
+            <% end %>
+            <% unread_msgs = ContactMessage.unread.count %>
+            <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>
+              Website
+              <% if unread_msgs > 0 %>
+                <span class="badge bg-danger ms-2" aria-label="<%= unread_msgs %> unread messages"><%= unread_msgs %></span>
+              <% end %>
+            <% end %>
           <% elsif current_user.user? %>
             <%= link_to internal_my_demerits_path, class: "nav-link" do %>
               Discipline Points
@@ -150,7 +160,7 @@
         
         <div class="navbar-nav ms-auto">
           <div class="dropdown">
-            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <% if current_user.avatar_url.present? %>
                 <img src="<%= current_user.avatar_url %>" alt="<%= current_user.full_name %>" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
               <% end %>
@@ -171,18 +181,33 @@
       </div>
     </nav>
 
-  <div class="container mt-4">
-    <% if flash.any? %>
-      <% flash.each do |key, value| %>
-        <div class="alert alert-<%= key == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
-          <%= value.html_safe %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  <main id="main-content" class="container mt-4 flex-grow-1">
+    <% if current_user.super_admin? %>
+      <% current_user.admin_alerts.unread.each do |alert| %>
+        <div class="alert alert-danger alert-dismissible fade show d-flex justify-content-between align-items-start" role="alert">
+          <div>
+            <strong>Email delivery failure:</strong> <%= alert.message %>
+          </div>
+          <%= button_to dismiss_internal_admin_alert_path(alert), method: :patch,
+                class: "btn-close ms-3", style: "flex-shrink: 0;",
+                "aria-label" => "Dismiss" do %><% end %>
         </div>
       <% end %>
     <% end %>
 
+    <div aria-live="polite" aria-atomic="true">
+      <% if flash.any? %>
+        <% flash.each do |key, value| %>
+          <div class="alert alert-<%= %w[notice success].include?(key) ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
+            <%= value.html_safe %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
     <%= yield %>
-  </div>
+  </main>
 
 
 </body>

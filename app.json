@@ -36,6 +36,22 @@
     "APP_HOST": {
       "description": "The URL of your app (e.g., cadets-test.herokuapp.com)",
       "required": false
+    },
+    "SENDGRID_API_KEY": {
+      "description": "Twilio SendGrid API key for outbound email notifications",
+      "required": false
+    },
+    "NOTIFICATION_FROM_EMAIL": {
+      "description": "From address for notification emails",
+      "required": false
+    },
+    "NOTIFICATION_FROM_NAME": {
+      "description": "Display name for notification emails",
+      "required": false
+    },
+    "NOTIFICATION_REPLY_TO": {
+      "description": "Optional reply-to address for notification emails",
+      "required": false
     }
   },
   "buildpacks": [

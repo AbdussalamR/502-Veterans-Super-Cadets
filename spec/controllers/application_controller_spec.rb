@@ -55,7 +55,7 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'redirects to root path' do
         get :test_ensure_admin
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -85,7 +85,7 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'redirects to root path' do
         get :test_ensure_super_admin
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end

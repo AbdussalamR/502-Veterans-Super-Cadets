@@ -22,14 +22,6 @@ end
 
 # --- Test data for recurring excuses ---
 
-# Officer user
-User.find_or_create_by!(email: "officer@tamu.edu") do |user|
-  user.full_name = "Officer Jones"
-  user.uid = "officer1"
-  user.provider = "google_oauth2"
-  user.role = "officer"
-  user.approval_status = "approved"
-end
 
 
 # Regular member
@@ -42,7 +34,7 @@ member = User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
 end
 
 # Regular member
-member = User.find_or_create_by!(email: "member@tamu.edu") do |user|
+member = User.find_or_create_by!(email: "zscollege01@tamu.edu") do |user|
   user.full_name = "Cadet Smith"
   user.uid = "member1"
   user.provider = "google_oauth2"

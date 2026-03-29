@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/CSCE431/singing-cadets-platform-main -name *reminder* -o -name *schedule*)",
+      "Bash(xargs grep:*)",
+      "Bash(find /c/CSCE431/singing-cadets-platform-main/db/migrate -name *notification* -o -name *reminder* -o -name *alert*)",
+      "Bash(find /c/CSCE431/singing-cadets-platform-main/spec -name *notification* -o -name *setting* -o -name *admin_alert*)",
+      "Bash(find /c/CSCE431/singing-cadets-platform-main -path */spec/factories/* -name *notification* -o -path */spec/factories/* -name *alert* -o -path */spec/factories/* -name *setting*)"
+    ]
+  }
+}

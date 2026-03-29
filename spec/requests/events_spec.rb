@@ -78,7 +78,7 @@ RSpec.describe 'Internal::Events', type: :request do
     context 'as regular user' do
       it 'denies access' do
         get new_internal_event_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -98,7 +98,7 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'denies access' do
         event = Event.create! valid_attributes
         get edit_internal_event_url(event)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -112,6 +112,14 @@ RSpec.describe 'Internal::Events', type: :request do
           expect do
             post internal_events_url, params: { event: valid_attributes }
           end.to change(Event, :count).by(1)
+        end
+
+        it 'enqueues notifications for approved members' do
+          create(:user)
+
+          expect do
+            post internal_events_url, params: { event: valid_attributes }
+          end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
         end
 
         it 'redirects to the created event' do
@@ -149,7 +157,7 @@ RSpec.describe 'Internal::Events', type: :request do
     context 'as regular user' do
       it 'denies access' do
         post internal_events_url, params: { event: valid_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -189,6 +197,15 @@ RSpec.describe 'Internal::Events', type: :request do
           event.reload
           expect(response).to redirect_to(internal_event_url(event))
         end
+
+        it 'enqueues notifications when updating an event' do
+          create(:user)
+          event = Event.create! valid_attributes
+
+          expect do
+            patch internal_event_url(event), params: { event: new_attributes }
+          end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
+        end
       end
 
       context 'with invalid parameters' do
@@ -204,7 +221,7 @@ RSpec.describe 'Internal::Events', type: :request do
       it 'denies access' do
         event = Event.create! valid_attributes
         patch internal_event_url(event), params: { event: { title: 'Updated Title' } }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -225,13 +242,22 @@ RSpec.describe 'Internal::Events', type: :request do
         delete internal_event_url(event)
         expect(response).to redirect_to(internal_events_url)
       end
+
+      it 'enqueues notifications when canceling an event' do
+        create(:user)
+        event = Event.create! valid_attributes
+
+        expect do
+          delete internal_event_url(event)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob).exactly(3).times
+      end
     end
 
     context 'as regular user' do
       it 'denies access' do
         event = Event.create! valid_attributes
         delete internal_event_url(event)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end

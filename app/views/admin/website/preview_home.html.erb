@@ -1,0 +1,41 @@
+<!-- Admin Preview Banner -->
+<div class="alert alert-warning text-center mb-0 rounded-0 border-0 border-bottom" style="position:sticky;top:0;z-index:9999;">
+  <i class="bi bi-eye-fill me-2"></i>
+  <strong>PREVIEW MODE</strong> — These changes have NOT been published to the live site yet.
+  <a href="<%= admin_website_path(tab: 'home') %>" class="btn btn-sm btn-warning ms-3">Back to Dashboard</a>
+  <%= button_to 'Publish Now', admin_publish_website_home_path,
+        method: :post, class: 'btn btn-sm btn-success ms-2',
+        data: { turbo_confirm: 'Publish this draft to the live site?' } %>
+</div>
+
+<div class="public-page-wrapper">
+  <!-- Hero Section -->
+  <div class="hero-section text-center text-white d-flex align-items-center justify-content-center flex-column" style="min-height: 50vh; background-color: #500000;">
+    <h1 class="display-3 fw-bold mb-4">
+      <%= @preview_home_contents['hero_title'] || 'The Singing Cadets' %>
+    </h1>
+    <p class="lead mb-4">
+      <%= @preview_home_contents['hero_subtitle'] || 'The Voice of Aggieland' %>
+    </p>
+    <a href="#" class="btn btn-outline-light btn-lg">Book a Performance</a>
+  </div>
+
+  <!-- About Section -->
+  <div class="container my-5">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 style="color:#500000;" class="fw-bold mb-3">About Us</h2>
+        <p><%= @preview_home_contents['about_text'] || "Internationally known as the \"Voice of Aggieland\"..." %></p>
+      </div>
+      <div class="col-md-6 text-center">
+        <% if @home_photos.any? %>
+          <%= image_tag @home_photos.first.image, class: 'img-fluid rounded', style: 'max-height:300px;object-fit:cover;width:100%;' %>
+        <% else %>
+          <div class="bg-light p-5 border rounded" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
+            <span class="text-muted"><i class="bi bi-camera me-2"></i>Choir Photo Placeholder</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

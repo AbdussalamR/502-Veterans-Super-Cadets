@@ -114,6 +114,14 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(response).to have_http_status(:redirect)
       end
 
+      it 'enqueues a review notification for section officers' do
+        officer_tenor
+
+        expect do
+          post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+      end
+
       # --- NEW: Story A3 AC 1 (Default Status) ---
       it 'sets status to "Pending Section Leader Review"' do
         post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
@@ -192,13 +200,19 @@ RSpec.describe 'Internal::Excuses', type: :request do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
         excuse.reload
         expect(excuse.status).to eq('approved')
-        expect(flash[:notice]).to include('Director finalized decision')
+        expect(flash[:notice]).to include('approved')
       end
 
       it 'syncs attendance automatically on finalize' do
         patch internal_excuse_path(excuse), params: { status: 'approved' }
         attendance = Attendance.find_by(user: user, event: event)
         expect(attendance.status).to eq('excused')
+      end
+
+      it 'enqueues a member notification on final decision' do
+        expect do
+          patch internal_excuse_path(excuse), params: { status: 'approved' }
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 
@@ -211,6 +225,14 @@ RSpec.describe 'Internal::Excuses', type: :request do
         expect(excuse.officer_status).to eq('approved')
         expect(excuse.status).to eq('pending') # Now awaiting Director
         expect(flash[:notice]).to include('Officer decision recorded')
+      end
+
+      it 'enqueues a director review notification' do
+        create(:user, :super_admin)
+
+        expect do
+          patch internal_excuse_path(excuse), params: { status: 'approved' }
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 

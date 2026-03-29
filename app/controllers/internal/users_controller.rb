@@ -5,10 +5,11 @@ module Internal
     include Loggable
   
     before_action :authenticate_user!
-    before_action :ensure_admin, except: %i[show attendance_history]
+    before_action :ensure_admin, except: %i[show attendance_history edit update]
     before_action :set_user,
                   only: %i[show edit update promote_to_officer promote_to_super_admin demote_to_user demote_to_officer
                            attendance_history destroy]
+    before_action :ensure_can_edit_user!, only: %i[edit update]
 
     def index
       # 1. Base query with eager loading to prevent N+1 performance issues
@@ -55,7 +56,7 @@ module Internal
         @total_tardies_and_demerits = @total_tardies + @user.received_demerits.sum(:value)
       else
         log_authorization_failure('view_user_profile', { target_user_id: @user.id })
-        redirect_to root_path, alert: 'You are not authorized to view this profile.'
+        redirect_unauthorized('You are not authorized to view this profile.')
         nil
       end
     end
@@ -79,6 +80,12 @@ module Internal
       return if performed?
 
       @user.promote_to_officer!(promoted_by: current_user)
+      Notifications::Dispatcher.publish(
+        event_key: 'role_promoted_to_officer',
+        recipients: [@user],
+        actor: current_user,
+        context: Notifications::Payloads.user(@user)
+      )
       log_action('user_promoted_to_officer', { 
                    target_user_id: @user.id, 
                    target_user_email: @user.email 
@@ -97,6 +104,12 @@ module Internal
       return if performed?
 
       @user.promote_to_super_admin!(promoted_by: current_user)
+      Notifications::Dispatcher.publish(
+        event_key: 'role_promoted_to_super_admin',
+        recipients: [@user],
+        actor: current_user,
+        context: Notifications::Payloads.user(@user)
+      )
       log_action('user_promoted_to_super_admin', { 
                    target_user_id: @user.id, 
                    target_user_email: @user.email 
@@ -115,6 +128,12 @@ module Internal
       return if performed?
 
       @user.demote_to_user!(demoted_by: current_user)
+      Notifications::Dispatcher.publish(
+        event_key: 'role_demoted_to_user',
+        recipients: [@user],
+        actor: current_user,
+        context: Notifications::Payloads.user(@user)
+      )
       log_action('user_demoted_to_user', { 
                    target_user_id: @user.id, 
                    target_user_email: @user.email 
@@ -133,6 +152,12 @@ module Internal
       return if performed?
 
       @user.demote_to_officer!(demoted_by: current_user)
+      Notifications::Dispatcher.publish(
+        event_key: 'role_demoted_to_officer',
+        recipients: [@user],
+        actor: current_user,
+        context: Notifications::Payloads.user(@user)
+      )
       log_action('user_demoted_to_officer', { 
                    target_user_id: @user.id, 
                    target_user_email: @user.email 
@@ -149,7 +174,7 @@ module Internal
     def attendance_history
       # Users can view their own attendance history, admins can view any user's history
       unless @user == current_user || current_user.admin?
-        redirect_to root_path, alert: 'You are not authorized to view this attendance history.'
+        redirect_unauthorized('You are not authorized to view this attendance history.')
         return
       end
 
@@ -224,20 +249,30 @@ module Internal
     end
 
     def user_params
-      # Permission: AC 3: Allowing section_id to be saved
-      params.require(:user).permit(:full_name, :section_id)
+      permitted_fields = [:full_name, :email_notifications_enabled]
+      permitted_fields << :section_id if current_user.super_admin?
+
+      params.require(:user).permit(*permitted_fields)
     end
   
     def ensure_admin
       return if current_user.admin?
 
-      redirect_to root_path, alert: 'You must be an admin to access this page.'
+      redirect_unauthorized('You must be an admin to access this page.')
+    end
+
+    def ensure_can_edit_user!
+      return if current_user.super_admin?
+      return if current_user == @user
+      return if current_user.officer? && current_user.section_id.present? && current_user.section_id == @user.section_id
+
+      redirect_unauthorized('You are not authorized to edit this member.')
     end
 
     def ensure_super_admin
       return if current_user.super_admin?
 
-      redirect_to root_path, alert: 'You must be a super admin to perform this action.'
+      redirect_unauthorized('You must be a super admin to perform this action.')
     end
   end
 end

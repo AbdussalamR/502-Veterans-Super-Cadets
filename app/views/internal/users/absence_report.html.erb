@@ -62,12 +62,12 @@
       <table class="table table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>Member</th>
-            <th class="text-center">Absences</th>
-            <th class="text-center">Tardies</th>
-            <th class="text-center">Discipline Points</th>
-            <th class="text-center">Total Points</th>
-            <th class="text-end">Actions</th>
+            <th scope="col">Member</th>
+            <th scope="col" class="text-center">Absences</th>
+            <th scope="col" class="text-center">Tardies</th>
+            <th scope="col" class="text-center">Discipline Points</th>
+            <th scope="col" class="text-center">Total Points</th>
+            <th scope="col" class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -101,6 +101,11 @@
               <td class="text-center fw-bold">
                 <span class="<%= total_points >= 3 ? 'text-danger' : (total_points >= 2 ? 'text-warning' : '') %>">
                   <%= format_absence_points(total_points) %>
+                  <% if total_points >= 3 %>
+                    <span class="visually-hidden">(exceeding limit)</span>
+                  <% elsif total_points >= 2 %>
+                    <span class="visually-hidden">(warning zone)</span>
+                  <% end %>
                 </span>
               </td>
               <td class="text-end">

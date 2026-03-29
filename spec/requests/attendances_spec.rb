@@ -59,7 +59,7 @@ RSpec.describe 'Internal::Attendances', type: :request do
 
       it 'denies access' do
         get new_internal_event_attendance_path(event)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
 
@@ -154,7 +154,7 @@ RSpec.describe 'Internal::Attendances', type: :request do
             user.id => { status: 'present', note: '' }
           }
         }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
