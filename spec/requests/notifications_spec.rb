@@ -20,7 +20,7 @@ RSpec.describe 'Notification system', type: :request do
       member: member,
       events: [event],
       reason: 'Sick',
-      status: 'Pending Section Leader Review',
+      status: 'Pending Officer Review',
       submission_date: Time.current,
       proof_link: 'https://example.com/proof'
     )

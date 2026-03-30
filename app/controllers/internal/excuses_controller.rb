@@ -63,6 +63,10 @@ module Internal
     end
 
     def update
+      if params[:status].present? && !current_user.super_admin? && !current_user.officer?
+        return render plain: "403 Forbidden", status: :forbidden
+      end
+
       if current_user.super_admin? && params[:status].present?
         if @excuse.finalize_by_admin(current_user, params[:status])
           Notifications::Dispatcher.publish(

@@ -4,6 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'Admin::Website', type: :request do
   let(:admin)        { create(:user, :super_admin) }
+  let(:officer)      { create(:user, :officer) }
   let(:regular_user) { create(:user) }
 
   # ─── Authentication / Authorisation ──────────────────────────────────────────
@@ -25,7 +26,33 @@ RSpec.describe 'Admin::Website', type: :request do
       end
     end
 
-    context 'when authenticated as an admin' do
+    # --- Director-only access (officers blocked) ---
+    context 'when authenticated as an officer' do
+      before { sign_in officer }
+
+      it 'redirects away (officers cannot access Website Management)' do
+        get admin_website_path
+        expect(response).to redirect_to(internal_events_path)
+      end
+
+      it 'blocks officer from editing home page content' do
+        patch admin_update_website_home_path, params: { home: { hero_title: 'Hack' } }
+        expect(response).to redirect_to(internal_events_path)
+      end
+
+      it 'blocks officer from publishing home page' do
+        post admin_publish_website_home_path
+        expect(response).to redirect_to(internal_events_path)
+      end
+
+      it 'blocks officer from marking messages as read' do
+        msg = create(:contact_message)
+        post admin_mark_website_message_read_path(msg)
+        expect(response).to redirect_to(internal_events_path)
+      end
+    end
+
+    context 'when authenticated as a director (super_admin)' do
       before { sign_in admin }
 
       it 'renders successfully' do
@@ -47,6 +74,32 @@ RSpec.describe 'Admin::Website', type: :request do
         create(:contact_message)
         get admin_website_path(tab: 'messages')
         expect(response.body).to include('Contact Form Submissions')
+      end
+
+      # --- Book Us tab: performance requests ---
+      it 'shows the Book Us tab with performance requests' do
+        pr = create(:performance_request, name: 'John Doe', organization: 'TAMU')
+        get admin_website_path(tab: 'book_us')
+        expect(response.body).to include('John Doe')
+        expect(response.body).to include('TAMU')
+      end
+
+      it 'shows pending badge on Book Us tab when requests are pending' do
+        create(:performance_request)
+        get admin_website_path
+        expect(response.body).to include('pending')
+      end
+
+      it 'shows empty state when no performance requests exist' do
+        get admin_website_path(tab: 'book_us')
+        expect(response.body).to include('No performance requests yet')
+      end
+
+      it 'displays reviewed requests with correct badge' do
+        create(:performance_request, :reviewed, name: 'Reviewed Org')
+        get admin_website_path(tab: 'book_us')
+        expect(response.body).to include('Reviewed Org')
+        expect(response.body).to include('Reviewed')
       end
     end
   end
@@ -71,7 +124,7 @@ RSpec.describe 'Admin::Website', type: :request do
       expect(PageContent.get('home', 'hero_title', draft: false)).to be_nil
     end
 
-    it 'redirects non-admin away' do
+    it 'redirects non-director away' do
       sign_in regular_user
       patch admin_update_website_home_path, params: { home: { hero_title: 'X' } }
       expect(response).to redirect_to(internal_events_path)
@@ -229,7 +282,7 @@ RSpec.describe 'Admin::Website', type: :request do
       expect(response).to redirect_to(admin_website_path(tab: 'messages'))
     end
 
-    it 'requires admin access' do
+    it 'requires director access (regular user blocked)' do
       sign_in regular_user
       msg = create(:contact_message)
       post admin_mark_website_message_read_path(msg)

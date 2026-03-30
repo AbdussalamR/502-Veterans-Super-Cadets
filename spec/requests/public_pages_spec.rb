@@ -49,6 +49,85 @@ RSpec.describe 'Public::Pages', type: :request do
       get public_performance_request_path
       expect(response).to have_http_status(:success)
     end
+
+    it 'shows the Submit Request button' do
+      get public_performance_request_path
+      expect(response.body).to include('Submit Request')
+    end
+
+    it 'shows the hero heading' do
+      get public_performance_request_path
+      expect(response.body).to include('Request a Performance')
+    end
+  end
+
+  describe 'POST /public/performance_request' do
+    let(:valid_params) do
+      {
+        performance_request: {
+          name: 'Jane Smith',
+          organization: 'Texas A&M',
+          event_date: 6.weeks.from_now.to_date.to_s,
+          location: 'Kyle Field',
+          contact_email: 'jane@example.com',
+          notes: 'Please arrive early'
+        }
+      }
+    end
+
+    context 'with valid params' do
+      it 'creates a new performance request' do
+        expect {
+          post public_submit_performance_request_path, params: valid_params
+        }.to change(PerformanceRequest, :count).by(1)
+      end
+
+      it 'redirects back to the form with a success notice' do
+        post public_submit_performance_request_path, params: valid_params
+        expect(response).to redirect_to(public_performance_request_path)
+        expect(flash[:notice]).to include('Jane Smith')
+      end
+
+      it 'enqueues a notification to directors' do
+        create(:user, :super_admin)
+        expect {
+          post public_submit_performance_request_path, params: valid_params
+        }.to have_enqueued_job(Notifications::DeliverNotificationJob)
+      end
+    end
+
+    context 'with invalid params' do
+      it 're-renders the form when name is missing' do
+        post public_submit_performance_request_path, params: {
+          performance_request: valid_params[:performance_request].merge(name: '')
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include('Submit Request')
+      end
+
+      it 're-renders the form when email is invalid' do
+        post public_submit_performance_request_path, params: {
+          performance_request: valid_params[:performance_request].merge(contact_email: 'not-an-email')
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include('valid email')
+      end
+
+      it 're-renders the form when event_date is in the past' do
+        post public_submit_performance_request_path, params: {
+          performance_request: valid_params[:performance_request].merge(event_date: 1.week.ago.to_date.to_s)
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'does not create a request on validation failure' do
+        expect {
+          post public_submit_performance_request_path, params: {
+            performance_request: valid_params[:performance_request].merge(name: '')
+          }
+        }.not_to change(PerformanceRequest, :count)
+      end
+    end
   end
 
   describe 'GET /public/media_gallery' do

@@ -197,11 +197,9 @@ class Excuse < ApplicationRecord
   end
 
   def must_have_events
-    if recurring?
-      errors.add(:base, "No event found for this date") if find_matching_events.empty?
-    else
-      errors.add(:base, "No event found for this date") if manual_event_ids.blank?
-    end
+    return if recurring? # Recurring excuses link events via callbacks; no pre-existing events required
+    # Accept events pre-assigned via the association (test/API) OR via manual_event_ids (form)
+    errors.add(:base, "No event found for this date") if manual_event_ids.blank? && events.empty?
   end
 
   def recurring_end_time_after_start_time
