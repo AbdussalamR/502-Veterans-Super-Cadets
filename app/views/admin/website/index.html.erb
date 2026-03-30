@@ -17,6 +17,7 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link <%= 'active' if @active_tab == 'book_us' %>" id="tab-book-us-btn" data-bs-toggle="tab" data-bs-target="#tab-book-us" type="button" role="tab" aria-controls="tab-book-us" aria-selected="<%= @active_tab == 'book_us' ? 'true' : 'false' %>">
         <i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Book Us
+        <% if @pending_requests_count > 0 %><span class="badge bg-danger ms-1"><%= @pending_requests_count %></span><% end %>
       </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -72,13 +73,13 @@
             <div class="card-body">
               <%= form_with url: admin_update_website_home_path, method: :patch, local: true do |f| %>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Hero Title</label>
+                  <label class="form-label fw-semibold">Main Title</label>
                   <%= f.text_field :hero_title, name: 'home[hero_title]',
                         value: @home_form_vals['hero_title'] || 'The Singing Cadets',
                         class: 'form-control' %>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Hero Subtitle</label>
+                  <label class="form-label fw-semibold">Main Subtitle</label>
                   <%= f.text_field :hero_subtitle, name: 'home[hero_subtitle]',
                         value: @home_form_vals['hero_subtitle'] || 'The Voice of Aggieland',
                         class: 'form-control' %>
@@ -162,16 +163,114 @@
 
     <!-- ===================== BOOK US TAB ===================== -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'book_us' %>" id="tab-book-us" role="tabpanel" aria-labelledby="tab-book-us-btn">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5">
-          <i class="bi bi-calendar-check fs-1 text-muted mb-3 d-block"></i>
-          <h5>Book Us Editor</h5>
-          <p class="text-muted">Zaahir this is where your implementation is — make sure its editable.</p>
-          <a href="<%= public_performance_request_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-box-arrow-up-right me-1"></i>View Current Page
-          </a>
-        </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+          Performance Requests
+          <% if @pending_requests_count > 0 %>
+            <span class="badge bg-danger ms-2"><%= @pending_requests_count %> pending</span>
+          <% end %>
+        </h5>
+        <a href="<%= public_performance_request_path %>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-up-right me-1"></i>View Public Form
+        </a>
       </div>
+
+      <% if @performance_requests.any? %>
+        <%# Stats row %>
+        <div class="row g-3 mb-4">
+          <% pr_pending  = @performance_requests.select { |r| r.status == 'pending' } %>
+          <% pr_reviewed = @performance_requests.select { |r| r.status == 'reviewed' } %>
+          <div class="col-md-4">
+            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25">
+              <div class="card-body text-center py-3">
+                <h4 class="text-warning mb-0"><%= pr_pending.count %></h4>
+                <p class="text-muted mb-0 small">Pending Review</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-success bg-opacity-10 border-success border-opacity-25">
+              <div class="card-body text-center py-3">
+                <h4 class="text-success mb-0"><%= pr_reviewed.count %></h4>
+                <p class="text-muted mb-0 small">Reviewed</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25">
+              <div class="card-body text-center py-3">
+                <h4 class="text-primary mb-0"><%= @performance_requests.count %></h4>
+                <p class="text-muted mb-0 small">Total Requests</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3">Requester</th>
+                    <th scope="col">Organization</th>
+                    <th scope="col">Event Date</th>
+                    <th scope="col">Contact</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @performance_requests.each do |req| %>
+                    <tr>
+                      <td class="ps-3 fw-semibold"><%= req.name %></td>
+                      <td><%= req.organization %></td>
+                      <td>
+                        <%= req.event_date.strftime("%b %-d, %Y") %>
+                        <% if req.event_date < Date.today %>
+                          <span class="badge bg-secondary ms-1">Past</span>
+                        <% end %>
+                      </td>
+                      <td><a href="mailto:<%= req.contact_email %>" class="text-decoration-none small"><%= req.contact_email %></a></td>
+                      <td class="text-muted small"><%= req.created_at.strftime("%b %-d, %Y") %></td>
+                      <td>
+                        <% if req.status == 'pending' %>
+                          <span class="badge bg-warning text-dark">Pending</span>
+                        <% else %>
+                          <span class="badge bg-success">Reviewed</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end pe-3">
+                        <%= link_to internal_performance_request_path(req), class: "btn btn-outline-primary btn-sm" do %>
+                          <i class="bi bi-eye me-1"></i>View
+                        <% end %>
+                      </td>
+                    </tr>
+                    <% if req.notes.present? %>
+                      <tr class="table-light">
+                        <td colspan="7" class="ps-3 py-2 text-muted small">
+                          <i class="bi bi-chat-left-text me-1"></i><strong>Notes:</strong> <%= req.notes %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-inbox text-muted display-1 mb-3 d-block"></i>
+            <h5 class="text-dark mb-2">No performance requests yet</h5>
+            <p class="text-muted">When organizers submit requests via the public form, they'll appear here.</p>
+          </div>
+        </div>
+      <% end %>
+
     </div>
 
     <!-- ===================== MEDIA TAB ===================== -->

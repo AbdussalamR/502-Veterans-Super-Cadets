@@ -40,10 +40,20 @@
             </div>
           <% end %>
 
+          <%# SCRUM-9: Personal Badge %>
+          <% if @excuse.is_personal? %>
+            <div class="mb-3">
+              <span class="badge bg-dark">
+                <i class="bi bi-shield-lock me-1"></i>Personal / Confidential
+              </span>
+              <span class="text-muted ms-2 small">This excuse is completely hidden from Officers.</span>
+            </div>
+          <% end %>
+
           <div class="mb-3">
             <span class="fw-semibold"><strong>Status:</strong></span>
             <% status_label = case @excuse.status
-              when 'Pending Section Leader Review' then 'Pending Officer Review'
+              when 'Pending Officer Review' then 'Pending Officer Review'
               when 'pending' then 'Pending Director Approval'
               when 'approved' then 'Approved'
               when 'denied' then 'Denied'
@@ -116,7 +126,7 @@
             <span class="fw-semibold"><strong>Proof:</strong></span>
             <div>
               <% if @excuse.proof_link.present? %>
-                <%= link_to @excuse.proof_link, @excuse.proof_link, target: "_blank", rel: "noopener", class: "btn btn-link px-0" %>
+                <%= link_to @excuse.proof_link, @excuse.proof_link, target: "_blank", rel: "noopener", class: "btn btn-link px-0 text-break" %>
               <% else %>
                 <span class="text-muted fst-italic">No proof provided.</span>
               <% end %>
@@ -124,7 +134,7 @@
           </div>
 
           <%# Officers make provisional decisions (do NOT change final status) %>
-          <% if current_user.officer? && @excuse.status == 'Pending Section Leader Review' %>
+          <% if current_user.officer? && @excuse.status == 'Pending Officer Review' %>
             <div class="d-flex gap-2 mb-3">
               <%= button_to 'Provisional Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-outline-success' %>
               <%= button_to 'Provisional Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-outline-danger' %>
@@ -132,7 +142,7 @@
           <% end %>
 
           <%# Admins finalize the decision (can do so at any pending stage, bypassing officer review) %>
-          <% if current_user.super_admin? && ['pending', 'Pending Section Leader Review'].include?(@excuse.status) %>
+          <% if current_user.super_admin? && ['pending', 'Pending Officer Review'].include?(@excuse.status) %>
           <% if @excuse.officer_status.present? %>
             <div class="mb-2"><small class="text-muted">This item has an officer provisional decision. Admins may finalize it or choose differently.</small></div>
           <% end %>
@@ -167,7 +177,13 @@
             </div>
           <% end %>
 
-          <%= link_to 'Back', internal_excuses_path, class: 'btn btn-secondary mt-2' %>
+          <div class="d-flex gap-2 mt-2">
+            <%= link_to 'Back', internal_excuses_path, class: 'btn btn-secondary' %>
+            <% if @excuse.editable_and_deletable_by_member?(current_user) %>
+              <%= link_to 'Edit Excuse', edit_internal_excuse_path(@excuse), class: 'btn btn-primary' %>
+              <%= button_to 'Delete Excuse', internal_excuse_path(@excuse), method: :delete, data: { confirm: 'Are you sure you want to delete this excuse? This cannot be undone.' }, class: 'btn btn-danger' %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>

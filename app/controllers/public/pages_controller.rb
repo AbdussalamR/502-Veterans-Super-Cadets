@@ -6,7 +6,34 @@ module Public
       @home_photos = MediaPhoto.for_page('home').published_only.ordered
     end
 
-    def performance_request; end
+    def performance_request
+      @performance_request = PerformanceRequest.new
+    end
+
+    def submit_performance_request
+      @performance_request = PerformanceRequest.new(
+        name:          params[:performance_request][:name].to_s.strip,
+        organization:  params[:performance_request][:organization].to_s.strip,
+        event_date:    params[:performance_request][:event_date],
+        location:      params[:performance_request][:location].to_s.strip,
+        contact_email: params[:performance_request][:contact_email].to_s.strip,
+        notes:         params[:performance_request][:notes].to_s.strip
+      )
+
+      if @performance_request.save
+        # Notify all directors via the shared SendGrid notification system
+        Notifications::Dispatcher.publish(
+          event_key: 'performance_request_submitted',
+          recipients: Notifications::Audience.approved_super_admins,
+          actor: nil,
+          context: Notifications::Payloads.performance_request(@performance_request)
+        )
+        redirect_to public_performance_request_path,
+                    notice: "Thank you, #{@performance_request.name}! Your performance request has been submitted. We'll be in touch soon."
+      else
+        render :performance_request, status: :unprocessable_entity
+      end
+    end
 
     def media_gallery
       @media_photos = MediaPhoto.for_page('media').published_only.ordered

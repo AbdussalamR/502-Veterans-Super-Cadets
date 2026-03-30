@@ -51,6 +51,18 @@ module Notifications
       }
     end
 
+    def performance_request(request)
+      {
+        'requester_name'  => request.name,
+        'organization'    => request.organization,
+        'event_date'      => request.event_date.strftime('%B %-d, %Y'),
+        'location'        => request.location,
+        'contact_email'   => request.contact_email,
+        'notes'           => request.notes.presence || 'None',
+        'requests_url'    => routes.internal_performance_requests_url(**url_options)
+      }
+    end
+
     def user(user)
       {
         'full_name' => user.full_name,

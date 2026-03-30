@@ -47,11 +47,12 @@ RSpec.describe Excuse, type: :model do
       expect(excuse.errors[:reason]).to include("can't be blank")
     end
 
-    it 'validates presence of proof_link' do
+    it 'allows blank proof_link (optional field)' do
       user = create(:user, approval_status: 'approved')
-      excuse = Excuse.new(member: user, reason: 'Test')
-      expect(excuse).not_to be_valid
-      expect(excuse.errors[:proof_link]).to include("can't be blank")
+      event = create(:event)
+      excuse = Excuse.new(member: user, events: [event], reason: 'Test', proof_link: '')
+      excuse.valid?
+      expect(excuse.errors[:proof_link]).to be_empty
     end
 
     it 'validates proof_link format' do
@@ -128,7 +129,9 @@ RSpec.describe Excuse, type: :model do
     context 'when recurring is false' do
       it 'does not require start_date, end_date, or recurring_days' do
         user = create(:user, approval_status: 'approved')
-        excuse = Excuse.new(member: user, reason: 'Test', proof_link: 'https://example.com/proof', recurring: false)
+        event = create(:event)
+        excuse = Excuse.new(member: user, reason: 'Test', proof_link: 'https://example.com/proof',
+                            recurring: false, manual_event_ids: [event.id])
         expect(excuse).to be_valid
       end
     end
@@ -137,9 +140,10 @@ RSpec.describe Excuse, type: :model do
   describe 'Story A3 logic and status transitions' do
     let(:member) { create(:user, approval_status: 'approved') }
 
-    it "defaults status to 'Pending Section Leader Review' on creation (AC 1)" do
-      excuse = Excuse.create!(member: member, reason: "Sick", proof_link: "https://test.com")
-      expect(excuse.status).to eq('Pending Section Leader Review')
+    it "defaults status to 'Pending Officer Review' on creation (AC 1)" do
+      event = create(:event)
+      excuse = Excuse.create!(member: member, events: [event], reason: "Sick", proof_link: "https://test.com")
+      expect(excuse.status).to eq('Pending Officer Review')
     end
 
     it "allows an officer to set a provisional decision" do
@@ -424,10 +428,9 @@ RSpec.describe Excuse, type: :model do
     let(:user3) { create(:user, approval_status: 'approved') }
 
     before do
-      # Bypassing validation to set specific statuses for scope testing
-      @approved_excuse = Excuse.create!(member: user1, reason: 'Sick', status: 'approved', proof_link: 'https://example.com/proof1')
-      @pending_excuse = Excuse.create!(member: user2, reason: 'Doctor', status: 'pending', proof_link: 'https://example.com/proof2')
-      @denied_excuse = Excuse.create!(member: user3, reason: 'Travel', status: 'denied', proof_link: 'https://example.com/proof3')
+      @approved_excuse = Excuse.create!(member: user1, events: [event], reason: 'Sick', status: 'approved', proof_link: 'https://example.com/proof1')
+      @pending_excuse  = Excuse.create!(member: user2, events: [event], reason: 'Doctor', status: 'pending', proof_link: 'https://example.com/proof2')
+      @denied_excuse   = Excuse.create!(member: user3, events: [event], reason: 'Travel', status: 'denied', proof_link: 'https://example.com/proof3')
     end
 
     describe '.approved' do
@@ -464,9 +467,9 @@ RSpec.describe Excuse, type: :model do
     end
 
     describe '.pending_unprocessed' do
-      it 'returns excuses with Pending Section Leader Review status' do
+      it 'returns excuses with Pending Officer Review status' do
         user4 = create(:user, approval_status: 'approved')
-        unprocessed = Excuse.create!(member: user4, reason: 'New', proof_link: 'https://example.com/proof4')
+        unprocessed = Excuse.create!(member: user4, events: [event], reason: 'New', proof_link: 'https://example.com/proof4')
         expect(Excuse.pending_unprocessed).to include(unprocessed)
         expect(Excuse.pending_unprocessed).not_to include(@approved_excuse, @pending_excuse, @denied_excuse)
       end
@@ -481,9 +484,9 @@ RSpec.describe Excuse, type: :model do
     let(:event) { create(:event) }
 
     it 'walks through the complete approval pipeline' do
-      # Step 0: Member creates excuse — defaults to "Pending Section Leader Review"
+      # Step 0: Member creates excuse — defaults to "Pending Officer Review"
       excuse = Excuse.create!(member: member, events: [event], reason: 'Sick', proof_link: 'https://example.com/proof')
-      expect(excuse.status).to eq('Pending Section Leader Review')
+      expect(excuse.status).to eq('Pending Officer Review')
 
       # Step 1: Officer makes provisional approval
       excuse.set_officer_decision(officer, 'approved')

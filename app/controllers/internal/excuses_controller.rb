@@ -3,17 +3,17 @@ module Internal
     include Loggable
 
     before_action :authenticate_user!
-    before_action :set_excuse, only: %i[show update review cancel_recurring]
+    before_action :set_excuse, only: %i[show edit update destroy review cancel_recurring]
     
     # AC 3: Block unauthorized URL access with 403 Forbidden
-    before_action :ensure_section_access, only: %i[show update review cancel_recurring]
+    before_action :ensure_section_access, only: %i[show edit update destroy review cancel_recurring]
 
     def index
       # AC 2: Section-based filtering
       base_query = if current_user.super_admin?
                      Excuse
                    elsif current_user.officer?
-                     Excuse.joins(:member).where(users: { section_id: current_user.section_id })
+                     Excuse.joins(:member).where(users: { section_id: current_user.section_id }).where(is_personal: [false, nil])
                    else
                      current_user.excuses
                    end
@@ -21,7 +21,7 @@ module Internal
       @excuses = base_query
         .includes(:member, :events, :reviewers)
         .order(Arel.sql("CASE status
-           WHEN 'Pending Section Leader Review' THEN 0
+           WHEN 'Pending Officer Review' THEN 0
            WHEN 'pending' THEN 1
            WHEN 'denied' THEN 2
            WHEN 'approved' THEN 3
@@ -38,22 +38,36 @@ module Internal
       @excuse.submission_date = Time.current
 
       if @excuse.save
+        notification_event_key = @excuse.is_personal? ? 'excuse_submitted_for_director_review' : 'excuse_submitted_for_review'
+        recipients = @excuse.is_personal? ? Notifications::Audience.approved_super_admins : Notifications::Audience.officers_for_member(@excuse.member)
+
         Notifications::Dispatcher.publish(
-          event_key: 'excuse_submitted_for_review',
-          recipients: Notifications::Audience.officers_for_member(@excuse.member),
+          event_key: notification_event_key,
+          recipients: recipients,
           actor: current_user,
           context: Notifications::Payloads.excuse(@excuse)
         )
         log_create_success(@excuse, { recurring: @excuse.recurring? })
-        redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Officer review."
+        redirect_to internal_excuses_path, notice: @excuse.is_personal? ? "Personal excuse submitted successfully for Director review." : "Excuse submitted successfully for Officer review."
       else
         log_create_failure(@excuse)
+        flash.now[:alert] = "Failed to submit excuse. Please correct the errors below."
         render :new, status: :unprocessable_entity
       end
     end
 
+    def edit
+      unless @excuse.editable_and_deletable_by_member?(current_user)
+        redirect_to internal_excuse_path(@excuse), alert: "This excuse can no longer be edited."
+      end
+    end
+
     def update
-      if current_user.super_admin?
+      if params[:status].present? && !current_user.super_admin? && !current_user.officer?
+        return render plain: "403 Forbidden", status: :forbidden
+      end
+
+      if current_user.super_admin? && params[:status].present?
         if @excuse.finalize_by_admin(current_user, params[:status])
           Notifications::Dispatcher.publish(
             event_key: @excuse.status == 'approved' ? 'excuse_approved' : 'excuse_denied',
@@ -70,8 +84,8 @@ module Internal
         else
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
-      elsif current_user.officer?
-        unless @excuse.status == 'Pending Section Leader Review'
+      elsif current_user.officer? && params[:status].present?
+        unless @excuse.status == 'Pending Officer Review'
           return redirect_to internal_excuse_path(@excuse), alert: "This excuse has already been processed and cannot be updated."
         end
 
@@ -92,8 +106,29 @@ module Internal
         else
           redirect_to internal_excuse_path(@excuse), alert: "Invalid decision."
         end
+      elsif @excuse.editable_and_deletable_by_member?(current_user)
+        # Member editing their own excuse
+        if @excuse.update(excuse_params)
+          # Process event links again if recurring or new manual_event_ids provided
+          @excuse.manual_event_ids = params[:excuse][:event_ids] if params[:excuse][:event_ids].present?
+          @excuse.process_event_links
+          
+          redirect_to internal_excuse_path(@excuse), notice: "Excuse updated successfully."
+        else
+          flash.now[:alert] = "Failed to update excuse. Please correct the errors below."
+          render :edit, status: :unprocessable_entity
+        end
       else
         render plain: "403 Forbidden", status: :forbidden
+      end
+    end
+
+    def destroy
+      if @excuse.editable_and_deletable_by_member?(current_user)
+        @excuse.destroy
+        redirect_to internal_excuses_path, notice: "Excuse deleted successfully."
+      else
+        redirect_to internal_excuse_path(@excuse), alert: "You do not have permission to delete this excuse."
       end
     end
 
@@ -122,8 +157,8 @@ module Internal
       return if current_user.super_admin?
 
       if current_user.officer?
-        if current_user.section_id != @excuse.member.section_id
-          render plain: "403 Forbidden - You are not the Officer for this member's section.", status: :forbidden and return
+        if @excuse.is_personal? || current_user.section_id != @excuse.member.section_id
+          render plain: "403 Forbidden - You are not authorized to view this excuse.", status: :forbidden and return
         end
       elsif @excuse.member != current_user
         render plain: "403 Forbidden", status: :forbidden and return
@@ -132,7 +167,7 @@ module Internal
 
     def excuse_params
       params.require(:excuse).permit(:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days,
-                                     :recurring_start_time, :recurring_end_time, { event_ids: [] })
+                                     :recurring_start_time, :recurring_end_time, :is_personal, { event_ids: [] })
     end
   end
 end

@@ -15,8 +15,8 @@ class Excuse < ApplicationRecord
   has_many :reviewers, through: :reviewers_to_excuses, source: :reviewer
 
   # Validations
-  validates :reason, :proof_link, presence: true
-  validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: false
+  validates :reason, presence: true
+  validates :proof_link, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }, allow_blank: true
   
   # STORY U3: Recurring validations (only required if recurring toggle is on)
   validates :start_date, :end_date, presence: true, if: :recurring?
@@ -34,12 +34,15 @@ class Excuse < ApplicationRecord
   scope :pending_admin_approval, -> { where(status: 'pending').where.not(officer_status: [nil, '']) }
 
   # Required by layouts/internal.html.erb for the Officer's notification badge
-  # Finds excuses that haven't been touched yet by any Section Leader
-  scope :pending_unprocessed, -> { where(status: 'Pending Section Leader Review') }
+  # Finds excuses that haven't been touched yet by any Officer
+  scope :pending_unprocessed, -> { where(status: 'Pending Officer Review') }
 
   # STORY A3 AC 1: Default status on creation
-  # This ensures every excuse starts in the Section Leader's queue.
+  # This ensures every excuse starts in the Officer's queue unless it's a Personal Excuse.
   before_validation :set_default_status, on: :create
+
+  # SCRUM-72: Validates that an event is selected
+  validate :must_have_events, on: :create
   
   # Logic Hooks
   after_create :process_event_links
@@ -91,6 +94,18 @@ class Excuse < ApplicationRecord
     events.exists?(['date > ?', Time.current])
   end
 
+  # Returns true if the given user is the creator and it is within 24 hours of the latest event's end time.
+  def editable_and_deletable_by_member?(user)
+    return false unless user == member
+
+    latest_event = events.order(date: :desc).first
+    return true unless latest_event # If no events linked, allow edit/delete loosely? Wait, the 24 hour rule applies to events
+
+    # Calculate end time. If `end_time` isn't set, use the end of the day.
+    deadline = (latest_event.end_time || latest_event.date.end_of_day) + 24.hours
+    Time.current <= deadline
+  end
+
   # --- Business Logic ---
 
   # STORY U3: Links existing events matching the pattern immediately upon creation
@@ -118,7 +133,7 @@ class Excuse < ApplicationRecord
     end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
 
     candidates.select do |event|
-      event_mins = event.date.hour * 60 + event.date.min
+      event_mins = (event.date.hour * 60) + event.date.min
       event_mins >= start_mins && event_mins <= end_mins
     end
   end
@@ -135,7 +150,7 @@ class Excuse < ApplicationRecord
   end
 
   # STORY A3: Officer Provisional Decision (Step 1)
-  # Records the Section Leader's recommendation without updating attendance yet.
+  # Records the Officer's recommendation without updating attendance yet.
   def set_officer_decision(officer, decision)
     return false unless %w[approved denied].include?(decision)
 
@@ -173,8 +188,18 @@ class Excuse < ApplicationRecord
   end
 
   def set_default_status
-    # STORY A3 AC 1: Specific requirement for default status string
-    self.status ||= 'Pending Section Leader Review'
+    if is_personal?
+      self.status ||= 'pending'
+    else
+      # STORY A3 AC 1: Specific requirement for default status string
+      self.status ||= 'Pending Officer Review'
+    end
+  end
+
+  def must_have_events
+    return if recurring? # Recurring excuses link events via callbacks; no pre-existing events required
+    # Accept events pre-assigned via the association (test/API) OR via manual_event_ids (form)
+    errors.add(:base, "No event found for this date") if manual_event_ids.blank? && events.empty?
   end
 
   def recurring_end_time_after_start_time

@@ -1,0 +1,115 @@
+<% content_for :title, "Performance Requests" %>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-dark mb-1">
+      <i class="bi bi-mic-fill me-2 text-danger"></i>Performance Requests
+    </h1>
+    <p class="text-muted mb-0">External inquiries submitted through the public website</p>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row mb-4">
+  <% pending  = @performance_requests.select { |r| r.status == 'pending' } %>
+  <% reviewed = @performance_requests.select { |r| r.status == 'reviewed' } %>
+  <div class="col-md-4">
+    <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25 h-100">
+      <div class="card-body text-center py-4">
+        <div class="display-5 text-warning mb-1"><i class="bi bi-hourglass-split"></i></div>
+        <h3 class="text-warning mb-0"><%= pending.count %></h3>
+        <p class="text-muted mb-0 small">Pending Review</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card bg-success bg-opacity-10 border-success border-opacity-25 h-100">
+      <div class="card-body text-center py-4">
+        <div class="display-5 text-success mb-1"><i class="bi bi-check-circle"></i></div>
+        <h3 class="text-success mb-0"><%= reviewed.count %></h3>
+        <p class="text-muted mb-0 small">Reviewed</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25 h-100">
+      <div class="card-body text-center py-4">
+        <div class="display-5 text-primary mb-1"><i class="bi bi-envelope"></i></div>
+        <h3 class="text-primary mb-0"><%= @performance_requests.count %></h3>
+        <p class="text-muted mb-0 small">Total Requests</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Requests Table -->
+<% if @performance_requests.any? %>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Requester</th>
+              <th>Organization</th>
+              <th>Event Date</th>
+              <th>Location</th>
+              <th>Contact Email</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @performance_requests.each do |req| %>
+              <tr>
+                <td class="ps-4 fw-semibold"><%= req.name %></td>
+                <td><%= req.organization %></td>
+                <td>
+                  <%= req.event_date.strftime("%b %d, %Y") %>
+                  <% if req.event_date < Date.today %>
+                    <span class="badge bg-secondary ms-1">Past</span>
+                  <% end %>
+                </td>
+                <td><%= req.location %></td>
+                <td><a href="mailto:<%= req.contact_email %>" class="text-decoration-none"><%= req.contact_email %></a></td>
+                <td class="text-muted small"><%= req.created_at.strftime("%b %d, %Y") %></td>
+                <td>
+                  <% if req.status == 'pending' %>
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  <% else %>
+                    <span class="badge bg-success">Reviewed</span>
+                  <% end %>
+                </td>
+                <td>
+                  <%= link_to internal_performance_request_path(req), class: "btn btn-outline-primary btn-sm" do %>
+                    <i class="bi bi-eye me-1"></i>View
+                  <% end %>
+                </td>
+              </tr>
+              <% if req.notes.present? %>
+                <tr class="table-light">
+                  <td colspan="8" class="ps-4 py-2 text-muted small">
+                    <i class="bi bi-chat-left-text me-1"></i><strong>Notes:</strong> <%= req.notes %>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-inbox text-muted display-1 mb-3"></i>
+      <h4 class="text-dark mb-2">No performance requests yet</h4>
+      <p class="text-muted">When external organizers submit requests via the public form, they'll appear here.</p>
+      <%= link_to public_performance_request_path, class: "btn btn-outline-primary", target: "_blank" do %>
+        <i class="bi bi-box-arrow-up-right me-2"></i>View Public Form
+      <% end %>
+    </div>
+  </div>
+<% end %>

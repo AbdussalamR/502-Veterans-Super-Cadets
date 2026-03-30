@@ -56,8 +56,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
   describe 'GET /show' do
     let(:excuse) do
-      Excuse.create!(member: user, events: [event], reason: 'Sick', 
-                     status: 'Pending Section Leader Review', submission_date: Time.current,
+      Excuse.create!(member: user, events: [event], reason: 'Sick',
+                     status: 'Pending Officer Review', submission_date: Time.current,
                      proof_link: 'https://example.com/proof')
     end
 
@@ -122,10 +122,40 @@ RSpec.describe 'Internal::Excuses', type: :request do
         end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
-      # --- NEW: Story A3 AC 1 (Default Status) ---
-      it 'sets status to "Pending Section Leader Review"' do
+      it 'targets section officers for a normal excuse submission' do
+        officer_tenor
+        admin_user
+
         post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
-        expect(Excuse.last.status).to eq('Pending Section Leader Review')
+
+        jobs = ActiveJob::Base.queue_adapter.enqueued_jobs.select do |job|
+          job[:job] == Notifications::DeliverNotificationJob
+        end
+
+        expect(jobs.map { |job| job[:args][0] }).to include('excuse_submitted_for_review')
+        expect(jobs.map { |job| job[:args][1] }).to include(officer_tenor.id)
+        expect(jobs.map { |job| job[:args][1] }).not_to include(admin_user.id)
+      end
+
+      it 'targets directors for a personal excuse submission' do
+        officer_tenor
+        admin_user
+
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sensitive matter', proof_link: 'https://example.com/proof', is_personal: '1' } }
+
+        jobs = ActiveJob::Base.queue_adapter.enqueued_jobs.select do |job|
+          job[:job] == Notifications::DeliverNotificationJob
+        end
+
+        expect(jobs.map { |job| job[:args][0] }).to include('excuse_submitted_for_director_review')
+        expect(jobs.map { |job| job[:args][1] }).to include(admin_user.id)
+        expect(jobs.map { |job| job[:args][1] }).not_to include(officer_tenor.id)
+      end
+
+      # --- NEW: Story A3 AC 1 (Default Status) ---
+      it 'sets status to "Pending Officer Review"' do
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
+        expect(Excuse.last.status).to eq('Pending Officer Review')
       end
 
       it 'sets submission date' do
@@ -161,7 +191,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
       end
 
       it 'does not attach events outside the specified time window' do
-        create(:event, date: next_monday.change(hour: 14), end_time: next_monday.change(hour: 15))
+        in_window_event     = create(:event, date: next_monday.change(hour: 11), end_time: next_monday.change(hour: 12))
+        out_of_window_event = create(:event, date: next_monday.change(hour: 14), end_time: next_monday.change(hour: 15))
 
         post internal_excuses_path, params: { excuse: {
           reason: 'Weekly conflict', proof_link: 'https://example.com/proof',
@@ -170,7 +201,9 @@ RSpec.describe 'Internal::Excuses', type: :request do
           recurring_start_time: '10:30', recurring_end_time: '12:00'
         } }
 
-        expect(Excuse.last.events.count).to eq(0)
+        excuse = Excuse.last
+        expect(excuse.events).to include(in_window_event)
+        expect(excuse.events).not_to include(out_of_window_event)
       end
 
       it 'fails validation without time fields' do
@@ -189,7 +222,7 @@ RSpec.describe 'Internal::Excuses', type: :request do
 
   describe 'PATCH /update' do
     let(:excuse) do
-      Excuse.create!(member: user, events: [event], reason: 'Sick', status: 'Pending Section Leader Review', 
+      Excuse.create!(member: user, events: [event], reason: 'Sick', status: 'Pending Officer Review',
                      submission_date: Time.current, proof_link: 'https://example.com/proof')
     end
 
@@ -336,8 +369,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
     let(:unassigned_officer) { create(:user, :officer, section: nil) }
     let(:excuse_from_unassigned) do
       Excuse.create!(
-        member: unassigned_member, reason: 'Sick', proof_link: 'https://example.com/proof',
-        status: 'Pending Section Leader Review', submission_date: Time.current
+        member: unassigned_member, events: [event], reason: 'Sick', proof_link: 'https://example.com/proof',
+        status: 'Pending Officer Review', submission_date: Time.current
       )
     end
 
@@ -360,8 +393,8 @@ RSpec.describe 'Internal::Excuses', type: :request do
     context 'as an officer with no section viewing a section member excuse' do
       let(:excuse_from_section_member) do
         Excuse.create!(
-          member: user, reason: 'Sick', proof_link: 'https://example.com/proof',
-          status: 'Pending Section Leader Review', submission_date: Time.current
+          member: user, events: [event], reason: 'Sick', proof_link: 'https://example.com/proof',
+          status: 'Pending Officer Review', submission_date: Time.current
         )
       end
       before { sign_in unassigned_officer }

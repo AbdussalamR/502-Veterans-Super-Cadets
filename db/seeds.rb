@@ -12,16 +12,26 @@
 # User.where(email: "email to delete").destroy_all
 
 # REPLACE email with your actual Gmail address
-User.find_or_create_by!(email: "deniza.telci@tamu.edu") do |user|
+User.find_or_create_by!(email: "zaahirsharma10@gmail.com") do |user|
   user.full_name = "Your Name" # You can put your real name here
   user.uid = "12345" # This is a placeholder; Google will update it when you log in
   user.provider = "google_oauth2"
-  user.role = "super_admin"
+  user.role = "user"
   user.approval_status = "approved"
 end
 
 # --- Test data for recurring excuses ---
 
+
+
+# Regular member
+member = User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
+  user.full_name = "Cadet Smith"
+  user.uid = "officer2"
+  user.provider = "google_oauth2"
+  user.role = "officer"
+  user.approval_status = "approved"
+end
 
 # Regular member
 member = User.find_or_create_by!(email: "zscollege01@tamu.edu") do |user|
@@ -59,7 +69,7 @@ end
   ) do |e|
     e.end_time = tue_date.to_datetime.change(hour: 13, min: 0)
     e.location = "MSC"
-    e.description = "Section leader meeting"
+    e.description = "Officer meeting"
   end
 end
 

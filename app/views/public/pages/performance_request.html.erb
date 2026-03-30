@@ -1,59 +1,181 @@
+<% @performance_request ||= PerformanceRequest.new %>
+
+<!-- Hero Section -->
+<div style="background: linear-gradient(135deg, #500000 0%, #7a0000 100%); color: white;" class="py-5 mb-0">
+  <div class="container text-center py-3">
+    <i class="bi bi-mic-fill display-4 mb-3 d-block" style="opacity: 0.85;"></i>
+    <h1 class="display-5 fw-bold mb-2">Request a Performance</h1>
+    <p class="lead mb-0" style="opacity: 0.9;">Bring the Voice of Aggieland to your event</p>
+  </div>
+</div>
+
 <div class="container my-5">
-  <h1 class="text-maroon border-bottom pb-2 mb-4">Performance Request</h1>
-  
-  <div class="row">
-    <div class="col-md-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-          <p class="text-muted mb-4">Interested in having the Singing Cadets perform at your event? Please fill out the form below.</p>
-          
-          <form>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-bold" for="perf_first_name">First Name</label>
-                <input type="text" class="form-control" id="perf_first_name" placeholder="John">
+  <div class="row justify-content-center g-5">
+
+    <!-- Form Column -->
+    <div class="col-lg-7">
+
+      <% if @performance_request.errors.any? %>
+        <div class="alert alert-danger d-flex align-items-start gap-2 mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+          <div>
+            <strong>Please fix the following:</strong>
+            <ul class="mb-0 mt-1">
+              <% @performance_request.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="card border-0 shadow">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="h5 fw-bold mb-1">Tell us about your event</h2>
+          <p class="text-muted small mb-4">All fields marked <span class="text-danger fw-bold">*</span> are required.</p>
+
+          <%= form_with model: @performance_request,
+                        url: public_submit_performance_request_path,
+                        method: :post,
+                        local: true do |f| %>
+
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="performance_request_name">
+                  Full Name <span class="text-danger">*</span>
+                </label>
+                <%= f.text_field :name,
+                      id: "performance_request_name",
+                      class: "form-control #{'is-invalid' if @performance_request.errors[:name].any?}",
+                      placeholder: "Jane Smith",
+                      required: true %>
+                <% if @performance_request.errors[:name].any? %>
+                  <div class="invalid-feedback"><%= @performance_request.errors[:name].first %></div>
+                <% end %>
               </div>
-              <div class="col-md-6">
-                <label class="form-label fw-bold" for="perf_last_name">Last Name</label>
-                <input type="text" class="form-control" id="perf_last_name" placeholder="Doe">
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="performance_request_organization">
+                  Organization <span class="text-danger">*</span>
+                </label>
+                <%= f.text_field :organization,
+                      id: "performance_request_organization",
+                      class: "form-control #{'is-invalid' if @performance_request.errors[:organization].any?}",
+                      placeholder: "Texas A&M University",
+                      required: true %>
+                <% if @performance_request.errors[:organization].any? %>
+                  <div class="invalid-feedback"><%= @performance_request.errors[:organization].first %></div>
+                <% end %>
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="performance_request_event_date">
+                  Event Date <span class="text-danger">*</span>
+                </label>
+                <%= f.date_field :event_date,
+                      id: "performance_request_event_date",
+                      class: "form-control #{'is-invalid' if @performance_request.errors[:event_date].any?}",
+                      min: Date.tomorrow.to_s,
+                      required: true %>
+                <div class="form-text">Must be a future date.</div>
+                <% if @performance_request.errors[:event_date].any? %>
+                  <div class="invalid-feedback"><%= @performance_request.errors[:event_date].first %></div>
+                <% end %>
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="performance_request_contact_email">
+                  Contact Email <span class="text-danger">*</span>
+                </label>
+                <%= f.email_field :contact_email,
+                      id: "performance_request_contact_email",
+                      class: "form-control #{'is-invalid' if @performance_request.errors[:contact_email].any?}",
+                      placeholder: "jane.smith@example.com",
+                      required: true %>
+                <% if @performance_request.errors[:contact_email].any? %>
+                  <div class="invalid-feedback"><%= @performance_request.errors[:contact_email].first %></div>
+                <% end %>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold" for="performance_request_location">
+                  Event Location <span class="text-danger">*</span>
+                </label>
+                <%= f.text_field :location,
+                      id: "performance_request_location",
+                      class: "form-control #{'is-invalid' if @performance_request.errors[:location].any?}",
+                      placeholder: "Kyle Field, College Station, TX",
+                      required: true %>
+                <% if @performance_request.errors[:location].any? %>
+                  <div class="invalid-feedback"><%= @performance_request.errors[:location].first %></div>
+                <% end %>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold" for="performance_request_notes">
+                  Additional Notes <span class="text-muted fw-normal">(optional)</span>
+                </label>
+                <%= f.text_area :notes,
+                      id: "performance_request_notes",
+                      class: "form-control",
+                      rows: 3,
+                      placeholder: "Anything else we should know — expected audience size, theme, special requests…" %>
+              </div>
+
+              <div class="col-12 pt-2">
+                <button type="submit" class="btn btn-lg w-100 text-white fw-semibold"
+                        style="background-color:#500000; border-color:#500000;">
+                  <i class="bi bi-send-fill me-2"></i>Submit Request
+                </button>
               </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label fw-bold" for="perf_email">Email</label>
-              <input type="email" class="form-control" id="perf_email" placeholder="john.doe@example.com">
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold" for="perf_event_type">Event Type</label>
-              <select class="form-select" id="perf_event_type">
-                <option>Corporate Event</option>
-                <option>Private Party</option>
-                <option>University Event</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold" for="perf_event_details">Event Details</label>
-              <textarea class="form-control" id="perf_event_details" rows="4" placeholder="Tell us more about your event..."></textarea>
-            </div>
-
-            <button type="button" class="btn btn-maroon px-4 py-2 mt-2">Submit Request</button>
-          </form>
+          <% end %>
         </div>
       </div>
     </div>
-    
-    <div class="col-md-4 mt-4 mt-md-0">
-      <div class="card border-0 bg-light p-3">
-        <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-maroon me-2"></i> Booking Information</h5>
-        <ul class="list-unstyled">
-          <li class="mb-3"><strong>Notice:</strong> Please submit requests at least 4 weeks in advance.</li>
-          <li class="mb-3"><strong>Pricing:</strong> Pricing varies based on event length and location.</li>
-          <li>For direct inquiries, contact our management team on the <%= link_to 'Contact page', public_contact_path %>.</li>
-        </ul>
+
+    <!-- Info Column -->
+    <div class="col-lg-4">
+      <div class="sticky-top" style="top: 1.5rem;">
+
+        <div class="card border-0 shadow-sm mb-4" style="border-top: 4px solid #500000 !important;">
+          <div class="card-body p-4">
+            <h3 class="h6 fw-bold mb-3" style="color:#500000;">
+              <i class="bi bi-info-circle-fill me-2"></i>Before You Submit
+            </h3>
+            <ul class="list-unstyled mb-0">
+              <li class="d-flex gap-2 mb-3">
+                <i class="bi bi-calendar3 text-muted mt-1 flex-shrink-0"></i>
+                <span><strong>4-week notice</strong> — please submit requests at least 4 weeks before your event.</span>
+              </li>
+              <li class="d-flex gap-2 mb-3">
+                <i class="bi bi-clock text-muted mt-1 flex-shrink-0"></i>
+                <span><strong>5–7 business days</strong> — our Director reviews all requests and will follow up by email.</span>
+              </li>
+              <li class="d-flex gap-2">
+                <i class="bi bi-envelope text-muted mt-1 flex-shrink-0"></i>
+                <span>Have questions? <%= link_to 'Contact us directly', public_contact_path, style: 'color:#500000;' %>.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card border-0 bg-light">
+          <div class="card-body p-4">
+            <h3 class="h6 fw-bold mb-3">
+              <i class="bi bi-music-note-beamed me-2 text-muted"></i>About the Singing Cadets
+            </h3>
+            <p class="text-muted small mb-0">
+              Internationally known as the "Voice of Aggieland," the Singing Cadets is Texas A&amp;M University's
+              premier men's chorus — one of the oldest student organizations on campus, representing the university
+              through music across the state, nation, and world.
+            </p>
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
 </div>

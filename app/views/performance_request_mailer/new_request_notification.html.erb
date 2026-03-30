@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; background: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { background: #500000; color: #fff; padding: 24px 32px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.85; }
+    .body { padding: 28px 32px; }
+    .field { margin-bottom: 18px; border-bottom: 1px solid #f0f0f0; padding-bottom: 14px; }
+    .field:last-of-type { border-bottom: none; }
+    .label { font-weight: bold; color: #500000; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .value { font-size: 15px; }
+    .action-box { background: #fff9f0; border: 1px solid #f0c070; border-radius: 6px; padding: 16px 20px; margin: 24px 0; }
+    .action-box p { margin: 0 0 12px; font-size: 14px; color: #555; }
+    .cta { display: inline-block; padding: 12px 28px; background: #500000; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; }
+    .footer { padding: 16px 32px; background: #f8f8f8; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎵 New Performance Request</h1>
+      <p>A new booking inquiry has been submitted and is awaiting your review.</p>
+    </div>
+
+    <div class="body">
+      <p style="margin-top:0;">Hello Director,</p>
+      <p>An external event organizer has submitted a performance request through the Singing Cadets public website. Please review the details below and log in to approve or deny the request.</p>
+
+      <div class="field">
+        <span class="label">Requester Name</span>
+        <div class="value"><%= @request.name %></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Organization</span>
+        <div class="value"><%= @request.organization %></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Event Date</span>
+        <div class="value"><%= @request.event_date.strftime("%B %d, %Y") %></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Location</span>
+        <div class="value"><%= @request.location %></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Contact Email</span>
+        <div class="value"><a href="mailto:<%= @request.contact_email %>" style="color:#500000;"><%= @request.contact_email %></a></div>
+      </div>
+
+      <% if @request.notes.present? %>
+        <div class="field">
+          <span class="label">Additional Notes</span>
+          <div class="value"><%= @request.notes %></div>
+        </div>
+      <% end %>
+
+      <div class="field">
+        <span class="label">Submitted At</span>
+        <div class="value"><%= @request.created_at.strftime("%B %d, %Y at %I:%M %p UTC") %></div>
+      </div>
+
+      <div class="action-box">
+        <p>This request is currently <strong>pending your review</strong>. Log in to the Singing Cadets director dashboard to approve or deny it.</p>
+        <a href="http://<%= @app_host %>/internal/performance_requests/<%= @request.id %>" class="cta">
+          Review This Request →
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      This email was sent automatically by the Singing Cadets management system.<br>
+      To view all performance requests, visit: http://<%= @app_host %>/internal/performance_requests
+    </div>
+  </div>
+</body>
+</html>
