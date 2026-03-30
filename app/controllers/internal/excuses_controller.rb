@@ -38,14 +38,17 @@ module Internal
       @excuse.submission_date = Time.current
 
       if @excuse.save
+        notification_event_key = @excuse.is_personal? ? 'excuse_submitted_for_director_review' : 'excuse_submitted_for_review'
+        recipients = @excuse.is_personal? ? Notifications::Audience.approved_super_admins : Notifications::Audience.officers_for_member(@excuse.member)
+
         Notifications::Dispatcher.publish(
-          event_key: 'excuse_submitted_for_review',
-          recipients: Notifications::Audience.officers_for_member(@excuse.member),
+          event_key: notification_event_key,
+          recipients: recipients,
           actor: current_user,
           context: Notifications::Payloads.excuse(@excuse)
         )
         log_create_success(@excuse, { recurring: @excuse.recurring? })
-        redirect_to internal_excuses_path, notice: "Excuse submitted successfully for Officer review."
+        redirect_to internal_excuses_path, notice: @excuse.is_personal? ? "Personal excuse submitted successfully for Director review." : "Excuse submitted successfully for Officer review."
       else
         log_create_failure(@excuse)
         flash.now[:alert] = "Failed to submit excuse. Please correct the errors below."

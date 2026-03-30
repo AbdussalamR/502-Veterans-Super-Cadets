@@ -122,6 +122,36 @@ RSpec.describe 'Internal::Excuses', type: :request do
         end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
+      it 'targets section officers for a normal excuse submission' do
+        officer_tenor
+        admin_user
+
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
+
+        jobs = ActiveJob::Base.queue_adapter.enqueued_jobs.select do |job|
+          job[:job] == Notifications::DeliverNotificationJob
+        end
+
+        expect(jobs.map { |job| job[:args][0] }).to include('excuse_submitted_for_review')
+        expect(jobs.map { |job| job[:args][1] }).to include(officer_tenor.id)
+        expect(jobs.map { |job| job[:args][1] }).not_to include(admin_user.id)
+      end
+
+      it 'targets directors for a personal excuse submission' do
+        officer_tenor
+        admin_user
+
+        post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sensitive matter', proof_link: 'https://example.com/proof', is_personal: '1' } }
+
+        jobs = ActiveJob::Base.queue_adapter.enqueued_jobs.select do |job|
+          job[:job] == Notifications::DeliverNotificationJob
+        end
+
+        expect(jobs.map { |job| job[:args][0] }).to include('excuse_submitted_for_director_review')
+        expect(jobs.map { |job| job[:args][1] }).to include(admin_user.id)
+        expect(jobs.map { |job| job[:args][1] }).not_to include(officer_tenor.id)
+      end
+
       # --- NEW: Story A3 AC 1 (Default Status) ---
       it 'sets status to "Pending Section Leader Review"' do
         post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }

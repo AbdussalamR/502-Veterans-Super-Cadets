@@ -123,6 +123,15 @@ module Notifications
           cta_label: 'Review excuse',
           cta_url: context['excuse_url']
         )
+      when 'excuse_submitted_for_director_review'
+        message(
+          subject: 'A new personal excuse needs director review',
+          heading: 'New personal excuse submitted',
+          intro: "#{context['member_name']} submitted a personal excuse for director review.",
+          bullets: ["Events: #{context['event_summary']}"],
+          cta_label: 'Review excuse',
+          cta_url: context['excuse_url']
+        )
       when 'excuse_pending_admin_review'
         message(
           subject: 'An excuse is ready for director review',
