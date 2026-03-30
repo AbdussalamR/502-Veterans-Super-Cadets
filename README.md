@@ -654,7 +654,7 @@ rails db:reset         # Drop, create, and migrate
 ### Development Team
 - **Texas A&M Singing Cadets** - Project sponsors and stakeholders
 - **CSCE 431 Software Engineering Team Fall 2025** - Original development team (Phase 1) - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
-- **CSCE 431 Software Engineering Team Spring 2026** - Phase 2 development team - Daniel Trinh, Junseok Kim, Abdussalam Raheem, Zaahir Sharma, Deniz Telci
+- **CSCE 431 Software Engineering Team Spring 2026** - Phase 2 development team - Junseok Kim, Abdussalam Raheem, Zaahir Sharma, Deniz Telci
 
 ### AI & Development Tools
 This project was developed with assistance from:
