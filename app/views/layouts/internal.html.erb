@@ -100,9 +100,9 @@
 
 <body class="d-flex flex-column min-vh-100">
   <a class="visually-hidden-focusable" href="#main-content">Skip to main content</a>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
       <div class="container-fluid">
-        <%= link_to "HOME", internal_events_path, class: "navbar-brand" %>
+        <%= link_to "Singing Cadets", internal_events_path, class: "navbar-brand" %>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -110,24 +110,34 @@
         
         <div class="collapse navbar-collapse" id="navbarNav">
         <div class="navbar-nav me-auto">
-          <%= link_to "Events", internal_events_path, class: "nav-link" %>
-          <%= link_to internal_excuses_path, class: "nav-link d-flex align-items-center" do %>
-            Excuses
-            <%# Show role-appropriate pending count badges %>
-            <% if current_user.super_admin? %>
-              <% pending_admin_count = Excuse.pending_admin_approval.count %>
-              <% if pending_admin_count > 0 %>
-                <span class="badge bg-danger ms-2" aria-label="<%= pending_admin_count %> pending admin approvals"><%= pending_admin_count %></span>
-              <% end %>
-            <% elsif current_user.officer? %>
-              <% pending_officer_count = Excuse.pending_unprocessed.joins(:member).where(users: { section_id: current_user.section_id }).count %>
-              <% if pending_officer_count > 0 %>
-                <span class="badge bg-danger ms-2" aria-label="<%= pending_officer_count %> pending excuses"><%= pending_officer_count %></span>
-              <% end %>
-            <% end %>
+          <%= link_to internal_events_path, class: "nav-link text-center" do %>
+            <div style="font-size: 1.3rem;">🗓️</div>
+            <div style="font-size: 0.65rem;">Events</div>
           <% end %>
-          <%= link_to "Music Drive", "https://drive.google.com/drive/folders/17ccw2GrZ6-p6WRj1jZO8-kcFxNzuFY79", class: "nav-link", target: "_blank", rel: "noopener" %>
-          
+
+          <%= link_to internal_excuses_path, class: "nav-link text-center" do %>
+            <div style="font-size: 1.3rem;">📋</div>
+            <div style="font-size: 0.65rem;">
+              Excuses
+              <% if current_user.super_admin? %>
+                <% pending_admin_count = Excuse.pending_admin_approval.count %>
+                <% if pending_admin_count > 0 %>
+                  <span class="badge bg-danger" aria-label="<%= pending_admin_count %> pending admin approvals"><%= pending_admin_count %></span>
+                <% end %>
+              <% elsif current_user.officer? %>
+                <% pending_officer_count = Excuse.pending_unprocessed.joins(:member).where(users: { section_id: current_user.section_id }).count %>
+                <% if pending_officer_count > 0 %>
+                  <span class="badge bg-danger" aria-label="<%= pending_officer_count %> pending excuses"><%= pending_officer_count %></span>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= link_to "https://drive.google.com/drive/folders/17ccw2GrZ6-p6WRj1jZO8-kcFxNzuFY79", class: "nav-link text-center", target: "_blank", rel: "noopener" do %>
+            <div style="font-size: 1.3rem;">🎵</div>
+            <div style="font-size: 0.65rem;">Music Drive</div>
+          <% end %>
+
           <% if current_user.admin? %>
             <%# ── Admin "Manage" dropdown ───────────────────────────────── %>
             <% pending_registrations = User.pending.count %>
@@ -138,12 +148,16 @@
               <% manage_badge += unread_msgs + pending_requests %>
             <% end %>
             <div class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
-                 data-bs-toggle="dropdown" aria-expanded="false">
-                Manage
-                <% if manage_badge > 0 %>
-                  <span class="badge bg-danger ms-2" aria-label="<%= manage_badge %> items need attention"><%= manage_badge %></span>
-                <% end %>
+              <a class="nav-link text-center dropdown-toggle" href="#" role="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                style="display: flex; flex-direction: column; align-items: center;">
+                <div style="font-size: 1.3rem;">🛠️</div>
+                <div style="font-size: 0.65rem; display: flex; align-items: center; gap: 3px;">
+                  Manage
+                  <% if manage_badge > 0 %>
+                    <span class="badge bg-danger"><%= manage_badge %></span>
+                  <% end %>
+                </div>
               </a>
               <ul class="dropdown-menu">
                 <li><%= link_to "Member Management", internal_users_path, class: "dropdown-item" %></li>
@@ -171,11 +185,14 @@
               </ul>
             </div>
           <% elsif current_user.user? %>
-            <%= link_to internal_my_demerits_path, class: "nav-link" do %>
-              Discipline Points
-              <% if current_user.received_demerits.count > 0 %>
-                <span class="badge bg-danger"><%= current_user.received_demerits.count %></span>
-              <% end %>
+            <%= link_to internal_my_demerits_path, class: "nav-link text-center" do %>
+              <div style="font-size: 1.3rem;">⚠️</div>
+              <div style="font-size: 0.65rem;">
+                Discipline
+                <% if current_user.received_demerits.count > 0 %>
+                  <span class="badge bg-danger"><%= current_user.received_demerits.count %></span>
+                <% end %>
+              </div>
             <% end %>
           <% end %>
         </div>
