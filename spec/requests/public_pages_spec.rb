@@ -44,6 +44,21 @@ RSpec.describe 'Public::Pages', type: :request do
     end
   end
 
+  # ===========================================================================
+  # User Story U1 — External Event Organizer: Submit a Performance Request
+  #
+  # Persona : External event organizer (unauthenticated)
+  # Need    : Submit a booking inquiry through a public web form
+  # Value   : Provides a professional, centralized intake process for the Singing Cadets
+  #
+  # Acceptance Criteria covered in this file:
+  #   AC 0.1 — Page is accessible to unauthenticated users
+  #   AC 0.2 — Form requires Name, Organization, Event Date, Location, Contact Email
+  #   AC 0.3 — Submission creates a DB record and emails the Director
+  #   AC 0.4 — Missing/invalid fields or a past date prevent submission and show errors
+  # ===========================================================================
+
+  # -- AC 0.1: The "Request a Performance" page is publicly accessible (no login required) --
   describe 'GET /public/performance_request' do
     it 'renders successfully without authentication' do
       get public_performance_request_path
@@ -62,32 +77,38 @@ RSpec.describe 'Public::Pages', type: :request do
   end
 
   describe 'POST /public/performance_request' do
+    # -- AC 0.2: All required fields (Name, Organization, Event Date, Location, Contact Email) --
+    # valid_params represents a correctly filled-out form with every required field present.
     let(:valid_params) do
       {
         performance_request: {
-          name: 'Jane Smith',
-          organization: 'Texas A&M',
-          event_date: 6.weeks.from_now.to_date.to_s,
-          location: 'Kyle Field',
-          contact_email: 'jane@example.com',
-          notes: 'Please arrive early'
+          name:          'Jane Smith',       # required – AC 0.2
+          organization:  'Texas A&M',        # required – AC 0.2
+          event_date:    6.weeks.from_now.to_date.to_s, # required, must be future – AC 0.2 & 0.4
+          location:      'Kyle Field',       # required – AC 0.2
+          contact_email: 'jane@example.com', # required, must be valid email – AC 0.2 & 0.4
+          notes:         'Please arrive early' # optional
         }
       }
     end
 
+    # -- AC 0.3: Successful submission creates a DB record and notifies the Director --
     context 'with valid params' do
+      # AC 0.3 (part 1): a new row is inserted into the PerformanceRequests table
       it 'creates a new performance request' do
         expect {
           post public_submit_performance_request_path, params: valid_params
         }.to change(PerformanceRequest, :count).by(1)
       end
 
+      # AC 0.3 (part 1 continued): the user is redirected with a confirmation message
       it 'redirects back to the form with a success notice' do
         post public_submit_performance_request_path, params: valid_params
         expect(response).to redirect_to(public_performance_request_path)
         expect(flash[:notice]).to include('Jane Smith')
       end
 
+      # AC 0.3 (part 2): an async notification job is enqueued so the Director is alerted
       it 'enqueues a notification to directors' do
         create(:user, :super_admin)
         expect {
@@ -96,15 +117,18 @@ RSpec.describe 'Public::Pages', type: :request do
       end
     end
 
+    # -- AC 0.4: Missing fields or a past date must prevent submission --
     context 'with invalid params' do
+      # AC 0.4: blank required field → form re-renders (422) instead of saving
       it 're-renders the form when name is missing' do
         post public_submit_performance_request_path, params: {
           performance_request: valid_params[:performance_request].merge(name: '')
         }
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(response.body).to include('Submit Request')
+        expect(response.body).to include('Submit Request') # form is shown again with errors
       end
 
+      # AC 0.4: malformed email → form re-renders with a helpful validation message
       it 're-renders the form when email is invalid' do
         post public_submit_performance_request_path, params: {
           performance_request: valid_params[:performance_request].merge(contact_email: 'not-an-email')
@@ -113,6 +137,7 @@ RSpec.describe 'Public::Pages', type: :request do
         expect(response.body).to include('valid email')
       end
 
+      # AC 0.4: past event date → form re-renders; past bookings are not accepted
       it 're-renders the form when event_date is in the past' do
         post public_submit_performance_request_path, params: {
           performance_request: valid_params[:performance_request].merge(event_date: 1.week.ago.to_date.to_s)
@@ -120,6 +145,7 @@ RSpec.describe 'Public::Pages', type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
+      # AC 0.4 (guard): no record is persisted when validation fails
       it 'does not create a request on validation failure' do
         expect {
           post public_submit_performance_request_path, params: {
