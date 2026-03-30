@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Internal
-  class SettingsController < ApplicationController
+  class SettingsController < InternalController
     before_action :require_super_admin!
 
     def edit

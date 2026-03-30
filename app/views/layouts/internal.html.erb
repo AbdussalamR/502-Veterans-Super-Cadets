@@ -129,29 +129,47 @@
           <%= link_to "Music Drive", "https://drive.google.com/drive/folders/17ccw2GrZ6-p6WRj1jZO8-kcFxNzuFY79", class: "nav-link", target: "_blank", rel: "noopener" %>
           
           <% if current_user.admin? %>
-            <%= link_to "Member Management", internal_users_path, class: "nav-link" %>
-            <%= link_to "Discipline Points", internal_demerits_path, class: "nav-link" %>
+            <%# ── Admin "Manage" dropdown ───────────────────────────────── %>
             <% pending_registrations = User.pending.count %>
-            <%= link_to admin_registrations_path, class: "nav-link d-flex align-items-center" do %>
-              Registration Approval
-              <% if pending_registrations > 0 %>
-                <span class="badge bg-danger ms-2" aria-label="<%= pending_registrations %> pending registrations"><%= pending_registrations %></span>
-              <% end %>
-            <% end %>
-            <% if current_user.super_admin? %>
-              <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
-            <% end %>
+            <% manage_badge = pending_registrations %>
             <% if current_user.super_admin? %>
               <% unread_msgs = ContactMessage.unread.count %>
               <% pending_requests = PerformanceRequest.pending.count %>
-              <% website_alert_count = unread_msgs + pending_requests %>
-              <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>
-                Website Management
-                <% if website_alert_count > 0 %>
-                  <span class="badge bg-danger ms-2" aria-label="<%= website_alert_count %> items need attention"><%= website_alert_count %></span>
-                <% end %>
-              <% end %>
+              <% manage_badge += unread_msgs + pending_requests %>
             <% end %>
+            <div class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                 data-bs-toggle="dropdown" aria-expanded="false">
+                Manage
+                <% if manage_badge > 0 %>
+                  <span class="badge bg-danger ms-2" aria-label="<%= manage_badge %> items need attention"><%= manage_badge %></span>
+                <% end %>
+              </a>
+              <ul class="dropdown-menu">
+                <li><%= link_to "Member Management", internal_users_path, class: "dropdown-item" %></li>
+                <li><%= link_to "Discipline Points", internal_demerits_path, class: "dropdown-item" %></li>
+                <li>
+                  <%= link_to admin_registrations_path, class: "dropdown-item d-flex align-items-center" do %>
+                    Registration Approval
+                    <% if pending_registrations > 0 %>
+                      <span class="badge bg-danger ms-2"><%= pending_registrations %></span>
+                    <% end %>
+                  <% end %>
+                </li>
+                <% if current_user.super_admin? %>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><%= link_to "Notification Settings", edit_internal_settings_path, class: "dropdown-item" %></li>
+                  <li>
+                    <%= link_to admin_website_path, class: "dropdown-item d-flex align-items-center" do %>
+                      Website Management
+                      <% if (unread_msgs + pending_requests) > 0 %>
+                        <span class="badge bg-danger ms-2"><%= unread_msgs + pending_requests %></span>
+                      <% end %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
           <% elsif current_user.user? %>
             <%= link_to internal_my_demerits_path, class: "nav-link" do %>
               Discipline Points
