@@ -72,13 +72,13 @@
             <div class="card-body">
               <%= form_with url: admin_update_website_home_path, method: :patch, local: true do |f| %>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Hero Title</label>
+                  <label class="form-label fw-semibold">Main Title</label>
                   <%= f.text_field :hero_title, name: 'home[hero_title]',
                         value: @home_form_vals['hero_title'] || 'The Singing Cadets',
                         class: 'form-control' %>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Hero Subtitle</label>
+                  <label class="form-label fw-semibold">Main Subtitle</label>
                   <%= f.text_field :hero_subtitle, name: 'home[hero_subtitle]',
                         value: @home_form_vals['hero_subtitle'] || 'The Voice of Aggieland',
                         class: 'form-control' %>

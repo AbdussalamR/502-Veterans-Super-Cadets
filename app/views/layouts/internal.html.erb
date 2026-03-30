@@ -140,6 +140,14 @@
             <% end %>
             <% if current_user.super_admin? %>
               <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
+              <%# Performance Requests tab — Director only %>
+              <% pr_pending = PerformanceRequest.pending.count %>
+              <%= link_to internal_performance_requests_path, class: "nav-link", style: "white-space: nowrap;" do %>
+                Performance Requests
+                <% if pr_pending > 0 %>
+                  <span class="badge bg-danger ms-1"><%= pr_pending %></span>
+                <% end %>
+              <% end %>
             <% end %>
             <% unread_msgs = ContactMessage.unread.count %>
             <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>

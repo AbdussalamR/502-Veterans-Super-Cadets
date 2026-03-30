@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_29_000005) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_29_230345) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,6 +176,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_000005) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["page_name", "content_key", "is_draft"], name: "index_page_contents_on_page_name_and_content_key_and_is_draft", unique: true
+  end
+
+  create_table "performance_requests", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "organization", null: false
+    t.date "event_date", null: false
+    t.string "location", null: false
+    t.string "contact_email", null: false
+    t.string "status", default: "pending", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_date"], name: "index_performance_requests_on_event_date"
+    t.index ["status"], name: "index_performance_requests_on_status"
   end
 
   create_table "reviewers_to_excuse", force: :cascade do |t|

@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   namespace :public, path: 'public' do
     get  'home', to: 'pages#home'
     get  'performance_request', to: 'pages#performance_request'
+    post 'performance_request', to: 'pages#submit_performance_request', as: 'submit_performance_request'
     get  'media_gallery', to: 'pages#media_gallery'
     get  'audition_information', to: 'pages#audition_information'
     get  'calendar', to: 'pages#calendar'
@@ -94,6 +95,8 @@ Rails.application.routes.draw do
         patch :dismiss
       end
     end
+
+    resources :performance_requests, only: [:index, :show, :update]
   end
 
   # Admin routes
