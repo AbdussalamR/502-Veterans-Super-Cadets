@@ -140,20 +140,16 @@
             <% end %>
             <% if current_user.super_admin? %>
               <%= link_to "Notification Settings", edit_internal_settings_path, class: "nav-link" %>
-              <%# Performance Requests tab — Director only %>
-              <% pr_pending = PerformanceRequest.pending.count %>
-              <%= link_to internal_performance_requests_path, class: "nav-link", style: "white-space: nowrap;" do %>
-                Performance Requests
-                <% if pr_pending > 0 %>
-                  <span class="badge bg-danger ms-1"><%= pr_pending %></span>
-                <% end %>
-              <% end %>
             <% end %>
-            <% unread_msgs = ContactMessage.unread.count %>
-            <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>
-              Website
-              <% if unread_msgs > 0 %>
-                <span class="badge bg-danger ms-2" aria-label="<%= unread_msgs %> unread messages"><%= unread_msgs %></span>
+            <% if current_user.super_admin? %>
+              <% unread_msgs = ContactMessage.unread.count %>
+              <% pending_requests = PerformanceRequest.pending.count %>
+              <% website_alert_count = unread_msgs + pending_requests %>
+              <%= link_to admin_website_path, class: "nav-link d-flex align-items-center" do %>
+                Website Management
+                <% if website_alert_count > 0 %>
+                  <span class="badge bg-danger ms-2" aria-label="<%= website_alert_count %> items need attention"><%= website_alert_count %></span>
+                <% end %>
               <% end %>
             <% end %>
           <% elsif current_user.user? %>

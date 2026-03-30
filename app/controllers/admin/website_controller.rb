@@ -1,6 +1,6 @@
 module Admin
   class WebsiteController < InternalController
-    before_action :require_admin
+    before_action :ensure_super_admin
 
     HOME_KEYS      = %w[hero_title hero_subtitle about_text].freeze
     CONTACT_KEYS   = %w[address email phone].freeze
@@ -136,6 +136,10 @@ module Admin
       @contact_draft     = contents_hash('contact', draft: true)
       @contact_has_draft = PageContent.has_drafts?('contact')
       @contact_form_vals = @contact_has_draft ? @contact_draft.merge(@contact_published) { |_, d, _| d } : @contact_published
+
+      # Book Us tab
+      @performance_requests      = PerformanceRequest.newest
+      @pending_requests_count    = PerformanceRequest.pending.count
 
       # Messages tab
       @contact_messages       = ContactMessage.recent

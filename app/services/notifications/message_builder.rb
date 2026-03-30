@@ -114,6 +114,20 @@ module Notifications
           cta_label: 'View calendar',
           cta_url: context['events_url']
         )
+      when 'performance_request_submitted'
+        message(
+          subject: "New Performance Request from #{context['requester_name']} (#{context['organization']})",
+          heading: 'New performance request received',
+          intro: "#{context['requester_name']} from #{context['organization']} has submitted a performance request.",
+          bullets: [
+            "Date: #{context['event_date']}",
+            "Location: #{context['location']}",
+            "Contact: #{context['contact_email']}",
+            ("Notes: #{context['notes']}" if context['notes'] != 'None')
+          ],
+          cta_label: 'View all requests',
+          cta_url: context['requests_url']
+        )
       when 'excuse_submitted_for_review'
         message(
           subject: 'A new excuse needs section review',

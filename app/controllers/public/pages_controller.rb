@@ -21,9 +21,13 @@ module Public
       )
 
       if @performance_request.save
-        # Notify the Director via email
-        director = User.where(role: 'super_admin').first
-        PerformanceRequestMailer.new_request_notification(@performance_request, director).deliver_later if director
+        # Notify all directors via the shared SendGrid notification system
+        Notifications::Dispatcher.publish(
+          event_key: 'performance_request_submitted',
+          recipients: Notifications::Audience.approved_super_admins,
+          actor: nil,
+          context: Notifications::Payloads.performance_request(@performance_request)
+        )
         redirect_to public_performance_request_path,
                     notice: "Thank you, #{@performance_request.name}! Your performance request has been submitted. We'll be in touch soon."
       else

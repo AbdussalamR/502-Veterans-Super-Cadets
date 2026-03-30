@@ -142,7 +142,7 @@
           <% end %>
 
           <%# Admins finalize the decision (can do so at any pending stage, bypassing officer review) %>
-          <% if current_user.super_admin? && ['pending', 'Pending Section Leader Review'].include?(@excuse.status) %>
+          <% if current_user.super_admin? && ['pending', 'Pending Officer Review'].include?(@excuse.status) %>
           <% if @excuse.officer_status.present? %>
             <div class="mb-2"><small class="text-muted">This item has an officer provisional decision. Admins may finalize it or choose differently.</small></div>
           <% end %>

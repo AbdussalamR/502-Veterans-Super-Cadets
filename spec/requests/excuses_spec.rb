@@ -153,9 +153,9 @@ RSpec.describe 'Internal::Excuses', type: :request do
       end
 
       # --- NEW: Story A3 AC 1 (Default Status) ---
-      it 'sets status to "Pending Section Leader Review"' do
+      it 'sets status to "Pending Officer Review"' do
         post internal_excuses_path, params: { excuse: { event_ids: [event.id], reason: 'Sick', proof_link: 'https://example.com/proof' } }
-        expect(Excuse.last.status).to eq('Pending Section Leader Review')
+        expect(Excuse.last.status).to eq('Pending Officer Review')
       end
 
       it 'sets submission date' do
