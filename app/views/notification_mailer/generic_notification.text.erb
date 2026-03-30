@@ -1,0 +1,14 @@
+Hello <%= @recipient.full_name %>,
+
+<%= @message.heading %>
+
+<%= @message.intro %>
+<% @message.bullets.each do |bullet| %>
+- <%= bullet %>
+<% end %>
+
+<% if @message.cta_url.present? %>
+<%= @message.cta_label %>: <%= @message.cta_url %>
+<% end %>
+
+Singing Cadets

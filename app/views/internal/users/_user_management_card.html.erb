@@ -14,7 +14,7 @@
             <% if user.avatar_url.present? %>
               <img src="<%= user.avatar_url %>" alt="<%= user.full_name %>" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
             <% else %>
-              <i class="bi bi-person-circle display-5 <%= user.super_admin? ? 'text-danger' : (user.officer? ? 'text-warning' : 'text-secondary') %>"></i>
+              <i class="bi bi-person-circle display-5 <%= user.super_admin? ? 'text-danger' : (user.officer? ? 'text-warning' : 'text-secondary') %>" aria-hidden="true"></i>
             <% end %>
           </div>
           <div>
@@ -22,7 +22,7 @@
               <%= link_to user.full_name, internal_user_path(user), class: "text-decoration-none text-dark" %>
             </h6>
             <span class="badge <%= user.super_admin? ? 'bg-danger' : (user.officer? ? 'bg-warning text-dark' : 'bg-secondary') %>">
-              <i class="bi bi-<%= user.super_admin? ? 'shield-fill-exclamation' : (user.officer? ? 'award' : 'person') %> me-1"></i>
+              <i class="bi bi-<%= user.super_admin? ? 'shield-fill-exclamation' : (user.officer? ? 'award' : 'person') %> me-1" aria-hidden="true"></i>
               <%= user.role_display_name %>
             </span>
           </div>
@@ -34,11 +34,11 @@
     <div class="card-body">
       <div class="mb-3">
         <div class="d-flex align-items-center mb-2">
-          <i class="bi bi-envelope text-muted me-2"></i>
+          <i class="bi bi-envelope text-muted me-2" aria-hidden="true"></i>
           <small class="text-muted"><%= user.email %></small>
         </div>
         <div class="d-flex align-items-center mb-2">
-          <i class="bi bi-music-note text-muted me-2"></i>
+          <i class="bi bi-music-note text-muted me-2" aria-hidden="true"></i>
           <small class="text-muted">Section: <%= user.section&.name || 'Unassigned' %></small>
         </div>
       </div>
@@ -63,7 +63,11 @@
       <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex gap-2">
           <%= link_to internal_user_path(user), class: "btn btn-outline-primary btn-sm", title: "Profile" do %><i class="bi bi-eye"></i><span class="btn-text ms-1">Profile</span><% end %>
-          <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit" do %><i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span><% end %>
+          <% can_edit = current_user.super_admin? || current_user == user ||
+                        (current_user.officer? && current_user.section_id.present? && current_user.section_id == user.section_id) %>
+          <% if can_edit %>
+            <%= link_to edit_internal_user_path(user), class: "btn btn-outline-secondary btn-sm", title: "Edit" do %><i class="bi bi-pencil"></i><span class="btn-text ms-1">Edit</span><% end %>
+          <% end %>
           <%= link_to attendance_history_internal_user_path(user), class: "btn btn-outline-info btn-sm", title: "History" do %><i class="bi bi-clock-history"></i><span class="btn-text ms-1">History</span><% end %>
         </div>
         

@@ -30,6 +30,9 @@
               <span class="badge bg-info">Recurring</span>
               <span class="text-muted ms-2">
                 Every <%= @excuse.recurring_day_names %>
+                <% if @excuse.recurring_time_range_label.present? %>
+                  <%= @excuse.recurring_time_range_label %>
+                <% end %>
                 <% if @excuse.start_date.present? && @excuse.end_date.present? %>
                   from <%= @excuse.start_date.strftime("%B %d, %Y") %> to <%= @excuse.end_date.strftime("%B %d, %Y") %>
                 <% end %>
@@ -37,21 +40,30 @@
             </div>
           <% end %>
 
-          <%# Determine display status: prefer officer_status (provisional) when present %>
-          <% display_status = (@excuse.respond_to?(:officer_status) && @excuse.officer_status.present?) ? @excuse.officer_status : @excuse.status %>
+          <%# SCRUM-9: Personal Badge %>
+          <% if @excuse.is_personal? %>
+            <div class="mb-3">
+              <span class="badge bg-dark">
+                <i class="bi bi-shield-lock me-1"></i>Personal / Confidential
+              </span>
+              <span class="text-muted ms-2 small">This excuse is completely hidden from Officers.</span>
+            </div>
+          <% end %>
+
           <div class="mb-3">
             <span class="fw-semibold"><strong>Status:</strong></span>
-            <span class="badge 
-              <%= case display_status
-                when 'pending' then 'bg-warning text-dark'
-                when 'denied' then 'bg-danger'
-                when 'approved' then 'bg-success'
-                else 'bg-secondary'
-              end %>">
-              <%= display_status.to_s.capitalize %>
+            <% status_label = case @excuse.status
+              when 'Pending Officer Review' then 'Pending Officer Review'
+              when 'pending' then 'Pending Director Approval'
+              when 'approved' then 'Approved'
+              when 'denied' then 'Denied'
+              else @excuse.status.to_s.capitalize
+            end %>
+            <span class="badge <%= @excuse.status == 'approved' ? 'bg-success' : @excuse.status == 'denied' ? 'bg-danger' : 'bg-warning text-dark' %>">
+              <%= status_label %>
             </span>
-            <% if @excuse.respond_to?(:officer_status) && @excuse.officer_status.present? && @excuse.status == 'pending' %>
-              <small class="text-muted ms-2">(provisional — officer decision)</small>
+            <% if @excuse.officer_status.present? && @excuse.status == 'pending' %>
+              <span class="badge bg-info ms-2">Officer: <%= @excuse.officer_status.capitalize %></span>
             <% end %>
           </div>
 
@@ -67,7 +79,7 @@
                     <small class="text-muted"> — <%= entry.created_at.in_time_zone('Central Time (US & Canada)').strftime("%B %d, %Y at %I:%M %p") %></small>
                     <% if reviewer.role == 'officer' %>
                       <span class="badge bg-warning ms-2">Officer</span>
-                    <% elsif reviewer.role == 'admin' or reviewer.role == 'super_admin' %>
+                    <% elsif reviewer.role == 'super_admin' %>
                       <span class="badge bg-danger ms-2">Admin</span>
                     <% end %>
                   </li>
@@ -114,7 +126,7 @@
             <span class="fw-semibold"><strong>Proof:</strong></span>
             <div>
               <% if @excuse.proof_link.present? %>
-                <%= link_to @excuse.proof_link, @excuse.proof_link, target: "_blank", rel: "noopener", class: "btn btn-link px-0" %>
+                <%= link_to @excuse.proof_link, @excuse.proof_link, target: "_blank", rel: "noopener", class: "btn btn-link px-0 text-break" %>
               <% else %>
                 <span class="text-muted fst-italic">No proof provided.</span>
               <% end %>
@@ -122,17 +134,17 @@
           </div>
 
           <%# Officers make provisional decisions (do NOT change final status) %>
-          <% if current_user.officer? && @excuse.status == 'Pending Section Leader Review' %>
+          <% if current_user.officer? && @excuse.status == 'Pending Officer Review' %>
             <div class="d-flex gap-2 mb-3">
               <%= button_to 'Provisional Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-outline-success' %>
               <%= button_to 'Provisional Deny', internal_excuse_path(@excuse, status: 'denied'), method: :patch, class: 'btn btn-outline-danger' %>
             </div>
           <% end %>
 
-          <%# Admins finalize the decision (set actual status) only when the excuse is pending %>
-          <% if current_user.super_admin? && @excuse.status == 'pending' %>
+          <%# Admins finalize the decision (can do so at any pending stage, bypassing officer review) %>
+          <% if current_user.super_admin? && ['pending', 'Pending Officer Review'].include?(@excuse.status) %>
           <% if @excuse.officer_status.present? %>
-            <div class="mb-2"><small class="text-muted">This item has an officer provisional decision below. Admins may finalize it or choose differently.</small></div>
+            <div class="mb-2"><small class="text-muted">This item has an officer provisional decision. Admins may finalize it or choose differently.</small></div>
           <% end %>
           <div class="d-flex gap-2 mb-3">
             <%= button_to 'Finalize Approve', internal_excuse_path(@excuse, status: 'approved'), method: :patch, class: 'btn btn-success' %>
@@ -154,7 +166,7 @@
             <% end %>
           <% end %>
           <%# AC6: Cancel future recurring excuses %>
-          <% if @excuse.recurring? && @excuse.member_id == current_user.id && @excuse.has_future_events? %>
+          <% if @excuse.recurring? && @excuse.member_id == current_user.id && @excuse.future_events? %>
             <div class="mb-3">
               <%= button_to 'Cancel Future Recurring Excuses',
                     cancel_recurring_internal_excuse_path(@excuse),
@@ -165,7 +177,13 @@
             </div>
           <% end %>
 
-          <%= link_to 'Back', internal_excuses_path, class: 'btn btn-secondary mt-2' %>
+          <div class="d-flex gap-2 mt-2">
+            <%= link_to 'Back', internal_excuses_path, class: 'btn btn-secondary' %>
+            <% if @excuse.editable_and_deletable_by_member?(current_user) %>
+              <%= link_to 'Edit Excuse', edit_internal_excuse_path(@excuse), class: 'btn btn-primary' %>
+              <%= button_to 'Delete Excuse', internal_excuse_path(@excuse), method: :delete, data: { confirm: 'Are you sure you want to delete this excuse? This cannot be undone.' }, class: 'btn btn-danger' %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>

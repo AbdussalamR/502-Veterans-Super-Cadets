@@ -42,7 +42,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access to delete action' do
         delete internal_user_path(user_to_delete)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You must be a super admin')
       end
     end
@@ -52,7 +52,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access to delete action' do
         delete internal_user_path(user_to_delete)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You must be an admin')
       end
     end
@@ -154,7 +154,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access to user management' do
         get internal_users_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('You must be an admin')
       end
     end
@@ -201,7 +201,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         get internal_user_path(other_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('not authorized')
       end
     end
@@ -217,12 +217,23 @@ RSpec.describe 'Internal::Users', type: :request do
       end
     end
 
-    context 'when user is not admin' do
+    context 'when user is editing their own profile' do
+      before { sign_in regular_user }
+
+      it 'allows access' do
+        get edit_internal_user_path(regular_user)
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context 'when user is not allowed to edit another profile' do
+      let(:other_user) { create(:user) }
+
       before { sign_in regular_user }
 
       it 'denies access' do
-        get edit_internal_user_path(regular_user)
-        expect(response).to redirect_to(root_path)
+        get edit_internal_user_path(other_user)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -245,12 +256,25 @@ RSpec.describe 'Internal::Users', type: :request do
       end
     end
 
-    context 'when user is not admin' do
+    context 'when user is updating their own notification settings' do
+      before { sign_in regular_user }
+
+      it 'allows the update' do
+        patch internal_user_path(regular_user), params: { user: { email_notifications_enabled: '0' } }
+        regular_user.reload
+        expect(regular_user.email_notifications_enabled).to be false
+        expect(response).to redirect_to(internal_user_path(regular_user))
+      end
+    end
+
+    context 'when user is not allowed to update another profile' do
+      let(:other_user) { create(:user) }
+
       before { sign_in regular_user }
 
       it 'denies access' do
-        patch internal_user_path(regular_user), params: { user: { full_name: 'Hacked' } }
-        expect(response).to redirect_to(root_path)
+        patch internal_user_path(other_user), params: { user: { full_name: 'Hacked' } }
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -267,6 +291,12 @@ RSpec.describe 'Internal::Users', type: :request do
         expect(flash[:notice]).to include('promoted to officer')
       end
 
+      it 'enqueues a role notification' do
+        expect do
+          patch promote_to_officer_internal_user_path(regular_user)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
+      end
+
       it 'handles errors gracefully' do
         allow_any_instance_of(User).to receive(:promote_to_officer!).and_raise(StandardError, 'Test error')
         patch promote_to_officer_internal_user_path(regular_user)
@@ -280,7 +310,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         patch promote_to_officer_internal_user_path(regular_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -310,7 +340,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         patch promote_to_super_admin_internal_user_path(regular_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -340,7 +370,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         patch demote_to_user_internal_user_path(regular_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -372,7 +402,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         patch demote_to_officer_internal_user_path(another_super_admin)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
       end
     end
   end
@@ -431,7 +461,7 @@ RSpec.describe 'Internal::Users', type: :request do
 
       it 'denies access' do
         get attendance_history_internal_user_path(other_user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(internal_events_path)
         expect(flash[:alert]).to include('not authorized')
       end
     end

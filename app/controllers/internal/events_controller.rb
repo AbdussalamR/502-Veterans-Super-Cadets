@@ -15,12 +15,11 @@ module Internal
     def index
       @upcoming_events = Event.upcoming.order(date: :asc)
       @past_events     = Event.past.order(date: :desc)
-      @events = @upcoming_events # For feeds, use upcoming events
 
       respond_to do |format|
-        format.html  # Your existing HTML view
-        format.ics { render_calendar }
-        format.rss   # Renders index.rss.builder
+        format.html
+        format.ics  { @events = Event.order(date: :asc); render_calendar }
+        format.rss  { @events = @upcoming_events }
       end
     end
 
@@ -56,6 +55,12 @@ module Internal
     def update
       respond_to do |format|
         if @event.update(event_params)
+          Notifications::Dispatcher.publish(
+            event_key: 'event_updated',
+            recipients: Notifications::Audience.approved_members,
+            actor: current_user,
+            context: Notifications::Payloads.event(@event)
+          )
           log_update_success(@event, { event_title: @event.title, event_date: @event.date })
           format.html { redirect_to internal_event_path(@event), notice: 'Event was successfully updated.', status: :see_other }
           format.json { render :show, status: :ok, location: internal_event_url(@event) }
@@ -69,8 +74,15 @@ module Internal
 
     # DELETE /events/1 or /events/1.json
     def destroy
+      notification_context = Notifications::Payloads.event(@event)
       event_title = @event.title
       @event.destroy
+      Notifications::Dispatcher.publish(
+        event_key: 'event_cancelled',
+        recipients: Notifications::Audience.approved_members,
+        actor: current_user,
+        context: notification_context
+      )
       log_destroy_success(@event, { event_title: event_title })
 
       respond_to do |format|
@@ -94,6 +106,11 @@ module Internal
       calendar = Icalendar::Calendar.new
       calendar.prodid = '-//Cadets Events//EN'
       calendar.x_wr_calname = 'Cadets Events Calendar'
+      calendar.x_wr_caldesc = 'Texas A&M Singing Cadets Events'
+      calendar.x_wr_timezone = 'America/Chicago'
+      # Tell calendar apps to re-fetch every hour so new events appear promptly
+      calendar.append_custom_property('X-PUBLISHED-TTL', 'PT1H')
+      calendar.append_custom_property('REFRESH-INTERVAL;VALUE=DURATION', 'PT1H')
 
       @events.each do |event|
         calendar.add_event(event.to_ical_event)
@@ -105,6 +122,12 @@ module Internal
     def save_single_event(_event)
       respond_to do |format|
         if @event.save
+          Notifications::Dispatcher.publish(
+            event_key: 'event_created',
+            recipients: Notifications::Audience.approved_members,
+            actor: current_user,
+            context: Notifications::Payloads.event(@event)
+          )
           log_create_success(@event, { event_title: @event.title, event_date: @event.date })
           format.html { redirect_to internal_event_path(@event), notice: 'Event was successfully created.' }
           format.json { render :show, status: :created, location: internal_event_url(@event) }
@@ -143,7 +166,16 @@ module Internal
         current_end += 1.week
       end
 
-      events.each(&:save!)
+      ActiveRecord::Base.transaction do
+        events.each(&:save!)
+      end
+
+      Notifications::Dispatcher.publish(
+        event_key: 'event_series_created',
+        recipients: Notifications::Audience.approved_members,
+        actor: current_user,
+        context: Notifications::Payloads.event_series(template_event, count: events.size, last_event: events.last)
+      )
 
       log_create_success(template_event,
                          { event_title: "#{template_event.title} (and #{events.size - 1} more)",

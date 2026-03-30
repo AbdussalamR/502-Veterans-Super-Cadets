@@ -1,0 +1,72 @@
+<!-- Admin Preview Banner -->
+<div class="alert alert-warning text-center mb-0 rounded-0 border-0 border-bottom" style="position:sticky;top:0;z-index:9999;">
+  <i class="bi bi-eye-fill me-2"></i>
+  <strong>PREVIEW MODE</strong> — These changes have NOT been published to the live site yet.
+  <a href="<%= admin_website_path(tab: 'auditions') %>" class="btn btn-sm btn-warning ms-3">Back to Dashboard</a>
+  <%= button_to 'Publish Now', admin_publish_website_auditions_path,
+        method: :post, class: 'btn btn-sm btn-success ms-2',
+        data: { turbo_confirm: 'Publish auditions content to the live site?' } %>
+</div>
+
+<div class="container my-5">
+  <h1 style="color:#500000;" class="border-bottom pb-2 mb-4">Audition Information</h1>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <p class="lead">Join the Voice of Aggieland. Auditions for the Singing Cadets are held at the beginning of the Fall and Spring semesters.</p>
+
+      <% signup_link = @preview_auditions_contents['signup_link'] %>
+      <% if signup_link.present? %>
+        <div class="mt-3 mb-4">
+          <a href="<%= signup_link %>" target="_blank" rel="noopener" class="btn btn-lg" style="background-color:#500000;color:white;">
+            <i class="bi bi-pencil-square me-2"></i>Sign Up for Auditions
+          </a>
+        </div>
+      <% end %>
+
+      <ul class="nav nav-tabs mt-4" id="previewAuditionTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#prev-upcoming" type="button">Current & Upcoming</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#prev-past" type="button">Past Auditions</button>
+        </li>
+      </ul>
+
+      <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="prev-upcoming">
+          <% if @current_auditions.any? || @future_auditions.any? %>
+            <% (@current_auditions + @future_auditions).each do |session| %>
+              <h3 class="mt-4 mb-3"><%= session.label %></h3>
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                  <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><strong>Start:</strong> <%= session.start_datetime.strftime("%B %-d, %Y at %-I:%M %p") %></li>
+                    <li><strong>End:</strong> <%= session.end_datetime.strftime("%B %-d, %Y at %-I:%M %p") %></li>
+                    <li class="mt-2"><strong>Location:</strong> <%= session.location %></li>
+                  </ul>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-muted mt-4">Audition dates have not been announced yet. Check back soon!</p>
+          <% end %>
+        </div>
+        <div class="tab-pane fade" id="prev-past">
+          <% if @past_auditions.any? %>
+            <% @past_auditions.each do |session| %>
+              <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body"><strong><%= session.label %></strong> — <%= session.location %></div>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-muted mt-4">No past auditions on record.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <h3 class="mt-5 mb-3">What to Expect</h3>
+      <p><%= @preview_auditions_contents['what_to_expect'] || "The audition process is straightforward. No prepared piece is necessary." %></p>
+    </div>
+  </div>
+</div>

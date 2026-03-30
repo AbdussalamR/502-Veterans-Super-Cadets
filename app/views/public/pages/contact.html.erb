@@ -1,41 +1,60 @@
 <div class="container my-5">
   <h1 class="text-maroon border-bottom pb-2 mb-4">Contact Us</h1>
-  
+
   <div class="row mt-4">
     <div class="col-md-6 mb-4 mb-md-0">
       <h3 class="mb-3">Get in Touch</h3>
       <p class="text-muted mb-4">Have questions? Send us an email or reach out to us using the information below.</p>
-      
+
       <div class="d-flex mb-3">
         <div class="flex-shrink-0 text-maroon">
-          <i class="bi bi-geo-alt-fill fs-4"></i>
+          <i class="bi bi-geo-alt-fill fs-4" aria-hidden="true"></i>
         </div>
         <div class="ms-3">
           <h5 class="mb-1 fw-bold">Address</h5>
-          <p class="text-muted">
-            1224 TAMU<br>
-            College Station, TX 77843
+          <p class="text-muted" style="white-space: pre-line;">
+            <%= PageContent.get('contact', 'address') || "1224 TAMU\nCollege Station, TX 77843" %>
           </p>
         </div>
       </div>
-      
+
       <div class="d-flex mb-3">
         <div class="flex-shrink-0 text-maroon">
-          <i class="bi bi-envelope-fill fs-4"></i>
+          <i class="bi bi-envelope-fill fs-4" aria-hidden="true"></i>
         </div>
         <div class="ms-3">
           <h5 class="mb-1 fw-bold">Email</h5>
-          <p class="text-muted">choir@tamu.edu</p>
+          <p class="text-muted"><%= PageContent.get('contact', 'email') || 'choir@tamu.edu' %></p>
         </div>
       </div>
 
       <div class="d-flex">
         <div class="flex-shrink-0 text-maroon">
-          <i class="bi bi-telephone-fill fs-4"></i>
+          <i class="bi bi-telephone-fill fs-4" aria-hidden="true"></i>
         </div>
         <div class="ms-3">
           <h5 class="mb-1 fw-bold">Phone</h5>
-          <p class="text-muted">(979) 845-5974</p>
+          <p class="text-muted"><%= PageContent.get('contact', 'phone') || '(979) 845-5974' %></p>
+        </div>
+      </div>
+
+      <div class="d-flex mt-3">
+        <div class="flex-shrink-0 text-maroon">
+          <i class="bi bi-share-fill fs-4" aria-hidden="true"></i>
+        </div>
+        <div class="ms-3">
+          <h5 class="mb-1 fw-bold">Follow Us</h5>
+          <div class="d-flex gap-3 fs-4">
+            <a href="https://www.instagram.com/singingcadets" target="_blank" rel="noopener" class="text-maroon" aria-label="Singing Cadets on Instagram">
+              <i class="bi bi-instagram" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.youtube.com/@SingingCadets" target="_blank" rel="noopener" class="text-maroon" aria-label="Singing Cadets on YouTube">
+              <i class="bi bi-youtube" aria-hidden="true"></i>
+            </a>
+            <a href="https://twitter.com/SingingCadets" target="_blank" rel="noopener" class="text-maroon" aria-label="Singing Cadets on X (Twitter)">
+              <i class="bi bi-twitter" aria-hidden="true"></i>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -43,21 +62,23 @@
     <div class="col-md-6">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <form>
+          <%= form_with url: public_submit_contact_path, method: :post, local: true do |f| %>
             <div class="mb-3">
-              <label class="form-label">Name</label>
-              <input type="text" class="form-control">
+              <label class="form-label">Name <span class="text-danger">*</span></label>
+              <%= f.text_field :name, class: 'form-control', required: true, placeholder: 'Your name' %>
             </div>
             <div class="mb-3">
-              <label class="form-label">Email Address</label>
-              <input type="email" class="form-control">
+              <label class="form-label">Email Address <span class="text-danger">*</span></label>
+              <%= f.email_field :email, class: 'form-control', required: true, placeholder: 'your@email.com' %>
             </div>
             <div class="mb-3">
-              <label class="form-label">Message</label>
-              <textarea class="form-control" rows="5"></textarea>
+              <label class="form-label">Message <span class="text-danger">*</span></label>
+              <%= f.text_area :message, class: 'form-control', rows: 5, required: true, placeholder: 'Your message...' %>
             </div>
-            <button type="button" class="btn btn-maroon w-100">Send Message</button>
-          </form>
+            <button type="submit" class="btn w-100 fw-semibold" style="background-color:#500000;color:#fff;border-color:#500000;">
+              <i class="bi bi-send me-1"></i>Send Message
+            </button>
+          <% end %>
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ class Event < ApplicationRecord
   has_many :events_to_excuses,
            class_name: 'EventsToExcuse',
            dependent: :destroy
-  has_many :excuses, through: :events_to_excuses, dependent: :destroy
+  has_many :excuses, through: :events_to_excuses
 
   # Validations
   validates :title, presence: true
@@ -22,12 +22,18 @@ class Event < ApplicationRecord
   # Virtual attributes for repeating events (not saved to the database)
   attr_accessor :repeat_weekly
   
-  def repeat_until
-    @repeat_until
-  end
+  attr_reader :repeat_until
 
   def repeat_until=(value)
-    @repeat_until = value.is_a?(String) ? (Date.parse(value) rescue nil) : value
+    @repeat_until = if value.is_a?(String)
+                      begin
+                        Date.parse(value)
+                      rescue ArgumentError
+                        nil
+                      end
+                    else
+                      value
+                    end
   end
 
   # Callbacks
@@ -170,13 +176,15 @@ class Event < ApplicationRecord
     self.checkin_passcode = rand(1000..9999).to_s
   end
 
-  before_destroy :destroy_related_excuses
+  after_destroy :destroy_orphaned_single_event_excuses
 
-  def destroy_related_excuses
-    # Only destroy excuses that are exclusively linked to this event
-    excuses.each do |excuse|
-      excuse.destroy if excuse.events.count == 1 # only linked to this event
-    end
+  def destroy_orphaned_single_event_excuses
+    # After this event (and its join records) are deleted, destroy any non-recurring
+    # excuses that are now completely unlinked from all events.
+    Excuse.where(recurring: false)
+          .left_joins(:events_to_excuses)
+          .where(events_to_excuses: { id: nil })
+          .destroy_all
   end
 
   def link_to_matching_recurring_excuses
@@ -184,6 +192,7 @@ class Event < ApplicationRecord
           .where('start_date <= ? AND end_date >= ?', date.to_date, date.to_date)
           .find_each do |excuse|
       next unless excuse.recurring_days_array.include?(date.wday)
+      next unless matches_recurring_time_window?(excuse)
       next if excuse.events.exists?(id: id)
 
       excuse.events << self
@@ -196,6 +205,16 @@ class Event < ApplicationRecord
         a.save
       end
     end
+  end
+
+  def matches_recurring_time_window?(excuse)
+    return true if excuse.recurring_start_time.blank? || excuse.recurring_end_time.blank?
+
+    start_mins = excuse.recurring_start_time.hour * 60 + excuse.recurring_start_time.min
+    end_mins = excuse.recurring_end_time.hour * 60 + excuse.recurring_end_time.min
+    event_mins = date.hour * 60 + date.min
+
+    event_mins >= start_mins && event_mins <= end_mins
   end
 
   def rss_description

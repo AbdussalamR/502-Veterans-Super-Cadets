@@ -1,0 +1,129 @@
+<% content_for :title, "Performance Request — #{@performance_request.name}" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-1">
+        <li class="breadcrumb-item"><%= link_to "Performance Requests", internal_performance_requests_path %></li>
+        <li class="breadcrumb-item active">Request from <%= @performance_request.name %></li>
+      </ol>
+    </nav>
+    <h1 class="display-5 fw-bold text-dark mb-0">
+      <i class="bi bi-mic-fill me-2 text-danger"></i>Performance Request Details
+    </h1>
+  </div>
+  <div>
+    <%= link_to internal_performance_requests_path, class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-1"></i>All Requests
+    <% end %>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Details Card -->
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 fw-bold">Submission Details</h5>
+        <% if @performance_request.status == 'pending' %>
+          <span class="badge bg-warning text-dark fs-6">Pending Review</span>
+        <% else %>
+          <span class="badge bg-success fs-6">Reviewed</span>
+        <% end %>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Requester Name</div>
+            <div class="fs-5 fw-semibold"><%= @performance_request.name %></div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Organization</div>
+            <div class="fs-5"><%= @performance_request.organization %></div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Event Date</div>
+            <div class="fs-5">
+              <%= @performance_request.event_date.strftime("%B %d, %Y") %>
+              <% if @performance_request.event_date < Date.today %>
+                <span class="badge bg-secondary ms-1">Past</span>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Location</div>
+            <div class="fs-5"><%= @performance_request.location %></div>
+          </div>
+
+          <div class="col-12">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Contact Email</div>
+            <div class="fs-5">
+              <a href="mailto:<%= @performance_request.contact_email %>" class="text-decoration-none">
+                <i class="bi bi-envelope me-1"></i><%= @performance_request.contact_email %>
+              </a>
+            </div>
+          </div>
+
+          <% if @performance_request.notes.present? %>
+            <div class="col-12">
+              <div class="text-muted small text-uppercase fw-bold mb-1">Additional Notes</div>
+              <div class="border rounded p-3 bg-light"><%= @performance_request.notes %></div>
+            </div>
+          <% end %>
+
+          <div class="col-12">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Submitted</div>
+            <div><%= @performance_request.created_at.strftime("%B %d, %Y at %I:%M %p") %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Card -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h5 class="mb-0 fw-bold">Director Actions</h5>
+      </div>
+      <div class="card-body p-4">
+        <% if @performance_request.status == 'pending' %>
+          <p class="text-muted small mb-3">Mark this request as reviewed once you have contacted the requester.</p>
+
+          <%= button_to internal_performance_request_path(@performance_request, status: 'reviewed'),
+                method: :patch,
+                class: "btn btn-success w-100 mb-3",
+                id: "approve-performance-request-btn" do %>
+            <i class="bi bi-check-circle me-2"></i>Mark as Reviewed / Approved
+          <% end %>
+
+          <a href="mailto:<%= @performance_request.contact_email %>?subject=Re: Performance Request - Singing Cadets&body=Dear <%= @performance_request.name %>,%0A%0AThank you for your interest in having the Singing Cadets perform at your event."
+             class="btn btn-outline-primary w-100"
+             id="reply-performance-request-btn">
+            <i class="bi bi-envelope me-2"></i>Reply via Email
+          </a>
+        <% else %>
+          <div class="alert alert-success mb-3">
+            <i class="bi bi-check-circle me-2"></i>This request has been reviewed.
+          </div>
+          <p class="text-muted small mb-3">Need to re-open this request?</p>
+
+          <%= button_to internal_performance_request_path(@performance_request, status: 'pending'),
+                method: :patch,
+                class: "btn btn-outline-warning w-100 mb-3",
+                id: "reset-performance-request-btn" do %>
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Pending
+          <% end %>
+
+          <a href="mailto:<%= @performance_request.contact_email %>"
+             class="btn btn-outline-secondary w-100">
+            <i class="bi bi-envelope me-2"></i>Contact Requester
+          </a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

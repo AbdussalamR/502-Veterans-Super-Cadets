@@ -12,27 +12,29 @@
 # User.where(email: "email to delete").destroy_all
 
 # REPLACE email with your actual Gmail address
-admin = User.find_or_create_by!(email: "deniza.telci@tamu.edu") do |user|
+User.find_or_create_by!(email: "zaahirsharma10@gmail.com") do |user|
   user.full_name = "Your Name" # You can put your real name here
   user.uid = "12345" # This is a placeholder; Google will update it when you log in
   user.provider = "google_oauth2"
-  user.role = "super_admin"
+  user.role = "user"
   user.approval_status = "approved"
 end
 
 # --- Test data for recurring excuses ---
 
-# Officer user
-officer = User.find_or_create_by!(email: "officer@tamu.edu") do |user|
-  user.full_name = "Officer Jones"
-  user.uid = "officer1"
+
+
+# Regular member
+member = User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
+  user.full_name = "Cadet Smith"
+  user.uid = "officer2"
   user.provider = "google_oauth2"
   user.role = "officer"
   user.approval_status = "approved"
 end
 
 # Regular member
-member = User.find_or_create_by!(email: "member@tamu.edu") do |user|
+member = User.find_or_create_by!(email: "zscollege01@tamu.edu") do |user|
   user.full_name = "Cadet Smith"
   user.uid = "member1"
   user.provider = "google_oauth2"
@@ -67,7 +69,7 @@ end
   ) do |e|
     e.end_time = tue_date.to_datetime.change(hour: 13, min: 0)
     e.location = "MSC"
-    e.description = "Section leader meeting"
+    e.description = "Officer meeting"
   end
 end
 
@@ -107,6 +109,8 @@ recurring_excuse = Excuse.find_or_create_by!(
   e.start_date = Date.new(2026, 3, 2)
   e.end_date = Date.new(2026, 3, 27)
   e.recurring_days = "1" # Monday
+  e.recurring_start_time = Time.zone.parse('08:00')
+  e.recurring_end_time = Time.zone.parse('23:59')
   e.frequency = "weekly"
 end
 if recurring_excuse.events.empty?
@@ -127,6 +131,8 @@ approved_recurring = Excuse.find_or_create_by!(
   e.start_date = Date.new(2026, 3, 2)
   e.end_date = Date.new(2026, 3, 13)
   e.recurring_days = "3,5" # Wed, Fri
+  e.recurring_start_time = Time.zone.parse('08:00')
+  e.recurring_end_time = Time.zone.parse('23:59')
   e.frequency = "weekly"
 end
 if approved_recurring.events.empty?

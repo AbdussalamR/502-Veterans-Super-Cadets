@@ -38,6 +38,58 @@ RSpec.describe User, type: :model do
       expect(user).not_to be_valid
       expect(user.errors[:approval_status]).to include('is not included in the list')
     end
+
+    it 'is invalid with a malformed email address' do
+      user = build(:user, email: 'not-an-email')
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include('is not a valid email address')
+    end
+
+    it 'is invalid when email is missing the domain' do
+      user = build(:user, email: 'user@')
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include('is not a valid email address')
+    end
+
+    it 'is valid with a well-formed email address' do
+      user = build(:user, email: 'valid.user@example.com')
+      expect(user).to be_valid
+    end
+  end
+
+  describe '#email_deliverable?' do
+    it 'returns true when email is present and notifications are enabled' do
+      user = build(:user, email: 'test@example.com', email_notifications_enabled: true)
+      expect(user.email_deliverable?).to be true
+    end
+
+    it 'returns false when email notifications are disabled' do
+      user = build(:user, email: 'test@example.com', email_notifications_enabled: false)
+      expect(user.email_deliverable?).to be false
+    end
+
+    it 'returns false when email is blank' do
+      user = build(:user, email_notifications_enabled: true)
+      user.email = nil
+      # bypass validation to simulate edge case
+      allow(user).to receive(:valid?).and_return(true)
+      expect(user.email_deliverable?).to be false
+    end
+  end
+
+  describe 'admin_alerts association' do
+    let(:director) { create(:user, :super_admin) }
+
+    it 'has many admin_alerts' do
+      AdminAlert.create!(user: director, message: 'Alert 1')
+      AdminAlert.create!(user: director, message: 'Alert 2')
+      expect(director.admin_alerts.count).to eq(2)
+    end
+
+    it 'destroys admin_alerts when user is destroyed' do
+      AdminAlert.create!(user: director, message: 'Alert')
+      expect { director.destroy }.to change(AdminAlert, :count).by(-1)
+    end
   end
 
   describe 'role methods' do
@@ -103,7 +155,7 @@ RSpec.describe User, type: :model do
   describe '.from_google' do
     let(:google_params) do
       {
-        email: 'test@example.com',
+        email: 'test@tamu.edu',
         full_name: 'Test User',
         uid: '12345',
         avatar_url: 'http://example.com/avatar.png'
@@ -112,21 +164,23 @@ RSpec.describe User, type: :model do
 
     context 'when user does not exist' do
       it 'creates a new user with regular role' do
+        user = nil
+
         expect {
-          User.from_google(**google_params)
+          user = User.from_google(**google_params)
         }.to change(User, :count).by(1)
 
-        user = User.last
-        expect(user.email).to eq('test@example.com')
+        expect(user.email).to eq('test@tamu.edu')
         expect(user.full_name).to eq('Test User')
         expect(user.uid).to eq('12345')
         expect(user.avatar_url).to eq('http://example.com/avatar.png')
         expect(user.role).to eq('user')
         expect(user.approval_status).to eq('pending')
+        expect(user.just_registered_via_google).to be true
       end
 
       it 'creates a super admin when email is in super admin list' do
-        allow(ENV).to receive(:[]).with('SUPER_ADMIN_EMAILS').and_return('test@example.com')
+        allow(ENV).to receive(:[]).with('SUPER_ADMIN_EMAILS').and_return('test@tamu.edu')
         user = User.from_google(**google_params)
         expect(user.role).to eq('super_admin')
         expect(user.approval_status).to eq('approved')
@@ -134,7 +188,7 @@ RSpec.describe User, type: :model do
     end
 
     context 'when user already exists' do
-      let!(:existing_user) { create(:user, email: 'test@example.com', role: 'officer') }
+      let!(:existing_user) { create(:user, email: 'test@tamu.edu', role: 'officer') }
 
       it 'updates existing user without changing role' do
         expect {

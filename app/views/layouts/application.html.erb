@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Singing Cadets</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -97,18 +97,21 @@
 </head>
 
 <body>
-  <div class="container mt-4">
-    <% if flash.any? %>
-      <% flash.each do |key, value| %>
-        <div class="alert alert-<%= key == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
-          <%= value.html_safe %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+  <a class="visually-hidden-focusable" href="#main-content">Skip to main content</a>
+  <main id="main-content" class="container mt-4">
+    <div aria-live="polite" aria-atomic="true">
+      <% if flash.any? %>
+        <% flash.each do |key, value| %>
+          <div class="alert alert-<%= key == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
+            <%= value.html_safe %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
       <% end %>
-    <% end %>
+    </div>
 
     <%= yield %>
-  </div>
+  </main>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
