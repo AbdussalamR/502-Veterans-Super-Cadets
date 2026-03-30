@@ -726,7 +726,7 @@ For bugs, feature requests, or technical support:
 ### Project Maintenance
 - **Current Maintainers:** Texas A&M Singing Cadets organization
 - **Phase 1 Developers:** CSCE 431 Software Engineering Team (Fall 2025) - Jessica Jakubik, Owen Brown, Taylor Smith, Lucas Bryant, Anjali Varghese
-- **Phase 2 Developers:** CSCE 431 Software Engineering Team (Spring 2026) - Daniel Trinh, Junseok Kim, Abdussalam Raheem, Zaahir Sharma, Deniz Telci
+- **Phase 2 Developers:** CSCE 431 Software Engineering Team (Spring 2026) - Junseok Kim, Abdussalam Raheem, Zaahir Sharma, Deniz Telci
 - **Contact:** Through Texas A&M Singing Cadets official channels
 
 ### Organization
