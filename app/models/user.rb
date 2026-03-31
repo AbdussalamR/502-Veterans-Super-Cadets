@@ -26,9 +26,9 @@ class User < ApplicationRecord
   begin
     has_many :attendances, dependent: :destroy
     has_many :attended_events, through: :attendances, source: :event
-    has_many :excuses, foreign_key: :member_id, dependent: :destroy
-    has_many :received_demerits, class_name: 'Demerit', foreign_key: 'member_id', dependent: :destroy
-    has_many :given_demerits, class_name: 'Demerit', foreign_key: 'given_by_id', dependent: :nullify
+    has_many :excuses, foreign_key: :member_id, dependent: :destroy, inverse_of: :member
+    has_many :received_demerits, class_name: 'Demerit', foreign_key: 'member_id', dependent: :destroy, inverse_of: :member
+    has_many :given_demerits, class_name: 'Demerit', foreign_key: 'given_by_id', dependent: :nullify, inverse_of: :given_by
     has_many :admin_alerts, dependent: :destroy
 
     # Scopes

@@ -14,7 +14,7 @@ module Admin
 
     # PATCH /admin/website/home
     def update_home
-      permitted = params.require(:home).permit(*HOME_KEYS)
+      permitted = params.expect(home: [*HOME_KEYS])
       permitted.each { |key, val| PageContent.set('home', key, val, draft: true) }
       redirect_to admin_website_path(tab: 'home'),
                   notice: 'Home page draft saved. Preview your changes, then publish when ready.'
@@ -34,7 +34,7 @@ module Admin
 
     # PATCH /admin/website/auditions
     def update_auditions
-      permitted = params.require(:auditions).permit(*AUDITIONS_KEYS)
+      permitted = params.expect(auditions: [*AUDITIONS_KEYS])
       permitted.each { |key, val| PageContent.set('auditions', key, val, draft: true) }
       redirect_to admin_website_path(tab: 'auditions'),
                   notice: 'Auditions page draft saved. Publish when ready.'
@@ -54,7 +54,7 @@ module Admin
 
     # PATCH /admin/website/contact
     def update_contact
-      permitted = params.require(:contact).permit(*CONTACT_KEYS)
+      permitted = params.expect(contact: [*CONTACT_KEYS])
       permitted.each { |key, val| PageContent.set('contact', key, val, draft: true) }
       redirect_to admin_website_path(tab: 'contact'),
                   notice: 'Contact page draft saved. Preview your changes, then publish when ready.'
@@ -95,7 +95,7 @@ module Admin
         now = Time.current
         @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', now, now).chronological
         @future_auditions  = AuditionSession.where('start_datetime > ?', now).chronological
-        @past_auditions    = AuditionSession.where('end_datetime < ?', now).chronological
+        @past_auditions    = AuditionSession.where(end_datetime: ...now).chronological
       else
         redirect_to admin_website_path, alert: 'Invalid preview page.'
         return
@@ -123,7 +123,7 @@ module Admin
       @audition_sessions    = AuditionSession.chronological
       @current_auditions    = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', now, now).chronological
       @future_auditions     = AuditionSession.where('start_datetime > ?', now).chronological
-      @past_auditions       = AuditionSession.where('end_datetime < ?', now).chronological
+      @past_auditions       = AuditionSession.where(end_datetime: ...now).chronological
       @new_audition_session = AuditionSession.new
 
       @auditions_published = contents_hash('auditions', draft: false)
@@ -148,7 +148,7 @@ module Admin
 
     def contents_hash(page, draft:)
       PageContent.where(page_name: page, is_draft: draft)
-                 .each_with_object({}) { |r, h| h[r.content_key] = r.content_value }
+        .each_with_object({}) { |r, h| h[r.content_key] = r.content_value }
     end
 
     # Merges draft over published so drafts take priority

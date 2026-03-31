@@ -19,8 +19,8 @@ class PerformanceRequest < ApplicationRecord
   private
 
   def event_date_must_be_in_future
-    return unless event_date.present?
+    return if event_date.blank?
 
-    errors.add(:event_date, "must be a future date") if event_date < Date.today
+    errors.add(:event_date, "must be a future date") if event_date < Time.zone.today
   end
 end

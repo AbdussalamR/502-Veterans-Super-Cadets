@@ -15,6 +15,12 @@ AllCops:
     - 'config/environment.rb'
     - 'config/application.rb'
     - 'node_modules/**/*'
+    - 'db/migrate/20260327140832_create_solid_queue_tables.solid_queue.rb'
+
+Layout/EndOfLine:
+  Exclude:
+    - 'app/views/internal/events/**/*'
+    - 'lib/tasks/semester_transition.rake'
 
 # INDENTATION: Use 2-space indentation
 Layout/IndentationWidth:

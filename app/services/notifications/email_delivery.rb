@@ -2,11 +2,11 @@
 
 module Notifications
   class EmailDelivery
-    def self.deliver(recipient:, message:)
+    def self.deliver(recipient:, message:) # rubocop:disable Naming/PredicateMethod
       return false unless Notifications::Config.sendgrid_configured?
       return false if recipient.email.blank?
 
-      mail = NotificationMailer.with(recipient:, message:).generic_notification.message
+      mail = NotificationMailer.with(recipient: recipient, message: message).generic_notification.message
       sendgrid_mail = SendGrid::Mail.new
       sendgrid_mail.from = SendGrid::Email.new(
         email: Notifications::Config.from_email,

@@ -77,17 +77,28 @@ RSpec.describe 'Internal::Excuses', type: :request do
       end
     end
 
-    # --- NEW: Story A3 AC 3 (Rainy Day - 403 Forbidden) ---
+    # -------------------------------------------------------------------------
+    # INTEGRITY TEST — Story A3 AC 3 (Rainy Day: Cross-Section URL Manipulation)
+    #
+    # Threat: An Officer knows (or guesses) the numeric ID of an excuse that
+    # belongs to a member in a different section, and types the direct URL into
+    # the browser to bypass the index-level filtering.
+    #
+    # Guard: `ensure_section_access` before_action compares the Officer's
+    # section_id against the excuse owner's section_id on every show/edit/update
+    # request. A mismatch returns 403 immediately — no data is rendered.
+    # -------------------------------------------------------------------------
     context 'as an Officer viewing a different section' do
       let(:member_bass) { create(:user, section: section_bass) }
       let(:excuse_bass) { create(:excuse, member: member_bass) }
-      
+
       before { sign_in officer_tenor }
 
       it 'returns 403 Forbidden when accessing an excuse ID from another section via URL' do
+        # Tenor 1 Officer directly requests a Bass 2 member's excuse — IDOR attempt
         get internal_excuse_path(excuse_bass)
-        expect(response.status).to eq(403)
-        expect(response.body).to include("403 Forbidden")
+        expect(response.status).to eq(403) # access blocked
+        expect(response.body).to include("403 Forbidden") # no data leaked
       end
     end
   end
@@ -269,22 +280,46 @@ RSpec.describe 'Internal::Excuses', type: :request do
       end
     end
 
+    # -------------------------------------------------------------------------
+    # INTEGRITY TEST — Privilege Escalation via Status Parameter (Rainy Day)
+    #
+    # Threat: A regular member crafts a PATCH request with `status: 'approved'`
+    # in the body, attempting to self-approve their own excuse without going
+    # through the Officer → Director review pipeline.
+    #
+    # Guard: The first line of `update` checks whether `params[:status]` is
+    # present and the user is neither super_admin nor officer. If so, it returns
+    # 403 immediately — before `excuse_params` is ever called — so the status
+    # field is never written and the review workflow is never bypassed.
+    # -------------------------------------------------------------------------
     context 'as regular user' do
       before { sign_in user }
 
       it 'denies access (403)' do
+        # Member sends status: 'approved' directly — privilege escalation attempt
         patch internal_excuse_path(excuse), params: { status: 'approved' }
-        expect(response.status).to eq(403)
+        expect(response.status).to eq(403) # early-return guard fires
       end
     end
 
+    # -------------------------------------------------------------------------
+    # INTEGRITY TEST — Cross-Section Officer PATCH (Rainy Day)
+    #
+    # Threat: A Bass 2 Officer knows the ID of a Tenor 1 member's excuse and
+    # tries to approve it by sending a PATCH request directly to that URL.
+    #
+    # Guard: `ensure_section_access` runs before `update`. The Officer's
+    # section_id does not match the excuse owner's section_id, so 403 is
+    # returned before any status change is applied to the database.
+    # -------------------------------------------------------------------------
     context 'as officer from a different section (AC 3)' do
       let(:officer_bass) { create(:user, :officer, section: section_bass) }
       before { sign_in officer_bass }
 
       it 'returns 403 Forbidden' do
+        # Bass 2 Officer attempts to approve a Tenor 1 member's excuse
         patch internal_excuse_path(excuse), params: { status: 'approved' }
-        expect(response.status).to eq(403)
+        expect(response.status).to eq(403) # section mismatch blocked
       end
     end
 

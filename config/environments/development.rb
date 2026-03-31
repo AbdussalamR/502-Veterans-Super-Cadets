@@ -82,7 +82,7 @@ Rails.application.configure do
   # Print a friendly clickable link when the server starts
   config.after_initialize do
     if defined?(Rails::Server)
-      puts "\n" + "=================================================="
+      puts "\n=================================================="
       puts "  🚀 Singing Cadets app is ready!"
       puts "  🔗 Access locally: http://localhost:3000"
       puts "==================================================\n\n"

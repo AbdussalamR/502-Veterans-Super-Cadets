@@ -182,8 +182,7 @@ class Event < ApplicationRecord
     # After this event (and its join records) are deleted, destroy any non-recurring
     # excuses that are now completely unlinked from all events.
     Excuse.where(recurring: false)
-          .left_joins(:events_to_excuses)
-          .where(events_to_excuses: { id: nil })
+          .where.missing(:events_to_excuses)
           .destroy_all
   end
 
@@ -210,11 +209,11 @@ class Event < ApplicationRecord
   def matches_recurring_time_window?(excuse)
     return true if excuse.recurring_start_time.blank? || excuse.recurring_end_time.blank?
 
-    start_mins = excuse.recurring_start_time.hour * 60 + excuse.recurring_start_time.min
-    end_mins = excuse.recurring_end_time.hour * 60 + excuse.recurring_end_time.min
-    event_mins = date.hour * 60 + date.min
+    start_mins = (excuse.recurring_start_time.hour * 60) + excuse.recurring_start_time.min
+    end_mins = (excuse.recurring_end_time.hour * 60) + excuse.recurring_end_time.min
+    event_mins = (date.hour * 60) + date.min
 
-    event_mins >= start_mins && event_mins <= end_mins
+    event_mins.between?(start_mins, end_mins)
   end
 
   def rss_description

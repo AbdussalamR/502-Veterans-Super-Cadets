@@ -17,10 +17,10 @@ module Notifications
       return unless recipient
 
       actor = User.find_by(id: actor_id) if actor_id.present?
-      message = Notifications::MessageBuilder.build(event_key:, recipient:, actor:, context:)
+      message = Notifications::MessageBuilder.build(event_key: event_key, recipient: recipient, actor: actor, context: context)
       return unless message
 
-      Notifications::EmailDelivery.deliver(recipient:, message:) if recipient.email_deliverable?
+      Notifications::EmailDelivery.deliver(recipient: recipient, message: message) if recipient.email_deliverable?
     end
   end
 end

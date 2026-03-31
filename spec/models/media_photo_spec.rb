@@ -56,10 +56,10 @@ RSpec.describe MediaPhoto, type: :model do
     end
 
     it '.ordered sorts by position then id' do
-      p2 = create(:media_photo, position: 20)
-      p1 = create(:media_photo, position: 10)
+      photo_two = create(:media_photo, position: 20)
+      photo_one = create(:media_photo, position: 10)
       ids = MediaPhoto.ordered.map(&:id)
-      expect(ids.index(p1.id)).to be < ids.index(p2.id)
+      expect(ids.index(photo_one.id)).to be < ids.index(photo_two.id)
     end
   end
 end

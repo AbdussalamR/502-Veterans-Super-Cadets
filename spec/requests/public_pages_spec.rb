@@ -34,8 +34,8 @@ RSpec.describe 'Public::Pages', type: :request do
     end
 
     it 'shows only published home photos' do
-      published_photo = create(:media_photo, :home, :published)
-      unpublished_photo = create(:media_photo, :home, published: false)
+      create(:media_photo, :home, :published)
+      create(:media_photo, :home, published: false)
       get public_home_path
       # Published photo's image url will be referenced; unpublished will not
       # We verify by checking the page loads without errors - deeper image URL
@@ -82,12 +82,12 @@ RSpec.describe 'Public::Pages', type: :request do
     let(:valid_params) do
       {
         performance_request: {
-          name:          'Jane Smith',       # required – AC 0.2
-          organization:  'Texas A&M',        # required – AC 0.2
-          event_date:    6.weeks.from_now.to_date.to_s, # required, must be future – AC 0.2 & 0.4
-          location:      'Kyle Field',       # required – AC 0.2
+          name: 'Jane Smith', # required – AC 0.2
+          organization: 'Texas A&M', # required – AC 0.2
+          event_date: 6.weeks.from_now.to_date.to_s, # required, must be future – AC 0.2 & 0.4
+          location: 'Kyle Field', # required – AC 0.2
           contact_email: 'jane@example.com', # required, must be valid email – AC 0.2 & 0.4
-          notes:         'Please arrive early' # optional
+          notes: 'Please arrive early', # optional
         }
       }
     end
@@ -96,9 +96,9 @@ RSpec.describe 'Public::Pages', type: :request do
     context 'with valid params' do
       # AC 0.3 (part 1): a new row is inserted into the PerformanceRequests table
       it 'creates a new performance request' do
-        expect {
+        expect do
           post public_submit_performance_request_path, params: valid_params
-        }.to change(PerformanceRequest, :count).by(1)
+        end.to change(PerformanceRequest, :count).by(1)
       end
 
       # AC 0.3 (part 1 continued): the user is redirected with a confirmation message
@@ -111,9 +111,9 @@ RSpec.describe 'Public::Pages', type: :request do
       # AC 0.3 (part 2): an async notification job is enqueued so the Director is alerted
       it 'enqueues a notification to directors' do
         create(:user, :super_admin)
-        expect {
+        expect do
           post public_submit_performance_request_path, params: valid_params
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 
@@ -147,11 +147,11 @@ RSpec.describe 'Public::Pages', type: :request do
 
       # AC 0.4 (guard): no record is persisted when validation fails
       it 'does not create a request on validation failure' do
-        expect {
+        expect do
           post public_submit_performance_request_path, params: {
             performance_request: valid_params[:performance_request].merge(name: '')
           }
-        }.not_to change(PerformanceRequest, :count)
+        end.not_to change(PerformanceRequest, :count)
       end
     end
   end
@@ -163,7 +163,7 @@ RSpec.describe 'Public::Pages', type: :request do
     end
 
     it 'shows published photos' do
-      photo = create(:media_photo, :published, caption: 'Published Photo')
+      create(:media_photo, :published, caption: 'Published Photo')
       get public_media_gallery_path
       expect(response.body).to include('Published Photo')
     end
@@ -175,7 +175,7 @@ RSpec.describe 'Public::Pages', type: :request do
     end
 
     it 'shows published videos' do
-      video = create(:media_video, :published, title: 'Published Video')
+      create(:media_video, :published, title: 'Published Video')
       get public_media_gallery_path
       expect(response.body).to include('Published Video')
     end
@@ -208,7 +208,7 @@ RSpec.describe 'Public::Pages', type: :request do
   describe 'accessibility (all public pages accessible without login)' do
     it 'does not redirect any public page to sign-in' do
       [public_home_path, public_performance_request_path, public_media_gallery_path,
-       public_audition_information_path, public_contact_path].each do |path|
+       public_audition_information_path, public_contact_path,].each do |path|
         get path
         expect(response).not_to redirect_to('/users/sign_in'), "Expected #{path} to not redirect to sign-in"
       end
@@ -256,7 +256,7 @@ RSpec.describe 'Public::Pages', type: :request do
 
       before { get public_audition_information_path }
 
-      it 'shows the current audition'  do
+      it 'shows the current audition' do
         expect(response.body).to include('Current Audition')
       end
 

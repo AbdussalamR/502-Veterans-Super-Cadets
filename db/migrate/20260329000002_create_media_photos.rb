@@ -8,6 +8,6 @@ class CreateMediaPhotos < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :media_photos, [:page_name, :position]
+    add_index :media_photos, %i[page_name position]
   end
 end

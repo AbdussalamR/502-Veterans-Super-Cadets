@@ -26,25 +26,43 @@ RSpec.describe 'Admin::Website', type: :request do
       end
     end
 
-    # --- Director-only access (officers blocked) ---
+    # =========================================================================
+    # INTEGRITY TESTS — Director-Only CMS Access (A3, Rainy Day)
+    #
+    # Threat: An Officer knows the /admin/website URL (or discovers it by
+    # reading the source) and navigates to it directly to read contact messages,
+    # alter public-facing content, or approve performance booking requests.
+    #
+    # Root cause caught this sprint: the original guard used `require_admin`,
+    # which returns true for BOTH Officers and Directors. Switching to
+    # `ensure_super_admin` (which checks `super_admin?` exclusively) closed
+    # the gap. These four tests prove every write and read path is locked.
+    #
+    # Guard: `before_action :ensure_super_admin` in Admin::WebsiteController
+    # redirects any non-super_admin to internal_events_path with an alert.
+    # =========================================================================
     context 'when authenticated as an officer' do
       before { sign_in officer }
 
+      # INTEGRITY: Officer cannot read the CMS dashboard at all
       it 'redirects away (officers cannot access Website Management)' do
         get admin_website_path
         expect(response).to redirect_to(internal_events_path)
       end
 
+      # INTEGRITY: Officer cannot overwrite public-facing content via PATCH
       it 'blocks officer from editing home page content' do
         patch admin_update_website_home_path, params: { home: { hero_title: 'Hack' } }
         expect(response).to redirect_to(internal_events_path)
       end
 
+      # INTEGRITY: Officer cannot push unapproved content to the live site
       it 'blocks officer from publishing home page' do
         post admin_publish_website_home_path
         expect(response).to redirect_to(internal_events_path)
       end
 
+      # INTEGRITY: Officer cannot read or dismiss private contact messages
       it 'blocks officer from marking messages as read' do
         msg = create(:contact_message)
         post admin_mark_website_message_read_path(msg)
@@ -78,7 +96,7 @@ RSpec.describe 'Admin::Website', type: :request do
 
       # --- Book Us tab: performance requests ---
       it 'shows the Book Us tab with performance requests' do
-        pr = create(:performance_request, name: 'John Doe', organization: 'TAMU')
+        create(:performance_request, name: 'John Doe', organization: 'TAMU')
         get admin_website_path(tab: 'book_us')
         expect(response.body).to include('John Doe')
         expect(response.body).to include('TAMU')
@@ -271,9 +289,9 @@ RSpec.describe 'Admin::Website', type: :request do
 
     it 'marks a message as read' do
       msg = create(:contact_message)
-      expect {
+      expect do
         post admin_mark_website_message_read_path(msg)
-      }.to change { msg.reload.read_at }.from(nil)
+      end.to change { msg.reload.read_at }.from(nil)
     end
 
     it 'redirects to the messages tab' do

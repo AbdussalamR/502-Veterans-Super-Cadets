@@ -9,6 +9,6 @@ class CreatePageContents < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :page_contents, [:page_name, :content_key, :is_draft], unique: true
+    add_index :page_contents, %i[page_name content_key is_draft], unique: true
   end
 end

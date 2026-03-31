@@ -15,8 +15,8 @@ module Admin
 
       photo = MediaPhoto.new(
         page_name: page,
-        caption:   params[:caption],
-        position:  MediaPhoto.next_position(page),
+        caption: params[:caption],
+        position: MediaPhoto.next_position(page),
         published: false
       )
       photo.image = params[:image] if params[:image].present?

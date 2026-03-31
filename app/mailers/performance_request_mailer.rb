@@ -9,8 +9,8 @@ class PerformanceRequestMailer < ApplicationMailer
     @app_host   = ENV.fetch('APP_HOST', 'localhost:3000')
 
     mail(
-      to:      @recipient,
-      from:    "#{@from_name} <#{@from_email}>",
+      to: @recipient,
+      from: "#{@from_name} <#{@from_email}>",
       subject: "New Performance Request from #{@request.name} (#{@request.organization})"
     )
   end

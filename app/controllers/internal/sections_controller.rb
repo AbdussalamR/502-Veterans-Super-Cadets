@@ -26,7 +26,7 @@ module Internal
     private
 
     def section_params
-      params.require(:section).permit(:name)
+      params.expect(section: [:name])
     end
   end
 end

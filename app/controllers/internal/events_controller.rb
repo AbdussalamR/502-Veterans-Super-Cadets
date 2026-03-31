@@ -18,8 +18,11 @@ module Internal
 
       respond_to do |format|
         format.html
-        format.ics  { @events = Event.order(date: :asc); render_calendar }
-        format.rss  { @events = @upcoming_events }
+        format.ics do
+          @events = Event.order(date: :asc)
+          render_calendar
+        end
+        format.rss { @events = @upcoming_events }
       end
     end
 
@@ -192,8 +195,8 @@ module Internal
     end
 
     def event_params
-      params.require(:event).permit(:title, :date, :end_time, :location, :description, :allow_self_checkin,
-                                    :repeat_weekly, :repeat_until, :is_public, :ticket_url)
+      params.expect(event: %i[title date end_time location description allow_self_checkin
+                              repeat_weekly repeat_until is_public ticket_url])
     end
 
     def handle_routing_error

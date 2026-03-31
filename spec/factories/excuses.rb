@@ -8,9 +8,7 @@ FactoryBot.define do
 
     # Set manual_event_ids so the must_have_events validation passes (mirrors the form flow)
     after(:build) do |excuse|
-      if !excuse.recurring? && excuse.events.empty? && excuse.manual_event_ids.blank?
-        excuse.manual_event_ids = [create(:event).id]
-      end
+      excuse.manual_event_ids = [create(:event).id] if !excuse.recurring? && excuse.events.empty? && excuse.manual_event_ids.blank?
     end
 
     trait :approved do

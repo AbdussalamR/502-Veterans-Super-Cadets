@@ -32,6 +32,12 @@ module Internal
       @excuse = Excuse.new
     end
 
+    def edit
+      return if @excuse.editable_and_deletable_by_member?(current_user)
+
+      redirect_to internal_excuse_path(@excuse), alert: "This excuse can no longer be edited."
+    end
+
     def create
       @excuse = current_user.excuses.build(excuse_params)
       @excuse.manual_event_ids = params[:excuse][:event_ids]
@@ -48,7 +54,8 @@ module Internal
           context: Notifications::Payloads.excuse(@excuse)
         )
         log_create_success(@excuse, { recurring: @excuse.recurring? })
-        redirect_to internal_excuses_path, notice: @excuse.is_personal? ? "Personal excuse submitted successfully for Director review." : "Excuse submitted successfully for Officer review."
+        notice = @excuse.is_personal? ? "Personal excuse submitted successfully for Director review." : "Excuse submitted successfully for Officer review."
+        redirect_to internal_excuses_path, notice: notice
       else
         log_create_failure(@excuse)
         flash.now[:alert] = "Failed to submit excuse. Please correct the errors below."
@@ -56,16 +63,8 @@ module Internal
       end
     end
 
-    def edit
-      unless @excuse.editable_and_deletable_by_member?(current_user)
-        redirect_to internal_excuse_path(@excuse), alert: "This excuse can no longer be edited."
-      end
-    end
-
     def update
-      if params[:status].present? && !current_user.super_admin? && !current_user.officer?
-        return render plain: "403 Forbidden", status: :forbidden
-      end
+      return render plain: "403 Forbidden", status: :forbidden if params[:status].present? && !current_user.super_admin? && !current_user.officer?
 
       if current_user.super_admin? && params[:status].present?
         if @excuse.finalize_by_admin(current_user, params[:status])
@@ -166,8 +165,8 @@ module Internal
     end
 
     def excuse_params
-      params.require(:excuse).permit(:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days,
-                                     :recurring_start_time, :recurring_end_time, :is_personal, { event_ids: [] })
+      params.expect(excuse: [:reason, :proof_link, :recurring, :start_date, :end_date, :recurring_days,
+                             :recurring_start_time, :recurring_end_time, :is_personal, { event_ids: [] },])
     end
   end
 end

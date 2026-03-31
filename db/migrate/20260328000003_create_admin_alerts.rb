@@ -10,6 +10,6 @@ class CreateAdminAlerts < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :admin_alerts, [:user_id, :read_at]
+    add_index :admin_alerts, %i[user_id read_at]
   end
 end

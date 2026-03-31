@@ -3,8 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe Notifications::EventReminderJob, type: :job do
-  let!(:member1) { create(:user, approval_status: 'approved') }
-  let!(:member2) { create(:user, approval_status: 'approved') }
+  let!(:member_one) { create(:user, approval_status: 'approved') }
+  let!(:member_two) { create(:user, approval_status: 'approved') }
   let!(:pending_user) { create(:user, :pending) }
 
   before do
@@ -18,9 +18,9 @@ RSpec.describe Notifications::EventReminderJob, type: :job do
       let!(:event) { create(:event, date: 24.hours.from_now + 30.minutes) }
 
       it 'enqueues DeliverNotificationJob for each approved member' do
-        expect {
+        expect do
           described_class.perform_now
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
           .exactly(2).times
       end
 
@@ -32,13 +32,13 @@ RSpec.describe Notifications::EventReminderJob, type: :job do
       it 'does not send a second reminder if already stamped' do
         event.update_columns(reminder_sent_at: 1.minute.ago)
 
-        expect {
+        expect do
           described_class.perform_now
-        }.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
       it 'does not enqueue for pending (unapproved) members' do
-        # Only member1 and member2 are approved; pending_user should be excluded
+        # Only member_one and member_two are approved; pending_user should be excluded
         described_class.perform_now
         enqueued = ActiveJob::Base.queue_adapter.enqueued_jobs
         recipient_ids = enqueued.map { |j| j[:args][1] }
@@ -51,15 +51,15 @@ RSpec.describe Notifications::EventReminderJob, type: :job do
       let!(:past_event) { create(:event, date: 1.week.ago, end_time: 1.week.ago + 1.hour) }
 
       it 'does not enqueue jobs for events too far in the future' do
-        expect {
+        expect do
           described_class.perform_now
-        }.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
       it 'does not enqueue jobs for past events' do
-        expect {
+        expect do
           described_class.perform_now
-        }.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 
@@ -71,18 +71,18 @@ RSpec.describe Notifications::EventReminderJob, type: :job do
       let!(:event_at_48h) { create(:event, date: 48.hours.from_now + 30.minutes) }
 
       it 'uses the configured hours instead of the default 24' do
-        # member1 and member2 are both approved, so at least 2 jobs will be enqueued
-        expect {
+        # member_one and member_two are both approved, so at least 2 jobs will be enqueued
+        expect do
           described_class.perform_now
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob).at_least(:once)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob).at_least(:once)
       end
     end
 
     context 'when there are no upcoming events' do
       it 'enqueues nothing' do
-        expect {
+        expect do
           described_class.perform_now
-        }.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
   end

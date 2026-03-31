@@ -12,9 +12,9 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
   describe 'POST /admin/media_photos' do
     context 'with a valid image' do
       it 'creates a new MediaPhoto as unpublished' do
-        expect {
+        expect do
           post admin_media_photos_path, params: { page_name: 'media', image: test_image, caption: 'Test' }
-        }.to change(MediaPhoto, :count).by(1)
+        end.to change(MediaPhoto, :count).by(1)
 
         photo = MediaPhoto.last
         expect(photo.published).to be false
@@ -29,18 +29,18 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
 
       it 'replaces the existing home photo when page is home' do
         existing = create(:media_photo, :home)
-        expect {
+        expect do
           post admin_media_photos_path, params: { page_name: 'home', image: test_image }
-        }.not_to change(MediaPhoto, :count)
+        end.not_to change(MediaPhoto, :count)
         expect { existing.reload }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
 
     context 'without an image' do
       it 'does not create a record and shows an error' do
-        expect {
+        expect do
           post admin_media_photos_path, params: { page_name: 'media' }
-        }.not_to change(MediaPhoto, :count)
+        end.not_to change(MediaPhoto, :count)
         expect(response).to redirect_to(admin_website_path(tab: 'media'))
         expect(flash[:alert]).to be_present
       end
@@ -50,9 +50,9 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
       before { sign_in regular_user }
 
       it 'redirects away without creating' do
-        expect {
+        expect do
           post admin_media_photos_path, params: { page_name: 'media', image: test_image }
-        }.not_to change(MediaPhoto, :count)
+        end.not_to change(MediaPhoto, :count)
         expect(response).to redirect_to(internal_events_path)
       end
     end
@@ -84,9 +84,9 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
     let!(:photo) { create(:media_photo) }
 
     it 'deletes the photo' do
-      expect {
+      expect do
         delete admin_media_photo_path(photo)
-      }.to change(MediaPhoto, :count).by(-1)
+      end.to change(MediaPhoto, :count).by(-1)
     end
 
     it 'redirects to the media tab' do
@@ -96,9 +96,9 @@ RSpec.describe 'Admin::MediaPhotos', type: :request do
 
     it 'requires admin access' do
       sign_in regular_user
-      expect {
+      expect do
         delete admin_media_photo_path(photo)
-      }.not_to change(MediaPhoto, :count)
+      end.not_to change(MediaPhoto, :count)
     end
   end
 end

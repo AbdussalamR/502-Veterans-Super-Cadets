@@ -3,7 +3,7 @@
 module Internal
   class PerformanceRequestsController < InternalController
     before_action :require_super_admin!
-    before_action :set_performance_request, only: [:show, :update]
+    before_action :set_performance_request, only: %i[show update]
 
     def index
       @performance_requests = PerformanceRequest.newest
@@ -13,9 +13,7 @@ module Internal
 
     def update
       new_status = params[:status]
-      unless %w[reviewed pending].include?(new_status)
-        return redirect_to internal_performance_request_path(@performance_request), alert: "Invalid status."
-      end
+      return redirect_to internal_performance_request_path(@performance_request), alert: "Invalid status." unless %w[reviewed pending].include?(new_status)
 
       @performance_request.update!(status: new_status)
       label = new_status == 'reviewed' ? 'approved' : 'reset to pending'

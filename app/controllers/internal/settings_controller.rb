@@ -22,7 +22,7 @@ module Internal
     private
 
     def setting_params
-      params.require(:application_setting).permit(:reminder_hours_before)
+      params.expect(application_setting: [:reminder_hours_before])
     end
 
     def require_super_admin!
