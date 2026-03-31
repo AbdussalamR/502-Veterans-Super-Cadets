@@ -69,12 +69,11 @@ module Users
       else
         attempted_email = request.env['omniauth.auth']&.info&.email
         log_authentication_failure({ reason: 'user_not_found', email: attempted_email })
-        if attempted_email.present? && !attempted_email.end_with?('@tamu.edu')
-          flash[:alert] = "Only @tamu.edu Google accounts are allowed. " \
-                          "You signed in with #{attempted_email}."
-        else
-          flash[:alert] = 'Authentication failed. Please try again or contact an administrator.'
-        end
+        flash[:alert] = if attempted_email.present? && !attempted_email.end_with?('@tamu.edu')
+                          "Only @tamu.edu Google accounts are allowed. You signed in with #{attempted_email}."
+                        else
+                          'Authentication failed. Please try again or contact an administrator.'
+                        end
         redirect_to '/users/sign_in'
       end
     rescue StandardError => e

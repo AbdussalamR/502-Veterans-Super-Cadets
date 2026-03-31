@@ -12,12 +12,12 @@ module Public
 
     def submit_performance_request
       @performance_request = PerformanceRequest.new(
-        name:          params[:performance_request][:name].to_s.strip,
-        organization:  params[:performance_request][:organization].to_s.strip,
-        event_date:    params[:performance_request][:event_date],
-        location:      params[:performance_request][:location].to_s.strip,
+        name: params[:performance_request][:name].to_s.strip,
+        organization: params[:performance_request][:organization].to_s.strip,
+        event_date: params[:performance_request][:event_date],
+        location: params[:performance_request][:location].to_s.strip,
         contact_email: params[:performance_request][:contact_email].to_s.strip,
-        notes:         params[:performance_request][:notes].to_s.strip
+        notes: params[:performance_request][:notes].to_s.strip
       )
 
       if @performance_request.save
@@ -44,7 +44,7 @@ module Public
       now = Time.current
       @current_auditions = AuditionSession.where('start_datetime <= ? AND end_datetime >= ?', now, now).chronological
       @future_auditions = AuditionSession.where('start_datetime > ?', now).chronological
-      @past_auditions = AuditionSession.where('end_datetime < ?', now).chronological
+      @past_auditions = AuditionSession.where(end_datetime: ...now).chronological
     end
 
     def calendar
@@ -74,8 +74,8 @@ module Public
 
     def submit_contact
       @msg = ContactMessage.new(
-        name:    params[:name].to_s.strip,
-        email:   params[:email].to_s.strip,
+        name: params[:name].to_s.strip,
+        email: params[:email].to_s.strip,
         message: params[:message].to_s.strip
       )
 

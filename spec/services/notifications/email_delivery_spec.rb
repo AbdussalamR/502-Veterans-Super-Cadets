@@ -32,7 +32,7 @@ RSpec.describe Notifications::EmailDelivery do
     allow(sendgrid_client).to receive(:_).with('send').and_return(send_endpoint)
     allow(send_endpoint).to receive(:post).and_return(response)
 
-    described_class.deliver(recipient:, message:)
+    described_class.deliver(recipient: recipient, message: message)
 
     expect(store).to have_received(:set_default_paths)
     expect(SendGrid::API).to have_received(:new).with(

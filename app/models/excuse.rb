@@ -9,9 +9,9 @@ class Excuse < ApplicationRecord
   attr_accessor :manual_event_ids
 
   # Associations
-  has_many :events_to_excuses, class_name: "EventsToExcuse", foreign_key: :excuse_id, dependent: :destroy
+  has_many :events_to_excuses, class_name: "EventsToExcuse", foreign_key: :excuse_id, dependent: :destroy, inverse_of: :excuse
   has_many :events, through: :events_to_excuses
-  has_many :reviewers_to_excuses, class_name: "ReviewersToExcuse", foreign_key: :excuse_id, dependent: :destroy
+  has_many :reviewers_to_excuses, class_name: "ReviewersToExcuse", foreign_key: :excuse_id, dependent: :destroy, inverse_of: :excuse
   has_many :reviewers, through: :reviewers_to_excuses, source: :reviewer
 
   # Validations
@@ -21,7 +21,9 @@ class Excuse < ApplicationRecord
   # STORY U3: Recurring validations (only required if recurring toggle is on)
   validates :start_date, :end_date, presence: true, if: :recurring?
   validates :recurring_days, presence: { message: "must have at least one day selected" }, if: :recurring?
-  validates :recurring_start_time, :recurring_end_time, presence: { message: "must be set for a time-range recurring excuse" }, if: :recurring_time_fields_required?
+  validates :recurring_start_time, :recurring_end_time,
+            presence: { message: "must be set for a time-range recurring excuse" },
+            if: :recurring_time_fields_required?
   validate :recurring_end_time_after_start_time, if: -> { recurring? && recurring_start_time.present? && recurring_end_time.present? }
 
   # Scopes
@@ -129,12 +131,12 @@ class Excuse < ApplicationRecord
 
     return candidates if recurring_start_time.blank? || recurring_end_time.blank?
 
-    start_mins = recurring_start_time.hour * 60 + recurring_start_time.min
-    end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
+    start_mins = (recurring_start_time.hour * 60) + recurring_start_time.min
+    end_mins   = (recurring_end_time.hour * 60) + recurring_end_time.min
 
     candidates.select do |event|
       event_mins = (event.date.hour * 60) + event.date.min
-      event_mins >= start_mins && event_mins <= end_mins
+      event_mins.between?(start_mins, end_mins)
     end
   end
 
@@ -188,23 +190,20 @@ class Excuse < ApplicationRecord
   end
 
   def set_default_status
-    if is_personal?
-      self.status ||= 'pending'
-    else
-      # STORY A3 AC 1: Specific requirement for default status string
-      self.status ||= 'Pending Officer Review'
-    end
+    # STORY A3 AC 1: Specific requirement for default status string
+    self.status ||= is_personal? ? 'pending' : 'Pending Officer Review'
   end
 
   def must_have_events
     return if recurring? # Recurring excuses link events via callbacks; no pre-existing events required
+
     # Accept events pre-assigned via the association (test/API) OR via manual_event_ids (form)
     errors.add(:base, "Please select at least one event") if manual_event_ids.blank? && events.empty?
   end
 
   def recurring_end_time_after_start_time
-    start_mins = recurring_start_time.hour * 60 + recurring_start_time.min
-    end_mins   = recurring_end_time.hour * 60 + recurring_end_time.min
+    start_mins = (recurring_start_time.hour * 60) + recurring_start_time.min
+    end_mins   = (recurring_end_time.hour * 60) + recurring_end_time.min
     errors.add(:recurring_end_time, "must be after the start time") if end_mins <= start_mins
   end
 

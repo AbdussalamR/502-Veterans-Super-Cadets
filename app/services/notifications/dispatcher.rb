@@ -3,7 +3,7 @@
 module Notifications
   class Dispatcher
     def self.publish(event_key:, recipients:, actor: nil, context: {})
-      new(event_key:, recipients:, actor:, context:).publish
+      new(event_key: event_key, recipients: recipients, actor: actor, context: context).publish
     end
 
     def initialize(event_key:, recipients:, actor:, context:)

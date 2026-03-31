@@ -59,9 +59,9 @@ RSpec.describe 'Notification system', type: :request do
       # AC 0.1: a background job is enqueued immediately on the PATCH request,
       # ensuring delivery happens asynchronously within the 5-minute SLA.
       it 'enqueues a notification job for the member (within async window)' do
-        expect {
+        expect do
           patch internal_excuse_path(excuse), params: { status: 'approved' }
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
       # AC 0.1 (recipient targeting): the job is addressed to the excuse owner,
@@ -116,9 +116,9 @@ RSpec.describe 'Notification system', type: :request do
 
       # AC 0.1: denial also triggers an immediate async notification job.
       it 'enqueues a notification job for the member' do
-        expect {
+        expect do
           patch internal_excuse_path(excuse), params: { status: 'denied' }
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
 
       # AC 0.2: a separate 'excuse_denied' event key routes to the denial template,
@@ -176,7 +176,9 @@ RSpec.describe 'Notification system', type: :request do
       ApplicationSetting.delete_all
       ApplicationSetting.create!(reminder_hours_before: 24)
       # Force creation of approved users so EventReminderJob has recipients
-      member; officer; director
+      member
+      officer
+      director
     end
 
     context 'when an event is ~24 hours away' do
@@ -184,9 +186,9 @@ RSpec.describe 'Notification system', type: :request do
 
       # AC 0.4: with the default 24 h window, a job is enqueued for all approved members.
       it 'sends reminder notifications to all approved members' do
-        expect {
+        expect do
           Notifications::EventReminderJob.perform_now
-        }.to have_enqueued_job(Notifications::DeliverNotificationJob).at_least(:once)
+        end.to have_enqueued_job(Notifications::DeliverNotificationJob).at_least(:once)
       end
 
       it 'sends each reminder with the event_reminder event key' do
@@ -202,9 +204,9 @@ RSpec.describe 'Notification system', type: :request do
       it 'does not re-send if the reminder was already sent' do
         upcoming_event.update_columns(reminder_sent_at: 5.minutes.ago)
 
-        expect {
+        expect do
           Notifications::EventReminderJob.perform_now
-        }.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
+        end.not_to have_enqueued_job(Notifications::DeliverNotificationJob)
       end
     end
 
@@ -224,7 +226,7 @@ RSpec.describe 'Notification system', type: :request do
           .select { |j| j[:job] == Notifications::DeliverNotificationJob }
 
         context_data = enqueued.map { |j| j[:args][3] }
-        titles = context_data.map { |c| c['title'] }
+        titles = context_data.pluck('title')
 
         expect(titles).to include(event_48h_away.title)
         expect(titles).not_to include(event_24h_away.title)
@@ -238,15 +240,15 @@ RSpec.describe 'Notification system', type: :request do
 
   describe 'Story A1: failed email creates in-app alert for directors' do
     # Both must be forced into existence BEFORE AlertDirectors.call runs
-    let!(:director2) { create(:user, :super_admin, approval_status: 'approved') }
+    let!(:director_two) { create(:user, :super_admin, approval_status: 'approved') }
     before { director } # `director` is a lazy let in the outer scope; force creation here
 
     # AC 0.2: every super_admin receives an AdminAlert record when a send fails,
     # so no director misses a delivery failure regardless of who is logged in.
     it 'creates AdminAlerts for all directors when AlertDirectors is called' do
-      expect {
+      expect do
         Notifications::AlertDirectors.call(message: 'SendGrid returned 503')
-      }.to change(AdminAlert, :count).by(2) # director + director2
+      end.to change(AdminAlert, :count).by(2) # director + director_two
     end
 
     # AC 0.2: the in-app pop-up banner appears on the director's layout page
@@ -292,10 +294,6 @@ RSpec.describe 'Notification system', type: :request do
           end_time: 1.week.from_now + 2.hours
         }
       }
-
-      enqueued = ActiveJob::Base.queue_adapter.enqueued_jobs
-        .select { |j| j[:job] == Notifications::DeliverNotificationJob }
-      recipient_ids = enqueued.map { |j| j[:args][1] }
 
       # opted_out_member IS enqueued (the dispatcher enqueues for all approved members),
       # but delivery is skipped inside the job because email_deliverable? returns false.

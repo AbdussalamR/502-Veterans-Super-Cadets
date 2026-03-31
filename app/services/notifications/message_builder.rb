@@ -13,7 +13,7 @@ module Notifications
     )
 
     def self.build(event_key:, recipient:, actor:, context:)
-      new(event_key:, recipient:, actor:, context:).build
+      new(event_key: event_key, recipient: recipient, actor: actor, context: context).build
     end
 
     def initialize(event_key:, recipient:, actor:, context:)
@@ -95,7 +95,7 @@ module Notifications
           intro: "#{actor_name} canceled an event.",
           bullets: [
             "When: #{context['date_label']}",
-            ("Where: #{context['location']}" if context['location'].present?)
+            ("Where: #{context['location']}" if context['location'].present?),
           ],
           cta_label: 'View calendar',
           cta_url: context['events_url']
@@ -109,7 +109,7 @@ module Notifications
             "Series: #{context['title']}",
             "First event: #{context['first_date_label']}",
             "Last event: #{context['last_date_label']}",
-            ("Where: #{context['location']}" if context['location'].present?)
+            ("Where: #{context['location']}" if context['location'].present?),
           ],
           cta_label: 'View calendar',
           cta_url: context['events_url']
@@ -123,7 +123,7 @@ module Notifications
             "Date: #{context['event_date']}",
             "Location: #{context['location']}",
             "Contact: #{context['contact_email']}",
-            ("Notes: #{context['notes']}" if context['notes'] != 'None')
+            ("Notes: #{context['notes']}" if context['notes'] != 'None'),
           ],
           cta_label: 'View all requests',
           cta_url: context['requests_url']
@@ -154,7 +154,7 @@ module Notifications
           bullets: [
             "Member: #{context['member_name']}",
             "Section decision: #{context['officer_status']}",
-            "Events: #{context['event_summary']}"
+            "Events: #{context['event_summary']}",
           ],
           cta_label: 'Review excuse',
           cta_url: context['excuse_url']
@@ -203,14 +203,14 @@ module Notifications
 
     attr_reader :event_key, :recipient, :actor, :context
 
-    def message(subject:, heading:, intro:, bullets:, cta_label:, cta_url:)
+    def message(subject:, heading:, intro:, bullets:, cta_label:, cta_url:) # rubocop:disable Metrics/ParameterLists
       Message.new(
-        subject:,
-        heading:,
-        intro:,
+        subject: subject,
+        heading: heading,
+        intro: intro,
         bullets: Array(bullets).compact_blank,
-        cta_label:,
-        cta_url:
+        cta_label: cta_label,
+        cta_url: cta_url
       )
     end
 
@@ -218,7 +218,7 @@ module Notifications
       [
         "When: #{context['date_label']} to #{context['end_time_label']}",
         ("Where: #{context['location']}" if context['location'].present?),
-        ("Details: #{context['description']}" if context['description'].present?)
+        ("Details: #{context['description']}" if context['description'].present?),
       ]
     end
 
@@ -226,13 +226,14 @@ module Notifications
       [
         "Value: #{context['value']}",
         "Date: #{context['date_label']}",
-        "Reason: #{context['reason']}"
+        "Reason: #{context['reason']}",
       ]
     end
 
     def actor_name
       actor&.full_name || context['actor_name'] || 'A Cadets admin'
     end
+
     def admin_registrations_url
       routes.admin_registrations_url(**url_options)
     end

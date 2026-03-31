@@ -22,10 +22,8 @@ end
 
 # --- Test data for recurring excuses ---
 
-
-
 # Regular member
-member = User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
+User.find_or_create_by!(email: "sharma.zaahir@gmail.com") do |user|
   user.full_name = "Cadet Smith"
   user.uid = "officer2"
   user.provider = "google_oauth2"

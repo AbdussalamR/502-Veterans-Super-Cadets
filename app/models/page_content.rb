@@ -3,7 +3,7 @@ class PageContent < ApplicationRecord
 
   validates :page_name, presence: true, inclusion: { in: PAGES }
   validates :content_key, presence: true
-  validates :content_key, uniqueness: { scope: [:page_name, :is_draft] }
+  validates :content_key, uniqueness: { scope: %i[page_name is_draft] }
 
   scope :published, -> { where(is_draft: false) }
   scope :drafts,    -> { where(is_draft: true) }
@@ -19,7 +19,7 @@ class PageContent < ApplicationRecord
     record.save!
   end
 
-  def self.has_drafts?(page)
+  def self.has_drafts?(page) # rubocop:disable Naming/PredicatePrefix
     drafts.for_page(page).exists?
   end
 

@@ -3,7 +3,7 @@ FactoryBot.define do
     page_name   { 'home' }
     content_key { 'hero_title' }
     content_value { 'The Singing Cadets' }
-    is_draft    { false }
+    is_draft { false }
 
     trait :draft do
       is_draft { true }

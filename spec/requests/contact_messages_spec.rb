@@ -10,9 +10,9 @@ RSpec.describe 'Contact form submission', type: :request do
 
     context 'with valid params' do
       it 'creates a ContactMessage' do
-        expect {
+        expect do
           post public_submit_contact_path, params: valid_params
-        }.to change(ContactMessage, :count).by(1)
+        end.to change(ContactMessage, :count).by(1)
       end
 
       it 'stores the correct data' do
@@ -33,23 +33,23 @@ RSpec.describe 'Contact form submission', type: :request do
 
     context 'with invalid params' do
       it 'does not create a record when name is missing' do
-        expect {
+        expect do
           post public_submit_contact_path, params: valid_params.merge(name: '')
-        }.not_to change(ContactMessage, :count)
+        end.not_to change(ContactMessage, :count)
         expect(response).to redirect_to(public_contact_path)
         expect(flash[:alert]).to be_present
       end
 
       it 'does not create a record with a bad email' do
-        expect {
+        expect do
           post public_submit_contact_path, params: valid_params.merge(email: 'not-an-email')
-        }.not_to change(ContactMessage, :count)
+        end.not_to change(ContactMessage, :count)
       end
 
       it 'does not create a record when message is blank' do
-        expect {
+        expect do
           post public_submit_contact_path, params: valid_params.merge(message: '')
-        }.not_to change(ContactMessage, :count)
+        end.not_to change(ContactMessage, :count)
       end
     end
   end

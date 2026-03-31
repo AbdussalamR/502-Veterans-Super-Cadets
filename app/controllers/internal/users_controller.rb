@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Internal
-  class UsersController < InternalController
+  class UsersController < InternalController # rubocop:disable Metrics/ClassLength
     include Loggable
   
     before_action :authenticate_user!
@@ -249,10 +249,10 @@ module Internal
     end
 
     def user_params
-      permitted_fields = [:full_name, :email_notifications_enabled]
+      permitted_fields = %i[full_name email_notifications_enabled]
       permitted_fields << :section_id if current_user.super_admin?
 
-      params.require(:user).permit(*permitted_fields)
+      params.expect(user: [*permitted_fields])
     end
   
     def ensure_admin

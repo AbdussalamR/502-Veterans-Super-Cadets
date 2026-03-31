@@ -136,14 +136,14 @@ module Internal
       member = @member || @demerit&.member
       return if member.nil?
 
-      unless current_user.section_id.present? && current_user.section_id == member.section_id
-        log_authorization_failure('officer_section_mismatch', { action: action_name, member_id: member.id })
-        redirect_unauthorized('You can only manage discipline points for members in your section.')
-      end
+      return if current_user.section_id.present? && current_user.section_id == member.section_id
+
+      log_authorization_failure('officer_section_mismatch', { action: action_name, member_id: member.id })
+      redirect_unauthorized('You can only manage discipline points for members in your section.')
     end
 
     def demerit_params
-      params.require(:demerit).permit(:member_id, :value, :reason, :date)
+      params.expect(demerit: %i[member_id value reason date])
     end
   end
 end

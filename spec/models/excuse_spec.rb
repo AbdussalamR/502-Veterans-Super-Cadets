@@ -86,41 +86,49 @@ RSpec.describe Excuse, type: :model do
       end
 
       it 'requires recurring_start_time' do
-        excuse = Excuse.new(base_attrs.merge(
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
-          recurring_days: '1', recurring_end_time: Time.zone.parse('10:00')
-        ))
+        excuse = Excuse.new(
+          base_attrs.merge(
+            start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+            recurring_days: '1', recurring_end_time: Time.zone.parse('10:00')
+          )
+        )
         expect(excuse).not_to be_valid
         expect(excuse.errors[:recurring_start_time]).to be_present
       end
 
       it 'requires recurring_end_time' do
-        excuse = Excuse.new(base_attrs.merge(
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
-          recurring_days: '1', recurring_start_time: Time.zone.parse('09:00')
-        ))
+        excuse = Excuse.new(
+          base_attrs.merge(
+            start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+            recurring_days: '1', recurring_start_time: Time.zone.parse('09:00')
+          )
+        )
         expect(excuse).not_to be_valid
         expect(excuse.errors[:recurring_end_time]).to be_present
       end
 
       it 'is invalid when recurring_end_time is before recurring_start_time' do
-        excuse = Excuse.new(base_attrs.merge(
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
-          recurring_days: '1',
-          recurring_start_time: Time.zone.parse('11:00'),
-          recurring_end_time: Time.zone.parse('09:00')
-        ))
+        excuse = Excuse.new(
+          base_attrs.merge(
+            start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+            recurring_days: '1',
+            recurring_start_time: Time.zone.parse('11:00'),
+            recurring_end_time: Time.zone.parse('09:00')
+          )
+        )
         expect(excuse).not_to be_valid
         expect(excuse.errors[:recurring_end_time]).to include("must be after the start time")
       end
 
       it 'is invalid when recurring_end_time equals recurring_start_time' do
-        excuse = Excuse.new(base_attrs.merge(
-          start_date: 1.week.from_now, end_date: 2.weeks.from_now,
-          recurring_days: '1',
-          recurring_start_time: Time.zone.parse('10:00'),
-          recurring_end_time: Time.zone.parse('10:00')
-        ))
+        excuse = Excuse.new(
+          base_attrs.merge(
+            start_date: 1.week.from_now, end_date: 2.weeks.from_now,
+            recurring_days: '1',
+            recurring_start_time: Time.zone.parse('10:00'),
+            recurring_end_time: Time.zone.parse('10:00')
+          )
+        )
         expect(excuse).not_to be_valid
         expect(excuse.errors[:recurring_end_time]).to include("must be after the start time")
       end
@@ -321,8 +329,8 @@ RSpec.describe Excuse, type: :model do
       it 'includes events whose start time falls within the time window' do
         # Event at 11:00 AM on Monday — inside 10:30 AM–12:00 PM window
         event_inside = create(:event,
-          date: next_monday.change(hour: 11, min: 0),
-          end_time: next_monday.change(hour: 12, min: 0))
+                              date: next_monday.change(hour: 11, min: 0),
+                              end_time: next_monday.change(hour: 12, min: 0))
 
         excuse = Excuse.new(
           member: user, recurring: true, recurring_days: '1',
@@ -338,8 +346,8 @@ RSpec.describe Excuse, type: :model do
       it 'excludes events whose start time falls outside the time window' do
         # Event at 2:00 PM on Monday — outside 10:30 AM–12:00 PM window
         event_outside = create(:event,
-          date: next_monday.change(hour: 14, min: 0),
-          end_time: next_monday.change(hour: 15, min: 0))
+                               date: next_monday.change(hour: 14, min: 0),
+                               end_time: next_monday.change(hour: 15, min: 0))
 
         excuse = Excuse.new(
           member: user, recurring: true, recurring_days: '1',
@@ -354,11 +362,11 @@ RSpec.describe Excuse, type: :model do
 
       it 'matches all day-matching events when no time range is given' do
         event_am = create(:event,
-          date: next_monday.change(hour: 9, min: 0),
-          end_time: next_monday.change(hour: 10, min: 0))
+                          date: next_monday.change(hour: 9, min: 0),
+                          end_time: next_monday.change(hour: 10, min: 0))
         event_pm = create(:event,
-          date: next_monday.change(hour: 14, min: 0),
-          end_time: next_monday.change(hour: 15, min: 0))
+                          date: next_monday.change(hour: 14, min: 0),
+                          end_time: next_monday.change(hour: 15, min: 0))
 
         excuse = Excuse.new(
           member: user, recurring: true, recurring_days: '1',

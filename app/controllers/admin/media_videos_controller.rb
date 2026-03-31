@@ -4,10 +4,10 @@ module Admin
 
     def create
       video = MediaVideo.new(
-        title:       params[:title],
+        title: params[:title],
         youtube_url: params[:youtube_url],
-        position:    MediaVideo.next_position,
-        published:   false
+        position: MediaVideo.next_position,
+        published: false
       )
 
       if video.save

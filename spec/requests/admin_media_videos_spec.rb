@@ -12,9 +12,9 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
   describe 'POST /admin/media_videos' do
     context 'with a valid YouTube URL' do
       it 'creates a new MediaVideo as unpublished' do
-        expect {
+        expect do
           post admin_media_videos_path, params: { youtube_url: valid_url, title: 'Rickroll' }
-        }.to change(MediaVideo, :count).by(1)
+        end.to change(MediaVideo, :count).by(1)
 
         video = MediaVideo.last
         expect(video.published).to be false
@@ -31,9 +31,9 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
 
     context 'with an invalid URL' do
       it 'does not create a record' do
-        expect {
+        expect do
           post admin_media_videos_path, params: { youtube_url: 'https://vimeo.com/123' }
-        }.not_to change(MediaVideo, :count)
+        end.not_to change(MediaVideo, :count)
         expect(flash[:alert]).to be_present
       end
     end
@@ -42,9 +42,9 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
       before { sign_in regular_user }
 
       it 'redirects away without creating' do
-        expect {
+        expect do
           post admin_media_videos_path, params: { youtube_url: valid_url }
-        }.not_to change(MediaVideo, :count)
+        end.not_to change(MediaVideo, :count)
         expect(response).to redirect_to(internal_events_path)
       end
     end
@@ -75,9 +75,9 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
     let!(:video) { create(:media_video) }
 
     it 'deletes the video' do
-      expect {
+      expect do
         delete admin_media_video_path(video)
-      }.to change(MediaVideo, :count).by(-1)
+      end.to change(MediaVideo, :count).by(-1)
     end
 
     it 'redirects to the media tab' do
@@ -87,9 +87,9 @@ RSpec.describe 'Admin::MediaVideos', type: :request do
 
     it 'requires admin access' do
       sign_in regular_user
-      expect {
+      expect do
         delete admin_media_video_path(video)
-      }.not_to change(MediaVideo, :count)
+      end.not_to change(MediaVideo, :count)
     end
   end
 end

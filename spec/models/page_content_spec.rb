@@ -44,36 +44,36 @@ RSpec.describe PageContent, type: :model do
 
     it 'returns the published value by default' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Published Title', is_draft: false)
+                            content_value: 'Published Title', is_draft: false)
       expect(PageContent.get('home', 'hero_title')).to eq('Published Title')
     end
 
     it 'returns the draft value when draft: true' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Draft Title', is_draft: true)
+                            content_value: 'Draft Title', is_draft: true)
       expect(PageContent.get('home', 'hero_title', draft: true)).to eq('Draft Title')
     end
 
     it 'does not return draft content when draft: false' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Draft Title', is_draft: true)
+                            content_value: 'Draft Title', is_draft: true)
       expect(PageContent.get('home', 'hero_title', draft: false)).to be_nil
     end
   end
 
   describe '.set' do
     it 'creates a new draft record' do
-      expect {
+      expect do
         PageContent.set('home', 'hero_title', 'New Title', draft: true)
-      }.to change(PageContent, :count).by(1)
+      end.to change(PageContent, :count).by(1)
     end
 
     it 'updates an existing record with the same key/page/draft' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Old', is_draft: true)
-      expect {
+                            content_value: 'Old', is_draft: true)
+      expect do
         PageContent.set('home', 'hero_title', 'Updated', draft: true)
-      }.not_to change(PageContent, :count)
+      end.not_to change(PageContent, :count)
       expect(PageContent.get('home', 'hero_title', draft: true)).to eq('Updated')
     end
   end
@@ -93,7 +93,7 @@ RSpec.describe PageContent, type: :model do
   describe '.publish_page!' do
     it 'converts all drafts to published' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Draft Value', is_draft: true)
+                            content_value: 'Draft Value', is_draft: true)
 
       expect { PageContent.publish_page!('home') }
         .to change { PageContent.published.for_page('home').count }.by(1)
@@ -102,9 +102,9 @@ RSpec.describe PageContent, type: :model do
 
     it 'removes old published records before publishing drafts' do
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Old Published', is_draft: false)
+                            content_value: 'Old Published', is_draft: false)
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'New Draft', is_draft: true)
+                            content_value: 'New Draft', is_draft: true)
 
       PageContent.publish_page!('home')
 
@@ -114,9 +114,9 @@ RSpec.describe PageContent, type: :model do
 
     it 'does not affect other pages' do
       create(:page_content, page_name: 'contact', content_key: 'email',
-             content_value: 'contact@example.com', is_draft: true)
+                            content_value: 'contact@example.com', is_draft: true)
       create(:page_content, page_name: 'home', content_key: 'hero_title',
-             content_value: 'Home Draft', is_draft: true)
+                            content_value: 'Home Draft', is_draft: true)
 
       PageContent.publish_page!('home')
 

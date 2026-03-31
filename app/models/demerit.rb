@@ -1,6 +1,6 @@
 class Demerit < ApplicationRecord
-  belongs_to :member, class_name: 'User', foreign_key: 'member_id'
-  belongs_to :given_by, class_name: 'User', foreign_key: 'given_by_id'
+  belongs_to :member, class_name: 'User', foreign_key: 'member_id', inverse_of: :received_demerits
+  belongs_to :given_by, class_name: 'User', foreign_key: 'given_by_id', inverse_of: :given_demerits
   
   validates :value, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :reason, presence: true

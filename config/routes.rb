@@ -112,7 +112,7 @@ Rails.application.routes.draw do
     resources :audition_sessions
 
     # Website content management dashboard
-    get  'website',                  to: 'website#index',              as: 'website'
+    get 'website', to: 'website#index', as: 'website'
 
     patch 'website/home',            to: 'website#update_home',        as: 'update_website_home'
     post  'website/home/publish',    to: 'website#publish_home',       as: 'publish_website_home'
@@ -122,13 +122,13 @@ Rails.application.routes.draw do
     post  'website/contact/publish', to: 'website#publish_contact',       as: 'publish_website_contact'
     delete 'website/contact/draft',  to: 'website#discard_contact_draft', as: 'discard_website_contact_draft'
 
-    get   'website/preview/:page',   to: 'website#preview',            as: 'preview_website_page'
+    get 'website/preview/:page', to: 'website#preview', as: 'preview_website_page'
 
     patch 'website/auditions',         to: 'website#update_auditions',        as: 'update_website_auditions'
     post  'website/auditions/publish', to: 'website#publish_auditions',       as: 'publish_website_auditions'
     delete 'website/auditions/draft',  to: 'website#discard_auditions_draft', as: 'discard_website_auditions_draft'
 
-    post  'website/messages/:id/read', to: 'website#mark_message_read',       as: 'mark_website_message_read'
+    post 'website/messages/:id/read', to: 'website#mark_message_read', as: 'mark_website_message_read'
 
     resources :media_photos, only: [:create, :destroy] do
       member { patch :publish }
