@@ -210,7 +210,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><%= link_to "Profile", internal_user_path(current_user), class: "dropdown-item" %></li>
-              <li><%= link_to "Help", internal_help_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Help and Feedback", internal_help_path, class: "dropdown-item" %></li>
               <li><hr class="dropdown-divider"></li>
               <li><%= button_to "Sign out", "/auth/sign_out", method: :delete, class: "dropdown-item", style: "background: none; border: none; width: 100%; text-align: left;" %></li>
             </ul>

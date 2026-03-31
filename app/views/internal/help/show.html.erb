@@ -12,132 +12,9 @@
           <h2><span aria-hidden="true">👤</span> Member Guide</h2>
           <p>Everything you need to know as a member</p>
         </div>
-
-        <div class="help-grid">
-          <!-- EVENTS -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">📅</span> Events</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>View Upcoming Events</strong></summary>
-                <p>Click <%= link_to "Events", internal_events_path %> in the top navigation. Events are sorted with upcoming events first.</p>
-                <ul>
-                  <li><strong>Event Details:</strong> Click any event to see the full details</li>
-                  <li><strong>Time & Location:</strong> Find when and where the event takes place</li>
-                  <li><strong>Attendance Status:</strong> See if you're marked as attended, excused, or absent</li>
-                  <li><strong>Quick Actions:</strong> Submit an excuse directly from the event page if needed</li>
-                </ul>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Check In to an Event</strong></summary>
-                <p>Mark yourself as attended for an event:</p>
-                <ol>
-                  <li>Go to <%= link_to "Events", internal_events_path %> and click the event you're attending</li>
-                  <li><strong>Self Check-in via Code:</strong> If the organizer provided a check-in code, enter it on the event page to automatically mark yourself as attended</li>
-                  <li><strong>Manual Attendance:</strong> Your attendance may also be marked by officers or admins</li>
-                  <li>Your attendance status will update immediately</li>
-                </ol>
-              </details>
-            </div>
-          </div>
-
-          <!-- EXCUSES -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">📝</span> Submit &amp; Track Excuses</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>How to Submit an Excuse</strong></summary>
-                <p>Go to <%= link_to "Excuses", internal_excuses_path %> or submit directly from an event page.</p>
-                <ol>
-                  <li>Select the <strong>event</strong> you're excusing from</li>
-                  <li>Type a <strong>brief reason</strong> (why you cannot/could not attend)</li>
-                  <li>Attach a <strong>proof link</strong> (Google Drive, photo link, etc.)</li>
-                  <li>Click <strong>Submit</strong> — status starts as <em>Pending</em></li>
-                </ol>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Submit Bulk Excuses</strong></summary>
-                <p>Need to excuse multiple events at once? Use the bulk excuse workflow:</p>
-                <ol>
-                  <li>Go to <%= link_to "Excuses", internal_excuses_path %> and look for the <strong>Bulk Excuse</strong> option</li>
-                  <li>Select <strong>multiple events</strong> you need to excuse from</li>
-                  <li>Enter a <strong>single reason</strong> that applies to all selected events</li>
-                  <li>Attach <strong>proof</strong> for the bulk excuse</li>
-                  <li>Click <strong>Submit</strong> — all excuses will be created with <em>Pending</em> status</li>
-                </ol>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Track Your Excuse Status</strong></summary>
-                <p>On the <%= link_to "Excuses", internal_excuses_path %> page, filter and view all your excuses:</p>
-                <ul>
-                  <li><span class="badge pending">Pending</span> — Waiting for officer/admin review</li>
-                  <li><span class="badge approved">Approved</span> — Your absence is excused</li>
-                  <li><span class="badge denied">Denied</span> — Excuse was not accepted</li>
-                  <li><span class="badge awaiting">Awaiting Admin Approval</span> — Officer provisionally approved; director must finalize</li>
-                </ul>
-              </details>
-            </div>
-          </div>
-
-          <!-- MUSIC DRIVE (members) -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">🎼</span> Music Drive</h3>
-            </div>
-            <div class="card-content">
-              <details>
-              <summary class="card-summary"><strong>What is the Music Drive?</strong></summary>
-              <p>The Music Drive is a shared Google Drive where the Singing Cadets keep scores, rehearsal tracks, and sheet music.</p>
-              <ul>
-                <li><strong>Access:</strong> Click the Music Drive link in the navigation or open it directly: <%= link_to "Open Music Drive", "https://drive.google.com/drive/folders/17ccw2GrZ6-p6WRj1jZO8-kcFxNzuFY79", target: "_blank", rel: "noopener" %></li>
-                <li><strong>Use:</strong> Download rehearsal files, review scores before practice, and upload any director/arranger-approved materials if you have upload permissions.</li>
-                <li><strong>Permissions:</strong> If you need upload access or see a missing file, contact a director (see Contact section).</li>
-              </ul>
-              </details>
-            </div>
-          </div>
-
-          <!-- DISCIPLINE POINTS -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">⚠️</span> Discipline Points</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>View Your Discipline Points</strong></summary>
-                <p>Check <%= link_to "My Discipline Points", internal_my_demerits_path %> to see all points assigned to you.</p>
-                <ul>
-                  <li><strong>Reason:</strong> Why the point was assigned</li>
-                  <li><strong>Date Assigned:</strong> When you received it</li>
-                  <li><strong>Assigned By:</strong> Who issued the discipline point</li>
-                </ul>
-                <p><em>If you believe a record is incorrect, contact an officer or director to discuss.</em></p>
-              </details>
-            </div>
-          </div>
-
-          <!-- NAVIGATION -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">🧭</span> Quick Navigation</h3>
-            </div>
-            <div class="card-content">
-              <ul class="nav-list">
-                <li><span aria-hidden="true">🗓️</span> <%= link_to "Events", internal_events_path %></li>
-                <li><span aria-hidden="true">📋</span> <%= link_to "Excuses", internal_excuses_path %></li>
-                <li><span aria-hidden="true">🎵</span> <%= link_to "Music Drive", "https://drive.google.com/drive/u/3/folders/0ACAwK4ezZTfMUk9PVA", target: "_blank", rel: "noopener" %></li>
-                <li><span aria-hidden="true">📌</span> <%= link_to "My Discipline Points", internal_my_demerits_path %></li>
-              </ul>
-            </div>
-          </div>       
-        </div>
+        <p style="text-align: center;">
+          <a href="https://docs.google.com/document/d/190jOT3i6MYmqPtzMAK65fhSYLoNE2MGP/edit?usp=sharing&ouid=111553121125115305524&rtpof=true&sd=true">READ THE USER GUIDE HERE!</a>
+        </p>
       </section>
     <% end %>
 
@@ -146,191 +23,10 @@
       <section class="help-role-section">
         <div class="role-header">
           <h2><span aria-hidden="true">👮</span> Officer &amp; Admin Guide</h2>
-          <p>Tools and features for managing the organization</p>
         </div>
-
-        <div class="help-grid">
-          <!-- EVENTS MANAGEMENT -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">📅</span> Event Management</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>Create New Event</strong></summary>
-                <p>Click <strong>New Event</strong> on the <%= link_to "Events", internal_events_path %> page.</p>
-                <ol>
-                  <li>Enter the <strong>event name</strong> (e.g., "Concert Performance")</li>
-                  <li>Set the <strong>date and time</strong></li>
-                  <li>Add a <strong>location</strong></li>
-                  <li>Set any event-specific details (required attendance, notes, etc.)</li>
-                  <li><strong>Self Check-in Code:</strong> Generate a unique code that members can use to automatically check themselves in — great for self-managed attendance!</li>
-                  <li><strong>Recurring Events:</strong> Create repeating events by specifying the recurrence pattern (daily, weekly, monthly, etc.)</li>
-                  <li>Click <strong>Create</strong> — members will see it immediately</li>
-                </ol>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>View & Edit Events</strong></summary>
-                <p>Go to <%= link_to "Events", internal_events_path %> to see all events. Click an event to view details and manage it.</p>
-                <ul>
-                  <li><strong>Edit Event:</strong> Change name, date, time, or location</li>
-                  <li><strong>View Attendance:</strong> See who attended, was excused, or was absent</li>
-                  <li><strong>Mark Attendance:</strong> Manually update attendance records if needed</li>
-                </ul>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Manage Event Attendance</strong></summary>
-                <p>From an event's detail page:</p>
-                <ul>
-                  <li><strong>View Attendance List:</strong> See all members and their status</li>
-                  <li><strong>Update Attendance:</strong> Manually mark members as attended, excused, or absent</li>
-                  <li><strong>Approved Excuses:</strong> Approved excuses automatically update attendance as "excused"</li>
-                  <li><strong>No-Show Follow-up:</strong> Track who didn't attend without an excuse</li>
-                </ul>
-              </details>
-            </div>
-          </div>
-
-          <!-- EXCUSE MANAGEMENT -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">📝</span> Excuse Review &amp; Approval</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>Review Submitted Excuses</strong></summary>
-                <p>Go to <%= link_to "Excuses", internal_excuses_path %> to see all submitted excuses.</p>
-                <ul>
-                  <li><strong>Pending:</strong> Excuses waiting for your review</li>
-                  <li><strong>Approved:</strong> Excuses you've accepted</li>
-                  <li><strong>Denied:</strong> Excuses you've rejected</li>
-                  <li><strong>Awaiting Admin Approval:</strong> Excuses that officers provisionally approved but need director finalization</li>
-                </ul>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Officer: Provisional Approve or Deny</strong></summary>
-                <p>As an officer, you can provisionally approve or deny excuses:</p>
-                <ol>
-                  <li>Click an excuse from the <strong>Pending</strong> section to view full details (member name, event, reason, proof link)</li>
-                  <li>Review the <strong>reason and proof</strong></li>
-                  <li>Click <strong>Provisional Approve</strong> to recommend the excuse (status becomes <em>Awaiting Admin Approval</em>)</li>
-                  <li>Or click <strong>Deny</strong> to reject it immediately</li>
-                  <li><strong>Note:</strong> Provisionally approved excuses need director finalization before the member's attendance is updated</li>
-                </ol>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Director: Finalize Admin Approvals</strong></summary>
-                <p>As a director, you review provisionally approved excuses:</p>
-                <ol>
-                  <li>Go to <%= link_to "Excuses", internal_excuses_path %> and view the <strong>Awaiting Admin Approval</strong> section</li>
-                  <li>Click an excuse to review the officer's recommendation and member details</li>
-                  <li>Click <strong>Approve</strong> to finalize the excuse (member attendance is automatically updated as "excused")</li>
-                  <li>Or click <strong>Deny</strong> to reject it</li>
-                  <li>Once finalized, the excuse is locked and member attendance reflects the decision</li>
-                </ol>
-              </details>
-            </div>
-          </div>
-
-          <!-- DISCIPLINE MANAGEMENT -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">⚠️</span> Discipline Points</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>Create Discipline Points</strong></summary>
-                <p>Go to <%= link_to "Discipline Points", internal_demerits_path %> and click <strong>New Discipline Point</strong>.</p>
-                <ol>
-                  <li>Select the <strong>member</strong> receiving the point</li>
-                  <li>Enter the <strong>reason</strong> (what they did)</li>
-                  <li>Add any <strong>notes</strong> for context</li>
-                  <li>Click <strong>Create</strong></li>
-                </ol>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>View & Edit Discipline Points</strong></summary>
-                <p>On the <%= link_to "Discipline Points", internal_demerits_path %> page:</p>
-                <ul>
-                  <li><strong>Search Members:</strong> Filter by member name to see their history</li>
-                  <li><strong>View Details:</strong> Click a record to see who assigned it and when</li>
-                  <li><strong>Edit/Delete:</strong> Modify or remove points if needed</li>
-                </ul>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Quick Add from Member Profile</strong></summary>
-                <p>You can also assign discipline points directly from a member's profile page.</p>
-              </details>
-            </div>
-          </div>
-
-          <!-- MEMBER MANAGEMENT -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">👥</span> Member Management</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>View All Members</strong></summary>
-                <p>Go to <%= link_to "Member Management", internal_users_path %> to see all members and their roles.</p>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Edit Member Information</strong></summary>
-                <p>Click a member to edit their:</p>
-                <ul>
-                  <li>Displayed Name</li>
-                  <li>Role (Member, Officer, Admin)</li>
-                  <li>Delete Member (remove their account from the system)</li>
-                </ul>
-              </details>
-
-              <details>
-                <summary class="card-summary"><strong>Change Member Roles</strong></summary>
-                <p>From a member's profile, update their role to promote them to Officer or Admin status in order to grant them additional permissions and access within the system.</p>
-              </details>
-            </div>
-          </div>
-
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">⚙️</span> Registration Management</h3>
-            </div>
-            <div class="card-content">
-              <details>
-                <summary class="card-summary"><strong>Manage Sign-ups</strong></summary>
-                <p>Go to <%= link_to "Registrations", admin_registrations_path %> to handle new member registrations.</p>
-                <ul>
-                  <li><strong>Pending Members:</strong> View member information awaiting approval</li>
-                  <li><strong>Pending Registrations:</strong> Accept or reject new signups</li>
-                </ul>
-              </details>
-            </div>
-          </div>
-
-          <!-- NAVIGATION -->
-          <div class="help-card">
-            <div class="card-header">
-              <h3><span aria-hidden="true">🧭</span> Quick Navigation</h3>
-            </div>
-            <div class="card-content">
-              <ul class="nav-list">
-                <li><span aria-hidden="true">🗓️</span> <%= link_to "Events", internal_events_path %></li>
-                <li><span aria-hidden="true">📋</span> <%= link_to "Excuses", internal_excuses_path %></li>
-                <li><span aria-hidden="true">🎵</span> <%= link_to "Music Drive", "https://drive.google.com/drive/u/3/folders/0ACAwK4ezZTfMUk9PVA", target: "_blank", rel: "noopener" %></li>
-                <li><span aria-hidden="true">👥</span> <%= link_to "Member Management", internal_users_path %></li>
-                <li><span aria-hidden="true">⚠️</span> <%= link_to "Discipline Points", internal_demerits_path %></li>
-                <li><span aria-hidden="true">⚙️</span> <%= link_to "Registration Approval", admin_registrations_path %></li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <p style="text-align: center;">
+          <a href="https://docs.google.com/document/d/1pJ0uDXSoorb2kygwkzFR9Fglkocff62x/edit?usp=sharing&ouid=111553121125115305524&rtpof=true&sd=true">READ THE ADMIN GUIDE HERE!</a>
+        </p>
       </section>
     <% end %>
   <% end %>
@@ -353,35 +49,44 @@
             <ul class="training-list">
               <li class="training-item">
                 <div class="training-meta">
-                  <strong>Getting Started Basics</strong><br>
+                  <strong>Navigating the Website</strong><br>
                   <small>Quick tour of the app and where to find things.</small>
                 </div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1OSFrWmGZoiwZF9WRiZ9-L51UhfjSMlX9/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
 
               <li class="training-item">
                 <div class="training-meta">
-                  <strong>Submitting & Tracking Excuses</strong><br>
-                  <small>How to submit single or bulk excuses and check their status.</small>
+                  <strong>Excuses</strong><br>
+                  <small>How to submit, manage, and delete one-time excuses.</small>
                 </div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=200", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1Z96sFFqU4518acutYIDmytkzhYGzi-zZ/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
 
               <li class="training-item">
                 <div class="training-meta">
-                  <strong>Checking In to Events</strong><br>
-                  <small>Using self check-in codes and confirming attendance.</small>
+                  <strong>Recurring Excuses</strong><br>
+                  <small>How to submit, manage, and delete recurring excuses.</small>
                 </div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=331", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <%= link_to "Watch", "https://drive.google.com/file/d/10hsH0DmpMmicyrC6diEtAY-k5-5MbIie/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
 
               <li class="training-item">
                 <div class="training-meta">
-                  <strong>Understanding Discipline Points</strong><br>
-                  <small>View and interpret your discipline records.</small>
+                  <strong>Setting Personal Reasons for Excuses</strong><br>
+                  <small>Make reasons private and only viewable by the director.</small>
                 </div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=404", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1bta5DqheYcr45o_-3R5R3jmGKXN7F76A/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
+
+              <li class="training-item">
+                <div class="training-meta">
+                  <strong>Checking into Events</strong><br>
+                  <small>Mark yourself as present with a code given by the officers/director.</small>
+                </div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1rV6ujeyG1KG6TSlS5eGb6yWqhHH03WtZ/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
+              </li>
+
             </ul>
           </div>
         </div>
@@ -395,20 +100,24 @@
           <div class="card-content">
             <ul class="training-list">
               <li class="training-item">
-                <div class="training-meta"><strong>Getting Started Basics</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Basic Navigation (Member)</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1OSFrWmGZoiwZF9WRiZ9-L51UhfjSMlX9/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Submitting & Tracking Excuses</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=200", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Submitting One-Time Excuses</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1Z96sFFqU4518acutYIDmytkzhYGzi-zZ/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Checking In to Events</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=331", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Submitting Recurring Events</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/10hsH0DmpMmicyrC6diEtAY-k5-5MbIie/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Understanding Discipline Points</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/19T8RGxsmZlMS7REbrsQ744Cm0rTzZPB2/view?usp=sharing&t=404", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Personal Reasons for Excuses</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1bta5DqheYcr45o_-3R5R3jmGKXN7F76A/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
+              </li>
+              <li class="training-item">
+                <div class="training-meta"><strong>Self-Registration to Events</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1rV6ujeyG1KG6TSlS5eGb6yWqhHH03WtZ/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
             </ul>
           </div>
@@ -422,28 +131,34 @@
           <div class="card-content">
             <ul class="training-list">
               <li class="training-item">
-                <div class="training-meta"><strong>Registrations & Member Management</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Basic Navigation (Admin)</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1FfLaliDiCBoGd7meMmNTEbJnIJ1y9BMn/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Creating/Editing Events & Self Check-in Codes</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing&t=56", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Events</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1AtT20PdkrMeyiTiTlRPpNGKuMav4dzQS/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Attendance Management & Absence Report</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing&t=210", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Excuses</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1rwYXwX4Y2uIqsfXt6gf_ry1nqHiXQlwG/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Reviewing & Provisionally Approving Excuses</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing&t=277", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Member Management</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/1biDun8Q9yr-gODTyUTXOMyg_-CVV4lrU/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Admin Finalization of Excuses</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing&t=366", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Discipline</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/12dtbu7gy0ORZRJXcFRF8Nj2jCM2EwzEP/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
               </li>
               <li class="training-item">
-                <div class="training-meta"><strong>Discipline Points Management</strong></div>
-                <%= link_to "Watch", "https://drive.google.com/file/d/1jfaWoEmHxI6s2Eva8_djz3jk8ajrYv3t/view?usp=sharing&t=448", target: "_blank", rel: "noopener", class: "video-btn" %>
+                <div class="training-meta"><strong>Registration</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/15N7Rpoa0Y5dVXnJkcqMGAV4lj3DLJZIV/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
+              </li>
+              </li>
+              <li class="training-item">
+                <div class="training-meta"><strong>Website Content Management</strong></div>
+                <%= link_to "Watch", "https://drive.google.com/file/d/17Ab6DiR2Ub0k1S135CMmnpqo_AUW1ZT9/view?usp=drive_link", target: "_blank", rel: "noopener", class: "video-btn" %>
+              </li>
             </ul>
           </div>
         </div>
@@ -469,18 +184,29 @@
     <% else %>
       <div class="contact-card dev-contact">
         <h3><span aria-hidden="true">👨‍💻</span> Developer Team</h3>
-        <p>If you're an officer or admin and found a bug or have a technical issue, please contact one of the developers:</p>
+        <p>If you're an officer or admin and found a bug or have a technical issue, please contact the product owner:</p>
         <div class="contact-info">
           <ul class="dev-list">
-            <li>Jessica Jakubik — <code>jessjakubik@tamu.edu</code></li>
-            <li>Owen Brown — <code>owenbrown@tamu.edu</code></li>
-            <li>Anjali Varghese — <code>anjali@tamu.edu</code></li>
-            <li>Taylor Smith — <code>smith.taylor@tamu.edu</code></li>
-            <li>Lucas Bryant — <code>lucas_bryant1@tamu.edu</code></li>
+            <li>Deniz Telci - <code>deniza.telci@tamu.edu</code></li>
           </ul>
         </div>
       </div>
     <% end %>
+  </section>
+
+  <!-- FEEDBACK SECTION -->
+  <section class="feedback-role-section">
+    <div class="role-header">
+      <h2><span aria-hidden="true">💬</span> Have Feedback?</h2>
+      <p>Send us your concerns and suggestions. We are all ears.</p>
+    </div>
+    <div class="feedback-link">
+      <p>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfTZsRjf1H1CGVgo8KBRS9J_j0v6k5n-_vS-Jtvw4RtvZKU1Q/viewform">
+          SUBMIT YOUR FEEDBACK HERE!
+        </a>
+      <p>    
+    </div>
   </section>
 </div>
 
