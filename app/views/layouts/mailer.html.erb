@@ -1,13 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <style>
-      /* Email styles need to be inline */
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Texas A&M Singing Cadets</title>
   </head>
+  <body style="margin:0; padding:0; background-color:#f4f4f4; font-family: Arial, Helvetica, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4; padding: 30px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
 
-  <body>
-    <%= yield %>
+            <!-- Header -->
+            <tr>
+              <td style="background-color:#500000; padding: 28px 40px; text-align:center;">
+                <p style="margin:0; color:#ffffff; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:bold;">Texas A&M University</p>
+                <h1 style="margin:6px 0 0; color:#ffffff; font-size:24px; font-weight:bold; letter-spacing:1px;">Singing Cadets</h1>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 36px 40px;">
+                <%= yield %>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color:#f8f8f8; border-top: 1px solid #e8e8e8; padding: 20px 40px; text-align:center;">
+                <p style="margin:0; color:#888888; font-size:12px;">
+                  Texas A&M Singing Cadets &mdash; Official Member Communications
+                </p>
+                <p style="margin:6px 0 0; color:#aaaaaa; font-size:11px;">
+                  To manage your email preferences, visit your profile settings in the member portal.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

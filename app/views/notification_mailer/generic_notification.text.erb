@@ -1,14 +1,24 @@
+Texas A&M Singing Cadets
+========================
+
 Hello <%= @recipient.full_name %>,
 
 <%= @message.heading %>
+<%= '-' * @message.heading.length %>
 
 <%= @message.intro %>
+<% if @message.bullets.any? %>
+
 <% @message.bullets.each do |bullet| %>
-- <%= bullet %>
+  > <%= bullet %>
 <% end %>
-
+<% end %>
 <% if @message.cta_url.present? %>
-<%= @message.cta_label %>: <%= @message.cta_url %>
+
+<%= @message.cta_label %>:
+<%= @message.cta_url %>
 <% end %>
 
-Singing Cadets
+---
+Texas A&M Singing Cadets Member Platform
+To manage email preferences, visit your profile settings in the member portal.
