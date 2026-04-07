@@ -79,13 +79,16 @@ module Internal
     def destroy
       notification_context = Notifications::Payloads.event(@event)
       event_title = @event.title
+      is_upcoming = @event.date > Time.current
       @event.destroy
-      Notifications::Dispatcher.publish(
-        event_key: 'event_cancelled',
-        recipients: Notifications::Audience.approved_members,
-        actor: current_user,
-        context: notification_context
-      )
+      if is_upcoming
+        Notifications::Dispatcher.publish(
+          event_key: 'event_cancelled',
+          recipients: Notifications::Audience.approved_members,
+          actor: current_user,
+          context: notification_context
+        )
+      end
       log_destroy_success(@event, { event_title: event_title })
 
       respond_to do |format|

@@ -122,8 +122,13 @@ Rails.application.configure do
   # config.active_record.database_resolver_context = ActiveRecord::Middleware::DatabaseSelector::Resolver::Session
 
   # Heroku will provide the HOST variable. If not set, it falls back to a placeholder.
-  config.action_controller.default_url_options = { 
-    host: ENV['APP_HOST'] || 'singing-cadets.herokuapp.com', 
-    protocol: 'https' 
+  config.action_controller.default_url_options = {
+    host: ENV['APP_HOST'] || 'singing-cadets.herokuapp.com',
+    protocol: 'https'
+  }
+
+  config.action_mailer.default_url_options = {
+    host: ENV['APP_HOST'] || 'singing-cadets.herokuapp.com',
+    protocol: 'https'
   }
 end

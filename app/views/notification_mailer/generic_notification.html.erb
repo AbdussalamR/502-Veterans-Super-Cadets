@@ -1,21 +1,39 @@
-<p>Hello <%= @recipient.full_name %>,</p>
+<p style="margin:0 0 20px; color:#333333; font-size:15px;">
+  Hello <strong><%= @recipient.full_name %></strong>,
+</p>
 
-<p><strong><%= @message.heading %></strong></p>
+<h2 style="margin:0 0 16px; color:#500000; font-size:20px; font-weight:bold; border-bottom:2px solid #500000; padding-bottom:10px;">
+  <%= @message.heading %>
+</h2>
 
-<p><%= @message.intro %></p>
+<p style="margin:0 0 20px; color:#444444; font-size:15px; line-height:1.6;">
+  <%= @message.intro %>
+</p>
 
 <% if @message.bullets.any? %>
-  <ul>
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px; width:100%;">
     <% @message.bullets.each do |bullet| %>
-      <li><%= bullet %></li>
+      <tr>
+        <td style="padding:6px 0; color:#444444; font-size:14px; line-height:1.5; border-bottom:1px solid #f0f0f0;">
+          <span style="color:#500000; font-weight:bold; margin-right:8px;">&#8250;</span><%= bullet %>
+        </td>
+      </tr>
     <% end %>
-  </ul>
+  </table>
 <% end %>
 
 <% if @message.cta_url.present? %>
-  <p>
-    <a href="<%= @message.cta_url %>"><%= @message.cta_label %></a>
-  </p>
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 8px;">
+    <tr>
+      <td style="background-color:#500000; border-radius:5px;">
+        <a href="<%= @message.cta_url %>" style="display:inline-block; padding:12px 28px; color:#ffffff; font-size:14px; font-weight:bold; text-decoration:none; letter-spacing:0.5px;">
+          <%= @message.cta_label %>
+        </a>
+      </td>
+    </tr>
+  </table>
 <% end %>
 
-<p>Singing Cadets</p>
+<p style="margin:28px 0 0; color:#888888; font-size:12px; border-top:1px solid #eeeeee; padding-top:16px;">
+  This message was sent by the Texas A&M Singing Cadets member platform.
+</p>
