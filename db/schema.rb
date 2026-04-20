@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_20_000000) do
     t.string "recurring_days"
     t.time "recurring_start_time"
     t.time "recurring_end_time"
+    t.boolean "is_personal", default: false, null: false
     t.index ["member_id"], name: "index_excuses_on_member_id"
   end
 
