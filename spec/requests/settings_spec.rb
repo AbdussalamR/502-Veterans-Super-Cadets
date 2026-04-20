@@ -16,7 +16,7 @@ RSpec.describe 'Internal::Settings', type: :request do
       it 'returns 200 and renders the settings form' do
         get edit_internal_settings_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('Notification Settings')
+        expect(response.body).to include('Platform Settings')
         expect(response.body).to include('reminder_hours_before')
       end
 
@@ -69,7 +69,28 @@ RSpec.describe 'Internal::Settings', type: :request do
         it 'shows a success flash message' do
           patch internal_settings_path, params: { application_setting: { reminder_hours_before: 6 } }
           follow_redirect!
-          expect(response.body).to include('Notification settings saved')
+          expect(response.body).to include('Platform settings saved')
+        end
+      end
+
+      context 'with a valid music_drive_url' do
+        it 'saves the URL and redirects' do
+          patch internal_settings_path, params: {
+            application_setting: { reminder_hours_before: 24, music_drive_url: 'https://drive.google.com/drive/folders/abc' }
+          }
+          expect(ApplicationSetting.instance.music_drive_url).to eq('https://drive.google.com/drive/folders/abc')
+          expect(response).to redirect_to(edit_internal_settings_path)
+        end
+      end
+
+      context 'with an invalid music_drive_url' do
+        it 'responds with 422 and does not save' do
+          ApplicationSetting.create!(reminder_hours_before: 24)
+          patch internal_settings_path, params: {
+            application_setting: { reminder_hours_before: 24, music_drive_url: 'not-a-url' }
+          }
+          expect(ApplicationSetting.instance.music_drive_url).to be_nil
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 

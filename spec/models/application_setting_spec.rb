@@ -26,6 +26,24 @@ RSpec.describe ApplicationSetting, type: :model do
       expect(setting).to be_valid
     end
 
+    describe 'music_drive_url' do
+      it 'is valid when blank' do
+        setting = build(:application_setting, music_drive_url: nil)
+        expect(setting).to be_valid
+      end
+
+      it 'is valid with a proper https URL' do
+        setting = build(:application_setting, music_drive_url: 'https://drive.google.com/drive/folders/abc123')
+        expect(setting).to be_valid
+      end
+
+      it 'is invalid with a non-URL string' do
+        setting = build(:application_setting, music_drive_url: 'not-a-url')
+        expect(setting).not_to be_valid
+        expect(setting.errors[:music_drive_url]).to include('must be a valid URL')
+      end
+    end
+
     it 'is invalid without reminder_hours_before' do
       setting = build(:application_setting, reminder_hours_before: nil)
       expect(setting).not_to be_valid

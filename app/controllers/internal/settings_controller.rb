@@ -11,7 +11,7 @@ module Internal
     def update
       @setting = ApplicationSetting.instance
       if @setting.update(setting_params)
-        flash[:success] = 'Notification settings saved.'
+        flash[:success] = 'Platform settings saved.'
         redirect_to edit_internal_settings_path
       else
         flash.now[:alert] = @setting.errors.full_messages.to_sentence
@@ -22,7 +22,7 @@ module Internal
     private
 
     def setting_params
-      params.expect(application_setting: [:reminder_hours_before])
+      params.expect(application_setting: %i[reminder_hours_before music_drive_url])
     end
 
     def require_super_admin!
