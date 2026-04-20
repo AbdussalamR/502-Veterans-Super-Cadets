@@ -31,43 +31,60 @@
       <div class="modal-body">
         <h6>1. Copy your personal feed link:</h6>
         <div class="input-group mb-3">
-          <input type="text" value="<%= internal_events_url(format: :ics, token: current_user.calendar_token) %>" 
+          <input type="text" value="<%= internal_events_url(format: :ics, token: current_user.calendar_token) %>"
                  class="form-control" id="icsLink" readonly>
           <button class="btn btn-primary" onclick="copyToClipboard('icsLink')">Copy Link</button>
         </div>
 
-        <div class="row mt-4">
-          <div class="col-md-6">
-            <p><strong>Google Calendar:</strong></p>
+        <h6 class="mt-4">2. Add to your calendar app:</h6>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <p class="mb-1"><strong><i class="bi bi-google me-1"></i>Google Calendar:</strong></p>
             <ol class="small">
-              <li>Open Google Calendar on a desktop.</li>
+              <li>Open Google Calendar on a <strong>desktop browser</strong>.</li>
               <li>Beside "Other calendars," click <strong>+</strong> then <strong>From URL</strong>.</li>
               <li>Paste the link and click <strong>Add calendar</strong>.</li>
             </ol>
           </div>
-          <div class="col-md-6">
-            <p><strong>Apple/iPhone:</strong></p>
+          <div class="col-md-6 mb-3">
+            <p class="mb-1"><strong><i class="bi bi-phone me-1"></i>iPhone / iPad (iOS):</strong></p>
             <ol class="small">
-              <li>Open <strong>Settings</strong> > <strong>Calendar</strong>.</li>
-              <li>Tap <strong>Accounts</strong> > <strong>Add Account</strong> > <strong>Other</strong>.</li>
-              <li>Tap <strong>Add Subscribed Calendar</strong> and paste the link.</li>
+              <li>Copy the link above, then open <strong>Settings</strong>.</li>
+              <li>Tap <strong>Calendar</strong> → <strong>Accounts</strong> → <strong>Add Account</strong> → <strong>Other</strong>.</li>
+              <li>Tap <strong>Add Subscribed Calendar</strong>, paste the link, and tap <strong>Next</strong> → <strong>Save</strong>.</li>
+            </ol>
+          </div>
+          <div class="col-md-6 mb-3">
+            <p class="mb-1"><strong><i class="bi bi-apple me-1"></i>Mac (macOS Calendar):</strong></p>
+            <ol class="small">
+              <li>Open the <strong>Calendar</strong> app.</li>
+              <li>Go to <strong>File</strong> → <strong>New Calendar Subscription</strong>.</li>
+              <li>Paste the link and click <strong>Subscribe</strong>.</li>
+              <li>Set auto-refresh to <strong>Every Hour</strong> and click <strong>OK</strong>.</li>
+            </ol>
+          </div>
+          <div class="col-md-6 mb-3">
+            <p class="mb-1"><strong><i class="bi bi-download me-1"></i>Download &amp; Import (any app):</strong></p>
+            <ol class="small">
+              <li>Open the link in your browser — it will download a <strong>.ics</strong> file.</li>
+              <li>Double-click the file to import it into your default calendar app.</li>
+              <li><span class="text-muted">Note: this is a one-time snapshot, not a live subscription.</span></li>
             </ol>
           </div>
         </div>
-        <hr>
-        <p class="small text-muted">
-          <i class="bi bi-info-circle me-1"></i>
-          RSS is also available for news readers:
-        </p>
 
+        <hr>
+        <p class="small text-muted mb-1">
+          <i class="bi bi-rss me-1"></i>
+          RSS feed for news readers:
+        </p>
         <div class="input-group input-group-sm">
           <input type="text"
-                value="<%= internal_events_url(format: :rss, token: current_user.calendar_token) %>"
-                class="form-control d-none"
-                id="rssLink"
-                readonly>
-          <button class="btn btn-outline-primary"
-                  onclick="copyToClipboard('rssLink')">
+                 value="<%= internal_events_url(format: :rss, token: current_user.calendar_token) %>"
+                 class="form-control"
+                 id="rssLink"
+                 readonly>
+          <button class="btn btn-outline-primary" onclick="copyToClipboard('rssLink')">
             Copy RSS Link
           </button>
         </div>
@@ -78,9 +95,8 @@
 
 <script>
 function copyToClipboard(id) {
-  var copyText = document.getElementById(id);
-  copyText.select();
-  navigator.clipboard.writeText(copyText.value);
+  var value = document.getElementById(id).value;
+  navigator.clipboard.writeText(value);
   alert("Link copied to clipboard!");
 }
 </script>

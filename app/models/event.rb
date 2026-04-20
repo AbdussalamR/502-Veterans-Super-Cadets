@@ -157,12 +157,13 @@ class Event < ApplicationRecord
 
   # for RSS feed item
   def to_rss_item
+    host = Rails.application.config.action_controller.default_url_options&.fetch(:host, 'localhost:3000')
     {
       title: title,
       description: rss_description,
       pub_date: created_at,
-      link: Rails.application.routes.url_helpers.internal_event_url(self, host: 'localhost:3000'),
-      guid: "event-#{id}",
+      link: Rails.application.routes.url_helpers.internal_event_url(self, host: host),
+      guid: "event-#{id}"
     }
   end
 
