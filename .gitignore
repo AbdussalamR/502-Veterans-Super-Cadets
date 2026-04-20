@@ -8,3 +8,4 @@ config/master.key
 .yarn/
 .env
 /seeds.rb
+.claude/

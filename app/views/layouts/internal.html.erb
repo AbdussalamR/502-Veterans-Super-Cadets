@@ -133,9 +133,12 @@
             </div>
           <% end %>
 
-          <%= link_to "https://drive.google.com/drive/folders/17ccw2GrZ6-p6WRj1jZO8-kcFxNzuFY79", class: "nav-link text-center", target: "_blank", rel: "noopener" do %>
-            <div style="font-size: 1.3rem;">🎵</div>
-            <div style="font-size: 0.65rem;">Music Drive</div>
+          <% music_drive_url = ApplicationSetting.instance.music_drive_url.presence %>
+          <% if music_drive_url %>
+            <%= link_to music_drive_url, class: "nav-link text-center", target: "_blank", rel: "noopener" do %>
+              <div style="font-size: 1.3rem;">🎵</div>
+              <div style="font-size: 0.65rem;">Music Drive</div>
+            <% end %>
           <% end %>
 
           <% if current_user.admin? %>
@@ -172,7 +175,7 @@
                 </li>
                 <% if current_user.super_admin? %>
                   <li><hr class="dropdown-divider"></li>
-                  <li><%= link_to "Notification Settings", edit_internal_settings_path, class: "dropdown-item" %></li>
+                  <li><%= link_to "Platform Settings", edit_internal_settings_path, class: "dropdown-item" %></li>
                   <li>
                     <%= link_to admin_website_path, class: "dropdown-item d-flex align-items-center" do %>
                       Website Management
