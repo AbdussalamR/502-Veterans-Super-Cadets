@@ -40,6 +40,23 @@
         </div>
       </div>
 
+      <div class="col-12 mt-3">
+        <h6 class="fw-bold">SMS Notifications</h6>
+      </div>
+
+      <div class="col-12">
+        <%= form.label :phone_number, class: "form-label" %>
+        <%= form.telephone_field :phone_number, class: "form-control", placeholder: "e.g. 555-123-4567" %>
+      </div>
+
+      <div class="col-12">
+        <div class="form-check">
+          <%= form.check_box :sms_notifications_enabled, class: "form-check-input" %>
+          <%= form.label :sms_notifications_enabled, "SMS notifications enabled", class: "form-check-label" %>
+          <div class="form-text">Requires a phone number above.</div>
+        </div>
+      </div>
+
       <div class="col-12">
         <div class="form-text">
           <strong>Current Role:</strong> 

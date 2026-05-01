@@ -15,12 +15,9 @@ module Notifications
 
     def publish
       recipients.uniq(&:id).each do |recipient|
-        Notifications::DeliverNotificationJob.perform_later(
-          event_key,
-          recipient.id,
-          actor&.id,
-          context.merge('actor_name' => actor&.full_name)
-        )
+        merged_context = context.merge('actor_name' => actor&.full_name)
+        Notifications::DeliverNotificationJob.perform_later(event_key, recipient.id, actor&.id, merged_context)
+        Notifications::DeliverSmsJob.perform_later(event_key, recipient.id, actor&.id, merged_context)
       end
     end
 

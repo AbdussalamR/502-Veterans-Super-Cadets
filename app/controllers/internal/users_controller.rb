@@ -249,7 +249,7 @@ module Internal
     end
 
     def user_params
-      permitted_fields = %i[full_name email_notifications_enabled]
+      permitted_fields = %i[full_name email_notifications_enabled phone_number sms_notifications_enabled]
       permitted_fields << :section_id if current_user.super_admin?
 
       params.expect(user: [*permitted_fields])

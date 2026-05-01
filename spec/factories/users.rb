@@ -24,5 +24,10 @@ FactoryBot.define do
     trait :rejected do
       approval_status { 'rejected' }
     end
+
+    trait :with_sms do
+      phone_number { '555-123-4567' }
+      sms_notifications_enabled { true }
+    end
   end
 end

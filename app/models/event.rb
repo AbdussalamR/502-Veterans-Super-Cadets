@@ -41,8 +41,8 @@ class Event < ApplicationRecord
   after_create :link_to_matching_recurring_excuses
 
   # Scopes for filtering
-  scope :upcoming, -> { where(date: Time.zone.today..).order(:date) }
-  scope :past, -> { where(date: ...Time.zone.today).order(date: :desc) }
+  scope :upcoming, -> { where('date >= ?', Time.current.beginning_of_day).order(:date) }
+  scope :past, -> { where('date < ?', Time.current.beginning_of_day).order(date: :desc) }
 
   # Validation to ensure end_time is after date's start time
   def end_time_after_start_time

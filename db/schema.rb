@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_20_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_30_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -315,6 +315,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_20_000000) do
     t.bigint "section_id"
     t.string "phone_number"
     t.boolean "email_notifications_enabled", default: true, null: false
+    t.string "carrier"
+    t.boolean "sms_notifications_enabled", default: false, null: false
     t.index ["approval_status"], name: "index_users_on_approval_status"
     t.index ["calendar_token"], name: "index_users_on_calendar_token"
     t.index ["email"], name: "index_users_on_email", unique: true
