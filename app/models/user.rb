@@ -18,6 +18,7 @@ class User < ApplicationRecord
     validates :uid, presence: true
     validates :role, inclusion: { in: ROLES }
     validates :approval_status, inclusion: { in: APPROVAL_STATUSES }, allow_nil: true
+    validates :phone_number, format: { with: /\A[\d\s\-().+]+\z/, message: 'is not a valid phone number' }, allow_blank: true
   rescue ActiveRecord::StatementInvalid
     # Table doesn't exist yet during migrations - skip validations
   end
@@ -294,5 +295,9 @@ class User < ApplicationRecord
 
   def email_deliverable?
     email_notifications_enabled? && email.present?
+  end
+
+  def sms_deliverable?
+    sms_notifications_enabled? && phone_number.present?
   end
 end
