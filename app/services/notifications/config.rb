@@ -23,5 +23,13 @@ module Notifications
     def sendgrid_configured?
       sendgrid_api_key.present? && from_email.present?
     end
+
+    def textbelt_api_key
+      ENV['TEXTBELT_API_KEY'].to_s
+    end
+
+    def textbelt_configured?
+      textbelt_api_key.present?
+    end
   end
 end
